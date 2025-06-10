@@ -1,6 +1,5 @@
-use std::{clone, time::Duration};
+use std::time::Duration;
 
-use log::info;
 use math::vec3::Vec3;
 use spacetimedb::{reducer, ReducerContext, ScheduleAt, Table, TimeDuration};
 use tables::{physics_rigid_bodies, physics_world, PhysicsWorld, RigidBody};
@@ -51,7 +50,6 @@ fn physics_step_world(ctx: &ReducerContext, world: PhysicsWorld) {
 
         body.force = Vec3::ZERO;
 
-        info!("Updated body @{}s: {}", delta_time, body);
         ctx.db.physics_rigid_bodies().id().update(body);
     }
 }

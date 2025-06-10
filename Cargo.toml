@@ -1,3 +1,6 @@
 [workspace]
+members = [
+    "client",
+    "spacetime_physics",
+]
 resolver = "3"
-members = ["spacetime_physics"]
