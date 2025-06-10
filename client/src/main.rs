@@ -1,5 +1,154 @@
-use bevy::prelude::*;
+use bevy::{color::palettes::css::RED, platform::collections::HashMap, prelude::*};
+use bevy_inspector_egui::{bevy_egui::EguiPlugin, quick::WorldInspectorPlugin};
+use bevy_spacetimedb::{
+    ReadDeleteEvent, ReadInsertEvent, ReadStdbConnectedEvent, ReadUpdateEvent, StdbConnectedEvent,
+    StdbConnection, StdbConnectionErrorEvent, StdbDisconnectedEvent, StdbPlugin, tables,
+};
+use module_bindings::{
+    DbConnection, PhysicsRigidBodiesTableAccess, PhysicsWorldTableAccess, RigidBody,
+};
+
+mod module_bindings;
+
+#[derive(Default, Resource)]
+pub struct RigidBodies {
+    bodies: HashMap<u64, Entity>,
+}
+
+impl RigidBodies {
+    pub fn get(&self, id: u64) -> Option<Entity> {
+        self.bodies.get(&id).copied()
+    }
+
+    pub fn insert(&mut self, id: u64, entity: Entity) {
+        self.bodies.insert(id, entity);
+    }
+
+    pub fn remove(&mut self, id: u64) {
+        self.bodies.remove(&id);
+    }
+}
 
 fn main() -> AppExit {
-    App::new().add_plugins(DefaultPlugins).run()
+    App::new()
+        .add_plugins(DefaultPlugins)
+        .add_plugins(
+            StdbPlugin::default()
+                .with_connection(|connected, disconnected, errored, _| {
+                    let conn = DbConnection::builder()
+                        .with_module_name("stdb-physics")
+                        .with_uri("https://stdb.jlavocat.eu")
+                        .on_connect(move |_, _, _| {
+                            connected.send(StdbConnectedEvent {}).unwrap();
+                        })
+                        .on_disconnect(move |_, err| {
+                            disconnected.send(StdbDisconnectedEvent { err }).unwrap();
+                        })
+                        .on_connect_error(move |_, err| {
+                            errored.send(StdbConnectionErrorEvent { err }).unwrap();
+                        });
+
+                    let conn = conn.build().unwrap();
+
+                    conn.run_threaded();
+
+                    conn
+                })
+                .with_events(|plugin, app, db, _| {
+                    tables!(physics_rigid_bodies, physics_world);
+                }),
+        )
+        .add_plugins(EguiPlugin {
+            enable_multipass_for_primary_context: true,
+        })
+        .add_plugins(WorldInspectorPlugin::new())
+        .insert_resource(RigidBodies::default())
+        .add_systems(Startup, setup)
+        .add_systems(First, on_connected)
+        .add_systems(PreUpdate, on_rigid_body_inserted)
+        .add_systems(Update, on_rigid_body_updated)
+        .add_systems(PostUpdate, on_rigid_body_deleted)
+        .run()
+}
+
+fn setup(mut commands: Commands) {
+    commands.spawn((
+        Name::new("Camera"),
+        Camera3d::default(),
+        Transform::from_xyz(0.0, 5.0, 50.0).looking_at(Vec3::ZERO, Vec3::Y),
+    ));
+
+    commands.spawn((
+        Name::new("Light"),
+        PointLight {
+            intensity: 1000.0,
+            shadows_enabled: true,
+            ..default()
+        },
+        Transform::from_xyz(5.0, 10.0, 5.0),
+    ));
+}
+
+fn on_connected(mut events: ReadStdbConnectedEvent, res: Res<StdbConnection<DbConnection>>) {
+    for _ in events.read() {
+        info!("Connected to SpacetimeDB.");
+        res.subscribe()
+            .on_applied(|_| info!("Subscribed to all tables"))
+            .subscribe_to_all_tables();
+    }
+}
+
+fn on_rigid_body_inserted(
+    mut commands: Commands,
+    mut events: ReadInsertEvent<RigidBody>,
+    mut rigid_bodies: ResMut<RigidBodies>,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+) {
+    for event in events.read() {
+        let material = materials.add(StandardMaterial {
+            base_color: RED.into(),
+            ..default()
+        });
+        let mesh = meshes.add(Sphere::default());
+
+        let pos = event.row.position.clone();
+        let entity = commands
+            .spawn((
+                Name::from(format!("RigidBody#{}", event.row.id)),
+                Transform::from_xyz(pos.x, pos.y, pos.z),
+                Mesh3d(mesh),
+                MeshMaterial3d(material),
+            ))
+            .id();
+        rigid_bodies.insert(event.row.id, entity);
+    }
+}
+
+fn on_rigid_body_updated(
+    mut commands: Commands,
+    mut events: ReadUpdateEvent<RigidBody>,
+    rigid_bodies: Res<RigidBodies>,
+) {
+    for event in events.read() {
+        if let Some(entity) = rigid_bodies.get(event.new.id) {
+            let pos = event.new.position.clone();
+            commands
+                .entity(entity)
+                .insert(Transform::from_xyz(pos.x, pos.y, pos.z));
+        }
+    }
+}
+
+fn on_rigid_body_deleted(
+    mut commands: Commands,
+    mut events: ReadDeleteEvent<RigidBody>,
+    mut rigid_bodies: ResMut<RigidBodies>,
+) {
+    for event in events.read() {
+        if let Some(entity) = rigid_bodies.get(event.row.id) {
+            commands.entity(entity).despawn();
+            rigid_bodies.remove(event.row.id);
+        }
+    }
 }

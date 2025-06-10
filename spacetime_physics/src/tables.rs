@@ -4,7 +4,7 @@ use spacetimedb::{table, ScheduleAt};
 
 use crate::{math::vec3::Vec3, physics_step_world};
 
-#[table(name = physics_world, scheduled(physics_step_world))]
+#[table(name = physics_world, scheduled(physics_step_world), public)]
 pub struct PhysicsWorld {
     #[primary_key]
     #[auto_inc]
@@ -13,7 +13,7 @@ pub struct PhysicsWorld {
     pub gravity: Vec3,
 }
 
-#[table(name = physics_rigid_bodies)]
+#[table(name = physics_rigid_bodies, public)]
 pub struct RigidBody {
     #[primary_key]
     #[auto_inc]

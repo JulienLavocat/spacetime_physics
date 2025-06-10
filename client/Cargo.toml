@@ -5,6 +5,7 @@ edition = "2024"
 
 [dependencies]
 bevy = "0.16"
+bevy-inspector-egui = "0.31.0"
 bevy_spacetimedb = "0.6.0"
 spacetimedb-sdk = "1.1.1"
 
