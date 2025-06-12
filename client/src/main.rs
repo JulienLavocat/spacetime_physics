@@ -5,8 +5,10 @@ use bevy_spacetimedb::{
     StdbConnection, StdbConnectionErrorEvent, StdbDisconnectedEvent, StdbPlugin, tables,
 };
 use module_bindings::{
-    DbConnection, PhysicsRigidBodiesTableAccess, PhysicsWorldTableAccess, RigidBody,
+    AccountTableAccess, DbConnection, PhysicsRigidBodiesTableAccess, PhysicsWorldTableAccess,
+    RigidBody,
 };
+use spacetimedb_sdk::{DbContext, Table};
 
 mod module_bindings;
 
@@ -56,6 +58,18 @@ fn main() -> AppExit {
                 })
                 .with_events(|plugin, app, db, _| {
                     tables!(physics_rigid_bodies, physics_world);
+
+                    db.account().on_insert(|ctx, row| {
+                        if ctx.identity() == row.identity {
+                            println!("SELF INSERTED: {:?}", row);
+                        } else {
+                            println!("Account inserted: {:?}", row);
+                        }
+
+                        ctx.db.account().iter().for_each(|account| {
+                            println!("Account: {:?}", account);
+                        });
+                    });
                 }),
         )
         .add_plugins(EguiPlugin {
@@ -92,9 +106,10 @@ fn setup(mut commands: Commands) {
 fn on_connected(mut events: ReadStdbConnectedEvent, res: Res<StdbConnection<DbConnection>>) {
     for _ in events.read() {
         info!("Connected to SpacetimeDB.");
-        res.subscribe()
-            .on_applied(|_| info!("Subscribed to all tables"))
-            .subscribe_to_all_tables();
+        // res.subscribe()
+        //     .on_applied(|_| info!("Subscribed to all tables"))
+        //     .subscribe_to_all_tables();
+        res.subscribe().subscribe("SELECT * FROM account");
     }
 }
 
@@ -112,7 +127,7 @@ fn on_rigid_body_inserted(
         });
         let mesh = meshes.add(Sphere::default());
 
-        let pos = event.row.position.clone();
+        let pos = event.row.transform.position.clone();
         let entity = commands
             .spawn((
                 Name::from(format!("RigidBody#{}", event.row.id)),
@@ -132,7 +147,7 @@ fn on_rigid_body_updated(
 ) {
     for event in events.read() {
         if let Some(entity) = rigid_bodies.get(event.new.id) {
-            let pos = event.new.position.clone();
+            let pos = event.new.transform.position.clone();
             commands
                 .entity(entity)
                 .insert(Transform::from_xyz(pos.x, pos.y, pos.z));

@@ -4,20 +4,38 @@
 #![allow(unused, clippy::all)]
 use spacetimedb_sdk::__codegen::{self as __sdk, __lib, __sats, __ws};
 
+pub mod account_table;
+pub mod account_type;
+pub mod collider_type;
+pub mod on_connect_reducer;
 pub mod physics_rigid_bodies_table;
 pub mod physics_step_world_reducer;
 pub mod physics_world_table;
 pub mod physics_world_type;
+pub mod plane_type;
+pub mod quat_type;
 pub mod rigid_body_type;
+pub mod sphere_type;
+pub mod test_reducer;
+pub mod transform_type;
 pub mod vec_3_type;
 
+pub use account_table::*;
+pub use account_type::Account;
+pub use collider_type::Collider;
+pub use on_connect_reducer::{on_connect, set_flags_for_on_connect, OnConnectCallbackId};
 pub use physics_rigid_bodies_table::*;
 pub use physics_step_world_reducer::{
     physics_step_world, set_flags_for_physics_step_world, PhysicsStepWorldCallbackId,
 };
 pub use physics_world_table::*;
 pub use physics_world_type::PhysicsWorld;
+pub use plane_type::Plane;
+pub use quat_type::Quat;
 pub use rigid_body_type::RigidBody;
+pub use sphere_type::Sphere;
+pub use test_reducer::{set_flags_for_test, test, TestCallbackId};
+pub use transform_type::Transform;
 pub use vec_3_type::Vec3;
 
 #[derive(Clone, PartialEq, Debug)]
@@ -28,7 +46,9 @@ pub use vec_3_type::Vec3;
 /// to indicate which reducer caused the event.
 
 pub enum Reducer {
+    OnConnect,
     PhysicsStepWorld { world: PhysicsWorld },
+    Test,
 }
 
 impl __sdk::InModule for Reducer {
@@ -38,7 +58,9 @@ impl __sdk::InModule for Reducer {
 impl __sdk::Reducer for Reducer {
     fn reducer_name(&self) -> &'static str {
         match self {
+            Reducer::OnConnect => "on_connect",
             Reducer::PhysicsStepWorld { .. } => "physics_step_world",
+            Reducer::Test => "test",
         }
     }
 }
@@ -46,10 +68,20 @@ impl TryFrom<__ws::ReducerCallInfo<__ws::BsatnFormat>> for Reducer {
     type Error = __sdk::Error;
     fn try_from(value: __ws::ReducerCallInfo<__ws::BsatnFormat>) -> __sdk::Result<Self> {
         match &value.reducer_name[..] {
+            "on_connect" => Ok(
+                __sdk::parse_reducer_args::<on_connect_reducer::OnConnectArgs>(
+                    "on_connect",
+                    &value.args,
+                )?
+                .into(),
+            ),
             "physics_step_world" => Ok(__sdk::parse_reducer_args::<
                 physics_step_world_reducer::PhysicsStepWorldArgs,
             >("physics_step_world", &value.args)?
             .into()),
+            "test" => Ok(
+                __sdk::parse_reducer_args::<test_reducer::TestArgs>("test", &value.args)?.into(),
+            ),
             unknown => {
                 Err(
                     __sdk::InternalError::unknown_name("reducer", unknown, "ReducerCallInfo")
@@ -64,6 +96,7 @@ impl TryFrom<__ws::ReducerCallInfo<__ws::BsatnFormat>> for Reducer {
 #[allow(non_snake_case)]
 #[doc(hidden)]
 pub struct DbUpdate {
+    account: __sdk::TableUpdate<Account>,
     physics_rigid_bodies: __sdk::TableUpdate<RigidBody>,
     physics_world: __sdk::TableUpdate<PhysicsWorld>,
 }
@@ -74,6 +107,7 @@ impl TryFrom<__ws::DatabaseUpdate<__ws::BsatnFormat>> for DbUpdate {
         let mut db_update = DbUpdate::default();
         for table_update in raw.tables {
             match &table_update.table_name[..] {
+                "account" => db_update.account = account_table::parse_table_update(table_update)?,
                 "physics_rigid_bodies" => {
                     db_update.physics_rigid_bodies =
                         physics_rigid_bodies_table::parse_table_update(table_update)?
@@ -107,6 +141,9 @@ impl __sdk::DbUpdate for DbUpdate {
     ) -> AppliedDiff<'_> {
         let mut diff = AppliedDiff::default();
 
+        diff.account = cache
+            .apply_diff_to_table::<Account>("account", &self.account)
+            .with_updates_by_pk(|row| &row.identity);
         diff.physics_rigid_bodies = cache
             .apply_diff_to_table::<RigidBody>("physics_rigid_bodies", &self.physics_rigid_bodies)
             .with_updates_by_pk(|row| &row.id);
@@ -122,6 +159,7 @@ impl __sdk::DbUpdate for DbUpdate {
 #[allow(non_snake_case)]
 #[doc(hidden)]
 pub struct AppliedDiff<'r> {
+    account: __sdk::TableAppliedDiff<'r, Account>,
     physics_rigid_bodies: __sdk::TableAppliedDiff<'r, RigidBody>,
     physics_world: __sdk::TableAppliedDiff<'r, PhysicsWorld>,
 }
@@ -136,6 +174,7 @@ impl<'r> __sdk::AppliedDiff<'r> for AppliedDiff<'r> {
         event: &EventContext,
         callbacks: &mut __sdk::DbCallbacks<RemoteModule>,
     ) {
+        callbacks.invoke_table_row_callbacks::<Account>("account", &self.account, event);
         callbacks.invoke_table_row_callbacks::<RigidBody>(
             "physics_rigid_bodies",
             &self.physics_rigid_bodies,
@@ -721,6 +760,7 @@ impl __sdk::SpacetimeModule for RemoteModule {
     type SubscriptionHandle = SubscriptionHandle;
 
     fn register_tables(client_cache: &mut __sdk::ClientCache<Self>) {
+        account_table::register_table(client_cache);
         physics_rigid_bodies_table::register_table(client_cache);
         physics_world_table::register_table(client_cache);
     }

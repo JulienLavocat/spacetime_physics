@@ -4,22 +4,14 @@
 #![allow(unused, clippy::all)]
 use spacetimedb_sdk::__codegen::{self as __sdk, __lib, __sats, __ws};
 
-use super::collider_type::Collider;
-use super::transform_type::Transform;
-use super::vec_3_type::Vec3;
-
 #[derive(__lib::ser::Serialize, __lib::de::Deserialize, Clone, PartialEq, Debug)]
 #[sats(crate = __lib)]
-pub struct RigidBody {
-    pub id: u64,
-    pub world_id: u64,
-    pub transform: Transform,
-    pub velocity: Vec3,
-    pub force: Vec3,
-    pub mass: f32,
-    pub collider: Collider,
+pub struct Account {
+    pub identity: __sdk::Identity,
+    pub name: String,
+    pub online: bool,
 }
 
-impl __sdk::InModule for RigidBody {
+impl __sdk::InModule for Account {
     type Module = super::RemoteModule;
 }
