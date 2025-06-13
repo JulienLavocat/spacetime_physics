@@ -1,6 +1,6 @@
 use collisions::{Collision, CollisionPoints};
 use log::debug;
-use solvers::{position::PositionSolver, Solver};
+use solvers::{impulse::ImpulseSolver, position::PositionSolver, Solver};
 use spacetimedb::ReducerContext;
 
 use crate::{
@@ -43,7 +43,7 @@ fn run_step(bodies: &mut [RigidBody], world: &PhysicsWorld, delta_time: f32) {
             collision.a, collision.b, collision.points
         );
     }
-    // ImpulseSolver::solve(world, &collisions, bodies, delta_time);
+    ImpulseSolver::solve(world, &collisions, bodies, delta_time);
     PositionSolver::solve(world, &collisions, bodies, delta_time);
 
     integrate_position(bodies, delta_time);
