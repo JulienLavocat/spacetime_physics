@@ -12,6 +12,7 @@ pub struct PhysicsWorld {
     pub id: u64,
     pub scheduled_at: __sdk::ScheduleAt,
     pub time_step: f32,
+    pub sub_step: u32,
     pub gravity: Vec3,
 }
 

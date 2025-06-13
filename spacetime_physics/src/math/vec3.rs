@@ -58,12 +58,48 @@ impl Vec3 {
         }
     }
 
+    pub fn normalize_or_zero(self) -> Self {
+        let len = self.length();
+        if len > 1e-5 {
+            self / len
+        } else {
+            Self::ZERO
+        }
+    }
+
     pub fn dot(self, other: Self) -> f32 {
         self.x * other.x + self.y * other.y + self.z * other.z
     }
 
+    pub fn cross(self, other: Self) -> Self {
+        Self {
+            x: self.y * other.z - self.z * other.y,
+            y: self.z * other.x - self.x * other.z,
+            z: self.x * other.y - self.y * other.x,
+        }
+    }
+
     pub fn length_squared(self) -> f32 {
         self.x * self.x + self.y * self.y + self.z * self.z
+    }
+
+    pub fn project_onto_plane(self, normal: Vec3) -> Self {
+        let dot_product = self.dot(normal);
+        Self {
+            x: self.x - dot_product * normal.x,
+            y: self.y - dot_product * normal.y,
+            z: self.z - dot_product * normal.z,
+        }
+    }
+
+    pub fn transform(self, matrix: [[f32; 4]; 4]) -> Self {
+        let x =
+            self.x * matrix[0][0] + self.y * matrix[0][1] + self.z * matrix[0][2] + matrix[0][3];
+        let y =
+            self.x * matrix[1][0] + self.y * matrix[1][1] + self.z * matrix[1][2] + matrix[1][3];
+        let z =
+            self.x * matrix[2][0] + self.y * matrix[2][1] + self.z * matrix[2][2] + matrix[2][3];
+        Self { x, y, z }
     }
 }
 
