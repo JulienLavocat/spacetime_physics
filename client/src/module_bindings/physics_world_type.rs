@@ -11,6 +11,7 @@ use super::vec_3_type::Vec3;
 pub struct PhysicsWorld {
     pub id: u64,
     pub scheduled_at: __sdk::ScheduleAt,
+    pub time_step: f32,
     pub gravity: Vec3,
 }
 

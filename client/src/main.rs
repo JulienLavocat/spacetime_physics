@@ -1,14 +1,17 @@
-use bevy::{color::palettes::css::RED, platform::collections::HashMap, prelude::*};
+use bevy::{
+    color::palettes::css::{GRAY, RED},
+    input::mouse::MouseMotion,
+    platform::collections::HashMap,
+    prelude::*,
+};
 use bevy_inspector_egui::{bevy_egui::EguiPlugin, quick::WorldInspectorPlugin};
 use bevy_spacetimedb::{
     ReadDeleteEvent, ReadInsertEvent, ReadStdbConnectedEvent, ReadUpdateEvent, StdbConnectedEvent,
     StdbConnection, StdbConnectionErrorEvent, StdbDisconnectedEvent, StdbPlugin, tables,
 };
 use module_bindings::{
-    AccountTableAccess, DbConnection, PhysicsRigidBodiesTableAccess, PhysicsWorldTableAccess,
-    RigidBody,
+    Collider, DbConnection, PhysicsRigidBodiesTableAccess, PhysicsWorldTableAccess, RigidBody,
 };
-use spacetimedb_sdk::{DbContext, Table};
 
 mod module_bindings;
 
@@ -58,18 +61,6 @@ fn main() -> AppExit {
                 })
                 .with_events(|plugin, app, db, _| {
                     tables!(physics_rigid_bodies, physics_world);
-
-                    db.account().on_insert(|ctx, row| {
-                        if ctx.identity() == row.identity {
-                            println!("SELF INSERTED: {:?}", row);
-                        } else {
-                            println!("Account inserted: {:?}", row);
-                        }
-
-                        ctx.db.account().iter().for_each(|account| {
-                            println!("Account: {:?}", account);
-                        });
-                    });
                 }),
         )
         .add_plugins(EguiPlugin {
@@ -80,7 +71,7 @@ fn main() -> AppExit {
         .add_systems(Startup, setup)
         .add_systems(First, on_connected)
         .add_systems(PreUpdate, on_rigid_body_inserted)
-        .add_systems(Update, on_rigid_body_updated)
+        .add_systems(Update, (on_rigid_body_updated, freecam))
         .add_systems(PostUpdate, on_rigid_body_deleted)
         .run()
 }
@@ -89,7 +80,7 @@ fn setup(mut commands: Commands) {
     commands.spawn((
         Name::new("Camera"),
         Camera3d::default(),
-        Transform::from_xyz(0.0, 5.0, 50.0).looking_at(Vec3::ZERO, Vec3::Y),
+        Transform::from_xyz(0.0, 5.0, 10.0).looking_at(Vec3::ZERO, Vec3::Y),
     ));
 
     commands.spawn((
@@ -106,10 +97,9 @@ fn setup(mut commands: Commands) {
 fn on_connected(mut events: ReadStdbConnectedEvent, res: Res<StdbConnection<DbConnection>>) {
     for _ in events.read() {
         info!("Connected to SpacetimeDB.");
-        // res.subscribe()
-        //     .on_applied(|_| info!("Subscribed to all tables"))
-        //     .subscribe_to_all_tables();
-        res.subscribe().subscribe("SELECT * FROM account");
+        res.subscribe()
+            .on_applied(|_| info!("Subscribed to all tables"))
+            .subscribe_to_all_tables();
     }
 }
 
@@ -121,21 +111,51 @@ fn on_rigid_body_inserted(
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
     for event in events.read() {
-        let material = materials.add(StandardMaterial {
-            base_color: RED.into(),
-            ..default()
-        });
-        let mesh = meshes.add(Sphere::default());
+        let body = event.row.clone();
+
+        let (mesh, material) = match body.collider {
+            Collider::Plane(_) => {
+                // Planes are not rendered, so we return None
+                info!("Inserting plane collider: {:?}", body);
+                let material = materials.add(StandardMaterial {
+                    base_color: GRAY.into(),
+                    ..default()
+                });
+                let mesh = meshes.add(Mesh::from(Plane3d {
+                    normal: Dir3::Y,
+                    half_size: Vec2::new(100.0, 100.0),
+                }));
+
+                (Some(mesh), Some(material))
+            }
+            Collider::Sphere(_) => {
+                info!("Inserting sphere collider: {:?}", body);
+                let material = Some(materials.add(StandardMaterial {
+                    base_color: RED.into(),
+                    ..default()
+                }));
+                let mesh = Some(meshes.add(Sphere::default()));
+                (mesh, material)
+            }
+        };
 
         let pos = event.row.transform.position.clone();
         let entity = commands
             .spawn((
                 Name::from(format!("RigidBody#{}", event.row.id)),
                 Transform::from_xyz(pos.x, pos.y, pos.z),
-                Mesh3d(mesh),
-                MeshMaterial3d(material),
             ))
             .id();
+
+        if let Some(mesh) = &mesh {
+            commands.entity(entity).insert(Mesh3d(mesh.clone()));
+        }
+        if let Some(material) = &material {
+            commands
+                .entity(entity)
+                .insert(MeshMaterial3d(material.clone()));
+        }
+
         rigid_bodies.insert(event.row.id, entity);
     }
 }
@@ -166,4 +186,46 @@ fn on_rigid_body_deleted(
             rigid_bodies.remove(event.row.id);
         }
     }
+}
+
+fn freecam(
+    mut camera_transform: Single<&mut Transform, With<Camera3d>>,
+    keyboard_input: Res<ButtonInput<KeyCode>>,
+    time: Res<Time>,
+    mouse_motion: Res<ButtonInput<MouseButton>>,
+    mut mouse_events: EventReader<MouseMotion>,
+) {
+    let speed = 10.0 * time.delta_secs();
+    let mut translation = camera_transform.translation;
+
+    if keyboard_input.pressed(KeyCode::KeyW) {
+        translation += camera_transform.forward() * speed;
+    }
+    if keyboard_input.pressed(KeyCode::KeyS) {
+        translation -= camera_transform.forward() * speed;
+    }
+    if keyboard_input.pressed(KeyCode::KeyA) {
+        translation -= camera_transform.right() * speed;
+    }
+    if keyboard_input.pressed(KeyCode::KeyD) {
+        translation += camera_transform.right() * speed;
+    }
+    if keyboard_input.pressed(KeyCode::Space) {
+        translation += Vec3::Y * speed;
+    }
+    if keyboard_input.pressed(KeyCode::ShiftLeft) {
+        translation -= Vec3::Y * speed;
+    }
+
+    if mouse_motion.pressed(MouseButton::Right) {
+        let delta: Vec2 = mouse_events.read().map(|e| e.delta).sum();
+        let yaw = -delta.x * 0.002;
+        let pitch = -delta.y * 0.002;
+
+        camera_transform.rotate(Quat::from_axis_angle(Vec3::Y, yaw));
+        let right = camera_transform.right().into();
+        camera_transform.rotate(Quat::from_axis_angle(right, pitch));
+    }
+
+    camera_transform.translation = translation;
 }
