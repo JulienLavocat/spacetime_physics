@@ -1,6 +1,5 @@
 use std::fmt::Display;
 
-use log::debug;
 use spacetimedb::SpacetimeType;
 
 use crate::math::{Transform, Vec3};

@@ -56,17 +56,13 @@ pub struct RigidBody {
     #[auto_inc]
     pub id: u64,
     #[index(btree)]
-    pub world_id: u64, // Foreign key to PhysicsWorld
+    pub world_id: u64,
     pub transform: Transform,
     pub velocity: Vec3,
     pub force: Vec3,
     pub mass: f32,
-    pub inv_mass: f32,
-    pub restitution: f32,
     pub collider: Collider,
-    pub last_contact_normal: Option<Vec3>,
-    pub is_sleeping: bool,
-    pub sleep_timer: f32,
+    pub inv_mass: f32,
 }
 
 impl RigidBody {
@@ -87,10 +83,6 @@ impl RigidBody {
             mass,
             collider,
             inv_mass: if mass > 0.0 { 1.0 / mass } else { 0.0 },
-            restitution: 0.0,
-            last_contact_normal: None,
-            is_sleeping: false,
-            sleep_timer: 0.0,
         }
     }
 
