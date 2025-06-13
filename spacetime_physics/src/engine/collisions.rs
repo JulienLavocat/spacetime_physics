@@ -1,5 +1,6 @@
 use std::fmt::Display;
 
+use log::debug;
 use spacetimedb::SpacetimeType;
 
 use crate::math::{Transform, Vec3};
@@ -131,30 +132,38 @@ fn test_sphere_sphere(a_pos: Vec3, r_a: f32, b_pos: Vec3, r_b: f32) -> Option<Co
     }
 }
 
-fn test_sphere_plane(
+pub fn test_sphere_plane(
     center: Vec3,
     radius: f32,
     normal: Vec3,
     distance: f32,
 ) -> Option<CollisionPoints> {
+    // Compute signed distance from sphere center to the plane
     let signed_dist = center.dot(normal) - distance;
+
+    // Penetration depth is how far the sphere overlaps the plane
     let depth = radius - signed_dist;
 
-    if depth > 0.0 {
-        let normal = if signed_dist < 0.0 { -normal } else { normal };
-
-        let a_point = center - normal * radius; // Point on sphere surface
-        let b_point = center - normal * signed_dist; // Closest point on plane
-
-        Some(CollisionPoints {
-            a: a_point,
-            b: b_point,
-            normal,
-            depth,
-        })
-    } else {
-        None
+    // No collision if sphere is completely above the plane
+    if depth < 0.0 {
+        return None;
     }
+
+    // Ensure normal always points from sphere toward plane
+    let contact_normal = if signed_dist < 0.0 { -normal } else { normal };
+
+    // Point on the sphere in contact with the plane
+    let a_point = center - contact_normal * radius;
+
+    // Closest point on the plane (along normal direction)
+    let b_point = center - contact_normal * signed_dist;
+
+    Some(CollisionPoints {
+        a: a_point,
+        b: b_point,
+        normal: contact_normal,
+        depth,
+    })
 }
 
 fn test_plane_sphere(

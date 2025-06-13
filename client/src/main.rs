@@ -90,7 +90,7 @@ fn setup(mut commands: Commands) {
             shadows_enabled: true,
             ..default()
         },
-        Transform::from_xyz(5.0, 10.0, 5.0),
+        Transform::from_xyz(5.0, 10.0, 5.0).looking_at(Vec3::ZERO, Vec3::Y),
     ));
 }
 
@@ -114,36 +114,41 @@ fn on_rigid_body_inserted(
         let body = event.row.clone();
 
         let (mesh, material) = match body.collider {
-            Collider::Plane(_) => {
+            Collider::Plane(plane) => {
                 // Planes are not rendered, so we return None
-                info!("Inserting plane collider: {:?}", body);
                 let material = materials.add(StandardMaterial {
                     base_color: GRAY.into(),
                     ..default()
                 });
                 let mesh = meshes.add(Mesh::from(Plane3d {
-                    normal: Dir3::Y,
+                    normal: Dir3::from_xyz(plane.normal.x, plane.normal.y, plane.normal.z).unwrap(),
                     half_size: Vec2::new(100.0, 100.0),
                 }));
 
                 (Some(mesh), Some(material))
             }
-            Collider::Sphere(_) => {
-                info!("Inserting sphere collider: {:?}", body);
+            Collider::Sphere(sphere) => {
                 let material = Some(materials.add(StandardMaterial {
                     base_color: RED.into(),
                     ..default()
                 }));
-                let mesh = Some(meshes.add(Sphere::default()));
+                let mesh = Some(meshes.add(Sphere::new(sphere.radius)));
                 (mesh, material)
             }
         };
 
         let pos = event.row.transform.position.clone();
+        let scale = event.row.transform.scale.clone();
+        let rotation = event.row.transform.rotation.clone();
+
         let entity = commands
             .spawn((
                 Name::from(format!("RigidBody#{}", event.row.id)),
-                Transform::from_xyz(pos.x, pos.y, pos.z),
+                Transform::from_xyz(pos.x, pos.y, pos.z)
+                    .with_rotation(Quat::from_xyzw(
+                        rotation.x, rotation.y, rotation.z, rotation.w,
+                    ))
+                    .with_scale(Vec3::new(scale.x, scale.y, scale.z)),
             ))
             .id();
 
@@ -171,6 +176,7 @@ fn on_rigid_body_updated(
             commands
                 .entity(entity)
                 .insert(Transform::from_xyz(pos.x, pos.y, pos.z));
+            println!("{}", event.new.transform.position.y);
         }
     }
 }

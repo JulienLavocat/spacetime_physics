@@ -15,6 +15,7 @@ pub struct PhysicsWorld {
     pub id: u64,
     pub scheduled_at: ScheduleAt,
     pub time_step: f32,
+    pub sub_step: u32,
     pub gravity: Vec3,
 }
 
@@ -28,6 +29,7 @@ impl PhysicsWorld {
             id: 0,
             scheduled_at,
             time_step: 1.0 / tps,
+            sub_step: 4,
             gravity,
         }
     }
@@ -62,6 +64,9 @@ pub struct RigidBody {
     pub inv_mass: f32,
     pub restitution: f32,
     pub collider: Collider,
+    pub last_contact_normal: Option<Vec3>,
+    pub is_sleeping: bool,
+    pub sleep_timer: f32,
 }
 
 impl RigidBody {
@@ -83,6 +88,9 @@ impl RigidBody {
             collider,
             inv_mass: if mass > 0.0 { 1.0 / mass } else { 0.0 },
             restitution: 0.0,
+            last_contact_normal: None,
+            is_sleeping: false,
+            sleep_timer: 0.0,
         }
     }
 

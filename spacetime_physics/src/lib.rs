@@ -13,6 +13,16 @@ fn init(ctx: &ReducerContext) {
         .insert(ctx)
         .id;
 
+    // RigidBody::new(
+    //     world_id,
+    //     Transform::from_xyz(0.0, 50.0, 0.0),
+    //     Vec3::ZERO,
+    //     Vec3::ZERO,
+    //     1.0,
+    //     Collider::sphere(2.0),
+    // )
+    // .insert(ctx);
+
     RigidBody::new(
         world_id,
         Transform::from_xyz(0.0, 10.0, 0.0),

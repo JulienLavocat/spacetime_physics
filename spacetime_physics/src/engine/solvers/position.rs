@@ -1,13 +1,20 @@
 use log::debug;
 
-use crate::{engine::collisions::Collision, tables::RigidBody};
+use crate::{
+    engine::collisions::Collision,
+    tables::{PhysicsWorld, RigidBody},
+};
+
+use super::Solver;
+
+const MAX_CORRECTION: f32 = 0.1;
 
 pub struct PositionSolver;
 
-impl PositionSolver {
-    pub fn solve(collisions: &[Collision], bodies: &mut [RigidBody]) {
+impl Solver for PositionSolver {
+    fn solve(_: &PhysicsWorld, collisions: &[Collision], bodies: &mut [RigidBody], _: f32) {
         let percent = 0.8; // typically 0.2 - 0.8: how aggressive the correction is
-        let slop = 0.01; // penetration tolerance to prevent jitter
+        let slop = 0.02; // penetration tolerance to prevent jitter
 
         for collision in collisions {
             let (a, b) = super::get_bodies_mut(collision.a, collision.b, bodies);
@@ -17,12 +24,12 @@ impl PositionSolver {
                 continue; // static/static, nothing to resolve
             }
 
-            let depth = (collision.points.depth - slop).max(0.0);
+            let depth = (collision.points.depth - slop).clamp(0.0, MAX_CORRECTION);
             let correction = collision.points.normal * (depth / inv_mass_sum) * percent;
 
             debug!(
-                "Position correction: a={}, b={}, depth={}, correction={:?}",
-                a.id, b.id, depth, correction
+                "Body {} penetration depth: {}, contact normal: {:?}, position: {:?}",
+                a.id, depth, collision.points.normal, a.transform.position
             );
 
             if a.inv_mass > 0.0 {

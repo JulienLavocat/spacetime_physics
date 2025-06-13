@@ -61,6 +61,10 @@ impl Vec3 {
     pub fn dot(self, other: Self) -> f32 {
         self.x * other.x + self.y * other.y + self.z * other.z
     }
+
+    pub fn length_squared(self) -> f32 {
+        self.x * self.x + self.y * self.y + self.z * self.z
+    }
 }
 
 impl Add for Vec3 {

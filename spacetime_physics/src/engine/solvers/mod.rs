@@ -1,4 +1,4 @@
-use crate::tables::RigidBody;
+use crate::tables::{PhysicsWorld, RigidBody};
 
 use super::collisions::Collision;
 
@@ -6,7 +6,12 @@ pub(crate) mod impulse;
 pub(crate) mod position;
 
 pub(crate) trait Solver {
-    fn solve(collisions: &[Collision], bodies: &mut [RigidBody], delta_time: f32);
+    fn solve(
+        world: &PhysicsWorld,
+        collisions: &[Collision],
+        bodies: &mut [RigidBody],
+        delta_time: f32,
+    );
 }
 
 pub(crate) fn get_bodies_mut(
