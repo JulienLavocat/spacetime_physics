@@ -17,9 +17,8 @@ pub struct RigidBody {
     pub velocity: Vec3,
     pub force: Vec3,
     pub mass: f32,
-    pub inv_mass: f32,
-    pub restitution: f32,
     pub collider: Collider,
+    pub inv_mass: f32,
 }
 
 impl __sdk::InModule for RigidBody {
