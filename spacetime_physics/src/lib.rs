@@ -1,23 +1,31 @@
-use collisions::Collider;
+use engine::collisions::Collider;
 use math::{Transform, Vec3};
 use spacetimedb::{reducer, ReducerContext};
 use tables::{PhysicsWorld, RigidBody};
 
-pub mod collisions;
 mod engine;
 pub mod math;
 pub mod tables;
-mod tmp;
 
 #[reducer(init)]
 fn init(ctx: &ReducerContext) {
-    let world_id = PhysicsWorld::new(10.0, Vec3::new(0.0, -9.81, 0.0))
+    let world_id = PhysicsWorld::new(60.0, Vec3::new(0.0, -9.81, 0.0))
         .insert(ctx)
         .id;
 
+    // RigidBody::new(
+    //     world_id,
+    //     Transform::from_xyz(0.0, 50.0, 0.0),
+    //     Vec3::ZERO,
+    //     Vec3::ZERO,
+    //     1.0,
+    //     Collider::sphere(2.0),
+    // )
+    // .insert(ctx);
+
     RigidBody::new(
         world_id,
-        Transform::IDENTITY,
+        Transform::from_xyz(0.0, 10.0, 0.0),
         Vec3::ZERO,
         Vec3::ZERO,
         1.0,

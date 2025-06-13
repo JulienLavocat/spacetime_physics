@@ -4,7 +4,7 @@ use spacetimedb::SpacetimeType;
 
 use super::{quat::Quat, vec3::Vec3};
 
-#[derive(SpacetimeType, Clone, Debug, PartialEq, Default)]
+#[derive(SpacetimeType, Clone, Copy, Debug, PartialEq, Default)]
 pub struct Transform {
     pub position: Vec3,
     pub rotation: Quat,

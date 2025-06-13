@@ -1,21 +1,22 @@
 use std::fmt::Display;
 
+use log::debug;
 use spacetimedb::SpacetimeType;
 
 use crate::math::{Transform, Vec3};
 
-#[derive(SpacetimeType, Clone, Debug, PartialEq, Default)]
+#[derive(SpacetimeType, Clone, Copy, Debug, PartialEq, Default)]
 pub struct Plane {
     pub normal: Vec3,
     pub distance: f32,
 }
 
-#[derive(SpacetimeType, Clone, Debug, PartialEq, Default)]
+#[derive(SpacetimeType, Clone, Copy, Debug, PartialEq, Default)]
 pub struct Sphere {
     pub radius: f32,
 }
 
-#[derive(SpacetimeType, Clone, Debug, PartialEq)]
+#[derive(SpacetimeType, Clone, Copy, Debug, PartialEq)]
 pub enum Collider {
     Sphere(Sphere),
     Plane(Plane),
@@ -91,6 +92,7 @@ impl CollisionPoints {
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Collision {
+    pub world_id: u64, // The ID of the physics world this collision occurred in
     /// The ID of the first rigid body involved in the collision
     pub a: u64,
     /// The ID of the second rigid body involved in the collision
@@ -130,28 +132,38 @@ fn test_sphere_sphere(a_pos: Vec3, r_a: f32, b_pos: Vec3, r_b: f32) -> Option<Co
     }
 }
 
-fn test_sphere_plane(
+pub fn test_sphere_plane(
     center: Vec3,
     radius: f32,
     normal: Vec3,
     distance: f32,
 ) -> Option<CollisionPoints> {
+    // Compute signed distance from sphere center to the plane
     let signed_dist = center.dot(normal) - distance;
+
+    // Penetration depth is how far the sphere overlaps the plane
     let depth = radius - signed_dist;
 
-    if depth > 0.0 {
-        let a_point = center - normal * radius;
-        let b_point = center - normal * signed_dist;
-
-        Some(CollisionPoints {
-            a: a_point,
-            b: b_point,
-            normal,
-            depth,
-        })
-    } else {
-        None
+    // No collision if sphere is completely above the plane
+    if depth < 0.0 {
+        return None;
     }
+
+    // Ensure normal always points from sphere toward plane
+    let contact_normal = if signed_dist < 0.0 { -normal } else { normal };
+
+    // Point on the sphere in contact with the plane
+    let a_point = center - contact_normal * radius;
+
+    // Closest point on the plane (along normal direction)
+    let b_point = center - contact_normal * signed_dist;
+
+    Some(CollisionPoints {
+        a: a_point,
+        b: b_point,
+        normal: contact_normal,
+        depth,
+    })
 }
 
 fn test_plane_sphere(
@@ -161,7 +173,9 @@ fn test_plane_sphere(
     radius: f32,
 ) -> Option<CollisionPoints> {
     test_sphere_plane(center, radius, normal, distance).map(|mut col| {
-        col.normal = -col.normal; // flip direction: now from plane to sphere
+        // Flip collision normal and points
+        std::mem::swap(&mut col.a, &mut col.b);
+        col.normal = -col.normal;
         col
     })
 }
