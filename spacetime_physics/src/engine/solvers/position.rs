@@ -1,6 +1,7 @@
+use log::debug;
+
 use crate::{
     engine::collisions::Collision,
-    math::Vec3,
     tables::{PhysicsWorld, RigidBody},
 };
 
@@ -20,6 +21,11 @@ impl Solver for PositionSolver {
 
         for collision in collisions {
             let (a, b) = get_bodies_mut(collision.a, collision.b, bodies);
+
+            if a.is_sleeping && b.is_sleeping {
+                continue;
+            }
+
             let normal = collision.points.normal;
             let depth = collision.points.depth;
             let correction_depth = (depth - slop).max(0.0);
@@ -36,23 +42,10 @@ impl Solver for PositionSolver {
             a.transform.position -= correction * a_ratio;
             b.transform.position += correction * b_ratio;
 
-            // Damp bouncing at rest contact
-            if depth > slop {
-                if a.inv_mass > 0.0 && a.velocity.dot(normal) > 0.0 {
-                    a.velocity = a.velocity.project_onto_plane(normal);
-                }
-                if b.inv_mass > 0.0 && b.velocity.dot(-normal) > 0.0 {
-                    b.velocity = b.velocity.project_onto_plane(-normal);
-                }
-            }
-
-            // Optional velocity clamp to prevent micro-jitter
-            if a.inv_mass > 0.0 && a.velocity.length_squared() < 1e-4 {
-                a.velocity = Vec3::ZERO;
-            }
-            if b.inv_mass > 0.0 && b.velocity.length_squared() < 1e-4 {
-                b.velocity = Vec3::ZERO;
-            }
+            debug!(
+                "PositionSolver applied: a_position={} -> {}, b_position={} -> {} , correction={:?}",
+                a.transform.position, b.transform.position, -(correction * a_ratio), correction * b_ratio, correction
+            );
         }
     }
 }

@@ -23,6 +23,8 @@ pub struct RigidBody {
     pub inv_mass: f32,
     pub restitution: f32,
     pub friction: f32,
+    pub is_sleeping: bool,
+    pub sleep_timer: f32,
 }
 
 impl RigidBody {
@@ -45,6 +47,8 @@ impl RigidBody {
             inv_mass: if mass > 0.0 { 1.0 / mass } else { 0.0 },
             restitution: 0.0,
             friction: 0.5,
+            is_sleeping: false,
+            sleep_timer: 0.0,
         }
     }
 

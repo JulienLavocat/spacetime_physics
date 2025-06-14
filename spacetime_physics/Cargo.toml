@@ -11,3 +11,4 @@ crate-type = ["cdylib"]
 [dependencies]
 spacetimedb = { version = "1.1.2", features = ["unstable"] }
 log = "0.4"
+parry3d = "0.21.1"

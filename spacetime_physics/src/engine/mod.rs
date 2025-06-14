@@ -20,14 +20,17 @@ pub fn step_world(ctx: &ReducerContext, world: &PhysicsWorld) {
         .collect::<Vec<_>>();
     bodies.sort_by_key(|body| body.id);
     let bodies = bodies.as_mut_slice();
+    debug!("--------------------------------");
 
     run_step(bodies, world, world.time_step);
 
     for body in bodies {
-        debug!(
-            "Updating body {}: position = {:?}, velocity = {:?}, force = {:?}",
-            body.id, body.transform.position, body.velocity, body.force
-        );
+        if body.id == 1 {
+            debug!(
+                "Updating body {}: position = {:?}, velocity = {:?}, force = {:?}",
+                body.id, body.transform.position, body.velocity, body.force
+            );
+        }
         body.update(ctx);
     }
 }
@@ -35,6 +38,7 @@ pub fn step_world(ctx: &ReducerContext, world: &PhysicsWorld) {
 fn run_step(bodies: &mut [RigidBody], world: &PhysicsWorld, delta_time: f32) {
     apply_forces(world, bodies);
     integrate_velocity(bodies, delta_time);
+    check_sleeping(world, bodies, delta_time);
 
     let collisions = detect_collisions(bodies);
     for collision in &collisions {
@@ -51,7 +55,7 @@ fn run_step(bodies: &mut [RigidBody], world: &PhysicsWorld, delta_time: f32) {
 
 fn apply_forces(world: &PhysicsWorld, bodies: &mut [RigidBody]) {
     for body in bodies {
-        if body.inv_mass == 0.0 {
+        if body.inv_mass == 0.0 || body.is_sleeping {
             continue; // Skip static or sleeping bodies
         }
 
@@ -65,7 +69,7 @@ fn apply_forces(world: &PhysicsWorld, bodies: &mut [RigidBody]) {
 
 fn integrate_velocity(bodies: &mut [RigidBody], delta_time: f32) {
     for body in bodies {
-        if body.inv_mass == 0.0 {
+        if body.inv_mass == 0.0 || body.is_sleeping {
             continue; // Skip static or sleeping bodies
         }
 
@@ -73,10 +77,12 @@ fn integrate_velocity(bodies: &mut [RigidBody], delta_time: f32) {
         body.velocity += acceleration * delta_time;
 
         body.force = Vec3::ZERO;
-        debug!(
+        if body.id == 1 {
+            debug!(
             "Integrating velocity for body {}: force = {:?}, inv_mass = {}, delta_time = {}, new_velocity = {:?}",
             body.id, body.force, body.inv_mass, delta_time, body.velocity
         );
+        }
     }
 }
 
@@ -87,6 +93,10 @@ fn detect_collisions(bodies: &[RigidBody]) -> Vec<Collision> {
         for b in bodies.iter().skip(i + 1) {
             if a.id == b.id {
                 continue; // Skip self-collision and different worlds
+            }
+
+            if a.is_sleeping && b.is_sleeping {
+                continue;
             }
 
             if let Some(collision) =
@@ -107,15 +117,37 @@ fn detect_collisions(bodies: &[RigidBody]) -> Vec<Collision> {
 
 fn integrate_position(bodies: &mut [RigidBody], delta_time: f32) {
     for body in bodies {
-        if body.inv_mass == 0.0 {
+        if body.inv_mass == 0.0 || body.is_sleeping {
             continue; // Skip static or sleeping bodies
         }
 
-        debug!(
-            "Integrating position for body {} at {}: velocity = {:?}, delta_time = {}",
-            body.id, body.transform.position, body.velocity, delta_time
-        );
+        if body.id == 1 {
+            debug!(
+                "Integrating position for body {} at {}: velocity = {:?}, delta_time = {}",
+                body.id, body.transform.position, body.velocity, delta_time
+            );
+        }
 
         body.transform.position += body.velocity * delta_time;
+    }
+}
+
+fn check_sleeping(world: &PhysicsWorld, bodies: &mut [RigidBody], delta_time: f32) {
+    for body in bodies {
+        if body.inv_mass == 0.0 || body.is_sleeping {
+            continue; // Skip static or sleeping bodies
+        }
+
+        if body.velocity.length_squared() < world.sleep_threshold {
+            body.sleep_timer += delta_time;
+            if body.sleep_timer >= world.sleep_time {
+                // Sleep after 1 second of inactivity
+                body.is_sleeping = true;
+                body.velocity = Vec3::ZERO; // Stop movement
+                debug!("Body {} is now sleeping", body.id);
+            }
+        } else {
+            body.sleep_timer = 0.0; // Reset sleep timer if moving
+        }
     }
 }
