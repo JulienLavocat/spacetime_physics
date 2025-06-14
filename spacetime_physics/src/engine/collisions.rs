@@ -78,12 +78,20 @@ impl CollisionPoints {
                 Collider::Sphere(Sphere { radius: r_a }),
                 Collider::Sphere(Sphere { radius: r_b }),
             ) => test_sphere_sphere(a_transform.position, *r_a, b_transform.position, *r_b),
-            (Collider::Sphere(Sphere { radius }), Collider::Plane(Plane { normal, distance })) => {
-                test_sphere_plane(a_transform.position, *radius, *normal, *distance)
-            }
-            (Collider::Plane(Plane { normal, distance }), Collider::Sphere(Sphere { radius })) => {
-                test_plane_sphere(*normal, *distance, b_transform.position, *radius)
-            }
+            (
+                Collider::Sphere(Sphere { radius }),
+                Collider::Plane(Plane {
+                    normal,
+                    distance: _,
+                }),
+            ) => test_sphere_plane(a_transform.position, *radius, b_transform.position, *normal),
+            (
+                Collider::Plane(Plane {
+                    normal,
+                    distance: _,
+                }),
+                Collider::Sphere(Sphere { radius }),
+            ) => test_plane_sphere(a_transform.position, *normal, b_transform.position, *radius),
             _ => panic!("Unsupported collider combination: {} vs {}", a, b),
         }
     }
@@ -132,46 +140,41 @@ fn test_sphere_sphere(a_pos: Vec3, r_a: f32, b_pos: Vec3, r_b: f32) -> Option<Co
 }
 
 pub fn test_sphere_plane(
-    center: Vec3,
-    radius: f32,
-    normal: Vec3,
-    distance: f32,
+    sphere_center: Vec3,
+    sphere_radius: f32,
+    plane_point: Vec3,
+    plane_normal: Vec3,
 ) -> Option<CollisionPoints> {
-    // Compute signed distance from sphere center to the plane
-    let signed_dist = center.dot(normal) - distance;
+    // Signed distance from sphere center to the plane
+    let dist = (sphere_center - plane_point).dot(plane_normal);
 
-    // Penetration depth is how far the sphere overlaps the plane
-    let depth = radius - signed_dist;
+    // Positive = above plane, Negative = penetrating
+    let penetration = sphere_radius - dist;
 
-    // No collision if sphere is completely above the plane
-    if depth < 0.0 {
-        return None;
+    if penetration > 0.0 {
+        // Contact point on sphere surface (along plane normal)
+        let contact_point_sphere = sphere_center - plane_normal * sphere_radius;
+        // Closest point on the plane (projected point)
+        let contact_point_plane = contact_point_sphere + plane_normal * penetration;
+
+        Some(CollisionPoints {
+            a: contact_point_sphere,
+            b: contact_point_plane,
+            normal: plane_normal,
+            depth: penetration,
+        })
+    } else {
+        None
     }
-
-    // Ensure normal always points from sphere toward plane
-    let contact_normal = if signed_dist < 0.0 { -normal } else { normal };
-
-    // Point on the sphere in contact with the plane
-    let a_point = center - contact_normal * radius;
-
-    // Closest point on the plane (along normal direction)
-    let b_point = center - contact_normal * signed_dist;
-
-    Some(CollisionPoints {
-        a: a_point,
-        b: b_point,
-        normal: contact_normal,
-        depth,
-    })
 }
 
 fn test_plane_sphere(
-    normal: Vec3,
-    distance: f32,
-    center: Vec3,
-    radius: f32,
+    plane_point: Vec3,
+    plane_normal: Vec3,
+    sphere_center: Vec3,
+    sphere_radius: f32,
 ) -> Option<CollisionPoints> {
-    test_sphere_plane(center, radius, normal, distance).map(|mut col| {
+    test_sphere_plane(sphere_center, sphere_radius, plane_point, plane_normal).map(|mut col| {
         // Flip collision normal and points
         std::mem::swap(&mut col.a, &mut col.b);
         col.normal = -col.normal;

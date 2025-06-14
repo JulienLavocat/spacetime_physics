@@ -1,3 +1,5 @@
+use log::debug;
+
 use crate::{
     engine::collisions::Collision,
     tables::{PhysicsWorld, RigidBody},
@@ -16,6 +18,10 @@ impl ImpulseSolver {
     ) {
         for collision in collisions {
             let (a, b) = get_bodies_mut(collision.a, collision.b, bodies);
+
+            if a.is_sleeping && b.is_sleeping {
+                continue;
+            }
 
             let normal = collision.points.normal;
             let relative_velocity = b.velocity - a.velocity;
@@ -51,6 +57,9 @@ impl ImpulseSolver {
 
             a.velocity -= friction_impulse * a.inv_mass;
             b.velocity += friction_impulse * b.inv_mass;
+
+            debug!("ImpulseSolver applied: a_velocity={:?}, b_velocity={:?}, impulse={:?}, friction_impulse={:?}",
+                   a.velocity, b.velocity, impulse, friction_impulse);
         }
     }
 }
