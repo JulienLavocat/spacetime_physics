@@ -3,6 +3,10 @@ use std::{
     ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign},
 };
 
+use parry3d::{
+    math::{Point, Vector},
+    na::Unit,
+};
 use spacetimedb::SpacetimeType;
 
 #[derive(SpacetimeType, Default, Debug, Clone, Copy, PartialEq)]
@@ -100,6 +104,49 @@ impl Vec3 {
         let z =
             self.x * matrix[2][0] + self.y * matrix[2][1] + self.z * matrix[2][2] + matrix[2][3];
         Self { x, y, z }
+    }
+}
+
+impl From<Vec3> for parry3d::na::Vector3<f32> {
+    fn from(value: Vec3) -> Self {
+        parry3d::na::Vector3::new(value.x, value.y, value.z)
+    }
+}
+
+impl From<parry3d::na::Vector3<f32>> for Vec3 {
+    fn from(value: parry3d::na::Vector3<f32>) -> Self {
+        Self {
+            x: value.x,
+            y: value.y,
+            z: value.z,
+        }
+    }
+}
+
+impl From<Vec3> for Unit<Vector<f32>> {
+    fn from(value: Vec3) -> Self {
+        let vec = parry3d::na::Vector3::new(value.x, value.y, value.z);
+        Unit::new_normalize(vec)
+    }
+}
+
+impl From<Unit<Vector<f32>>> for Vec3 {
+    fn from(value: Unit<Vector<f32>>) -> Self {
+        Self {
+            x: value.x,
+            y: value.y,
+            z: value.z,
+        }
+    }
+}
+
+impl From<Point<f32>> for Vec3 {
+    fn from(p: Point<f32>) -> Self {
+        Self {
+            x: p.x,
+            y: p.y,
+            z: p.z,
+        }
     }
 }
 

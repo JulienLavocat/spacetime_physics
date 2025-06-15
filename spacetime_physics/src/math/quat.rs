@@ -1,5 +1,6 @@
 use std::{fmt::Display, ops::Mul};
 
+use parry3d::na::Unit;
 use spacetimedb::SpacetimeType;
 
 use super::Vec3;
@@ -22,6 +23,24 @@ impl Quat {
 
     pub fn new(x: f32, y: f32, z: f32, w: f32) -> Self {
         Self { x, y, z, w }
+    }
+}
+
+impl From<Quat> for Unit<parry3d::na::Quaternion<f32>> {
+    fn from(q: Quat) -> Self {
+        let quat = parry3d::na::Quaternion::new(q.w, q.x, q.y, q.z);
+        Unit::new_normalize(quat)
+    }
+}
+
+impl From<parry3d::na::Quaternion<f32>> for Quat {
+    fn from(q: parry3d::na::Quaternion<f32>) -> Self {
+        Self {
+            x: q.i,
+            y: q.j,
+            z: q.k,
+            w: q.w,
+        }
     }
 }
 

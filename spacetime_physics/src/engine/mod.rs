@@ -9,6 +9,7 @@ use crate::{
 };
 
 pub mod collisions;
+pub mod collisions2;
 mod solvers;
 
 pub fn step_world(ctx: &ReducerContext, world: &PhysicsWorld) {

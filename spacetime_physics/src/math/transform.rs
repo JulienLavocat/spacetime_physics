@@ -1,5 +1,6 @@
 use std::fmt::Display;
 
+use parry3d::{math::Isometry, na::Translation3};
 use spacetimedb::SpacetimeType;
 
 use super::{quat::Quat, vec3::Vec3};
@@ -32,6 +33,13 @@ impl Transform {
             rotation: Quat::ZERO,
             scale: Vec3::ONE,
         }
+    }
+}
+
+impl From<&Transform> for Isometry<f32> {
+    fn from(t: &Transform) -> Self {
+        let translation = Translation3::new(t.position.x, t.position.y, t.position.z);
+        Isometry::from_parts(translation, t.rotation.into())
     }
 }
 
