@@ -37,6 +37,14 @@ impl Vec3 {
         Self { x, y, z }
     }
 
+    pub fn splat(value: f32) -> Self {
+        Self {
+            x: value,
+            y: value,
+            z: value,
+        }
+    }
+
     pub fn length(self) -> f32 {
         (self.x * self.x + self.y * self.y + self.z * self.z).sqrt()
     }
@@ -71,11 +79,13 @@ impl Vec3 {
         }
     }
 
-    pub fn dot(self, other: Self) -> f32 {
+    pub fn dot(self, other: impl Into<Self>) -> f32 {
+        let other = other.into();
         self.x * other.x + self.y * other.y + self.z * other.z
     }
 
-    pub fn cross(self, other: Self) -> Self {
+    pub fn cross(self, other: impl Into<Self>) -> Self {
+        let other = other.into();
         Self {
             x: self.y * other.z - self.z * other.y,
             y: self.z * other.x - self.x * other.z,
@@ -104,6 +114,12 @@ impl Vec3 {
         let z =
             self.x * matrix[2][0] + self.y * matrix[2][1] + self.z * matrix[2][2] + matrix[2][3];
         Self { x, y, z }
+    }
+}
+
+impl From<&Vec3> for Vec3 {
+    fn from(value: &Vec3) -> Self {
+        *value
     }
 }
 
@@ -386,6 +402,18 @@ impl Mul<f32> for Vec3 {
     }
 }
 
+impl Mul<&Vec3> for f32 {
+    type Output = Vec3;
+
+    fn mul(self, rhs: &Vec3) -> Self::Output {
+        Vec3 {
+            x: self * rhs.x,
+            y: self * rhs.y,
+            z: self * rhs.z,
+        }
+    }
+}
+
 impl MulAssign<f32> for Vec3 {
     fn mul_assign(&mut self, rhs: f32) {
         self.x *= rhs;
@@ -411,6 +439,26 @@ impl DivAssign<f32> for Vec3 {
         self.x /= rhs;
         self.y /= rhs;
         self.z /= rhs;
+    }
+}
+
+impl Mul<Vec3> for f32 {
+    type Output = Vec3;
+
+    fn mul(self, rhs: Vec3) -> Self::Output {
+        Vec3 {
+            x: self * rhs.x,
+            y: self * rhs.y,
+            z: self * rhs.z,
+        }
+    }
+}
+
+impl MulAssign<f32> for &mut Vec3 {
+    fn mul_assign(&mut self, rhs: f32) {
+        self.x *= rhs;
+        self.y *= rhs;
+        self.z *= rhs;
     }
 }
 

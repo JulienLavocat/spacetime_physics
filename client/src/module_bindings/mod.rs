@@ -5,6 +5,7 @@
 use spacetimedb_sdk::__codegen::{self as __sdk, __lib, __sats, __ws};
 
 pub mod collider_type;
+pub mod mat_3_type;
 pub mod physics_rigid_bodies_table;
 pub mod physics_step_world_reducer;
 pub mod physics_world_table;
@@ -13,10 +14,10 @@ pub mod plane_type;
 pub mod quat_type;
 pub mod rigid_body_type;
 pub mod sphere_type;
-pub mod transform_type;
 pub mod vec_3_type;
 
 pub use collider_type::Collider;
+pub use mat_3_type::Mat3;
 pub use physics_rigid_bodies_table::*;
 pub use physics_step_world_reducer::{
     physics_step_world, set_flags_for_physics_step_world, PhysicsStepWorldCallbackId,
@@ -27,7 +28,6 @@ pub use plane_type::Plane;
 pub use quat_type::Quat;
 pub use rigid_body_type::RigidBody;
 pub use sphere_type::Sphere;
-pub use transform_type::Transform;
 pub use vec_3_type::Vec3;
 
 #[derive(Clone, PartialEq, Debug)]
