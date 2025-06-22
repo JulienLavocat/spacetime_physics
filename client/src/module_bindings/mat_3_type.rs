@@ -4,17 +4,20 @@
 #![allow(unused, clippy::all)]
 use spacetimedb_sdk::__codegen::{self as __sdk, __lib, __sats, __ws};
 
-use super::quat_type::Quat;
-use super::vec_3_type::Vec3;
-
 #[derive(__lib::ser::Serialize, __lib::de::Deserialize, Clone, PartialEq, Debug)]
 #[sats(crate = __lib)]
-pub struct Transform {
-    pub position: Vec3,
-    pub rotation: Quat,
-    pub scale: Vec3,
+pub struct Mat3 {
+    pub m_11: f32,
+    pub m_12: f32,
+    pub m_13: f32,
+    pub m_21: f32,
+    pub m_22: f32,
+    pub m_23: f32,
+    pub m_31: f32,
+    pub m_32: f32,
+    pub m_33: f32,
 }
 
-impl __sdk::InModule for Transform {
+impl __sdk::InModule for Mat3 {
     type Module = super::RemoteModule;
 }

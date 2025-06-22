@@ -137,18 +137,15 @@ fn on_rigid_body_inserted(
             }
         };
 
-        let pos = event.row.transform.position.clone();
-        let scale = event.row.transform.scale.clone();
-        let rotation = event.row.transform.rotation.clone();
+        let pos = event.row.position.clone();
+        let rotation = event.row.rotation.clone();
 
         let entity = commands
             .spawn((
                 Name::from(format!("RigidBody#{}", event.row.id)),
-                Transform::from_xyz(pos.x, pos.y, pos.z)
-                    .with_rotation(Quat::from_xyzw(
-                        rotation.x, rotation.y, rotation.z, rotation.w,
-                    ))
-                    .with_scale(Vec3::new(scale.x, scale.y, scale.z)),
+                Transform::from_xyz(pos.x, pos.y, pos.z).with_rotation(Quat::from_xyzw(
+                    rotation.x, rotation.y, rotation.z, rotation.w,
+                )),
             ))
             .id();
 
@@ -172,11 +169,11 @@ fn on_rigid_body_updated(
 ) {
     for event in events.read() {
         if let Some(entity) = rigid_bodies.get(event.new.id) {
-            let pos = event.new.transform.position.clone();
+            let pos = event.new.position.clone();
             commands
                 .entity(entity)
                 .insert(Transform::from_xyz(pos.x, pos.y, pos.z));
-            println!("{}", event.new.transform.position.y);
+            println!("{}", event.new.position.y);
         }
     }
 }

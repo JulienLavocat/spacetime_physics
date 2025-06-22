@@ -5,7 +5,8 @@
 use spacetimedb_sdk::__codegen::{self as __sdk, __lib, __sats, __ws};
 
 use super::collider_type::Collider;
-use super::transform_type::Transform;
+use super::mat_3_type::Mat3;
+use super::quat_type::Quat;
 use super::vec_3_type::Vec3;
 
 #[derive(__lib::ser::Serialize, __lib::de::Deserialize, Clone, PartialEq, Debug)]
@@ -13,16 +14,17 @@ use super::vec_3_type::Vec3;
 pub struct RigidBody {
     pub id: u64,
     pub world_id: u64,
-    pub transform: Transform,
+    pub position: Vec3,
+    pub rotation: Quat,
     pub velocity: Vec3,
+    pub angular_velocity: Vec3,
+    pub inertia_tensor: Mat3,
+    pub inv_inertia_tensor: Option<Mat3>,
     pub force: Vec3,
     pub mass: f32,
     pub collider: Collider,
     pub inv_mass: f32,
-    pub restitution: f32,
-    pub friction: f32,
-    pub is_sleeping: bool,
-    pub sleep_timer: f32,
+    pub torque: Vec3,
 }
 
 impl __sdk::InModule for RigidBody {

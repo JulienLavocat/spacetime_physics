@@ -3,8 +3,9 @@
 
 #![allow(unused, clippy::all)]
 use super::collider_type::Collider;
+use super::mat_3_type::Mat3;
+use super::quat_type::Quat;
 use super::rigid_body_type::RigidBody;
-use super::transform_type::Transform;
 use super::vec_3_type::Vec3;
 use spacetimedb_sdk::__codegen::{self as __sdk, __lib, __sats, __ws};
 

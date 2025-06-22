@@ -14,6 +14,7 @@ pub struct PhysicsWorld {
     pub sub_step: u32,
     pub gravity: Vec3,
     pub precision: f32,
+    pub position_iterations: u32,
 }
 
 impl PhysicsWorld {
@@ -26,9 +27,10 @@ impl PhysicsWorld {
             id: 0,
             scheduled_at,
             time_step: 1.0 / tps,
-            sub_step: 4,
+            sub_step: 10,
             gravity,
             precision: 1e-3,
+            position_iterations: 1,
         }
     }
 

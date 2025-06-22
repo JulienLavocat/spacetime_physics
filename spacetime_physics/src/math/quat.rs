@@ -1,6 +1,8 @@
-use std::{fmt::Display, ops::Mul};
+use std::{
+    fmt::Display,
+    ops::{Add, AddAssign, Mul, Sub, SubAssign},
+};
 
-use parry3d::na::Unit;
 use spacetimedb::SpacetimeType;
 
 use super::Vec3;
@@ -18,29 +20,71 @@ impl Quat {
         x: 0.0,
         y: 0.0,
         z: 0.0,
+        w: 0.0,
+    };
+    pub const IDENTITY: Self = Self {
+        x: 0.0,
+        y: 0.0,
+        z: 0.0,
         w: 1.0,
     };
 
     pub fn new(x: f32, y: f32, z: f32, w: f32) -> Self {
         Self { x, y, z, w }
     }
-}
 
-impl From<Quat> for Unit<parry3d::na::Quaternion<f32>> {
-    fn from(q: Quat) -> Self {
-        let quat = parry3d::na::Quaternion::new(q.w, q.x, q.y, q.z);
-        Unit::new_normalize(quat)
-    }
-}
-
-impl From<parry3d::na::Quaternion<f32>> for Quat {
-    fn from(q: parry3d::na::Quaternion<f32>) -> Self {
+    pub fn from_xyz(vec: Vec3, w: f32) -> Self {
         Self {
-            x: q.i,
-            y: q.j,
-            z: q.k,
-            w: q.w,
+            x: vec.x,
+            y: vec.y,
+            z: vec.z,
+            w,
         }
+    }
+
+    pub fn normalize(self) -> Self {
+        let len = (self.x * self.x + self.y * self.y + self.z * self.z + self.w * self.w).sqrt();
+        if len == 0.0 {
+            return Self::ZERO;
+        }
+        Self {
+            x: self.x / len,
+            y: self.y / len,
+            z: self.z / len,
+            w: self.w / len,
+        }
+    }
+
+    pub fn inverse(&self) -> Self {
+        let len_squared = self.x * self.x + self.y * self.y + self.z * self.z + self.w * self.w;
+        if len_squared == 0.0 {
+            return Self::ZERO;
+        }
+        Self {
+            x: -self.x / len_squared,
+            y: -self.y / len_squared,
+            z: -self.z / len_squared,
+            w: self.w / len_squared,
+        }
+    }
+
+    pub fn xyz(&self) -> Vec3 {
+        Vec3::new(self.x, self.y, self.z)
+    }
+
+    pub fn rotate(&self, vec: Vec3) -> Vec3 {
+        let uv = Vec3::new(
+            self.y * vec.z - self.z * vec.y,
+            self.z * vec.x - self.x * vec.z,
+            self.x * vec.y - self.y * vec.x,
+        );
+        let uuv = Vec3::new(
+            self.y * uv.z - self.z * uv.y,
+            self.z * uv.x - self.x * uv.z,
+            self.x * uv.y - self.y * uv.x,
+        );
+
+        vec + (uv * (2.0 * self.w)) + uuv
     }
 }
 
@@ -60,6 +104,89 @@ impl Mul<Vec3> for Quat {
         );
 
         vec + (uv * (2.0 * self.w)) + uuv
+    }
+}
+
+impl Mul<Quat> for Quat {
+    type Output = Quat;
+
+    fn mul(self, other: Quat) -> Self::Output {
+        Quat {
+            x: self.w * other.x + self.x * other.w + self.y * other.z - self.z * other.y,
+            y: self.w * other.y - self.x * other.z + self.y * other.w + self.z * other.x,
+            z: self.w * other.z + self.x * other.y - self.y * other.x + self.z * other.w,
+            w: self.w * other.w - self.x * other.x - self.y * other.y - self.z * other.z,
+        }
+    }
+}
+
+impl Mul<Quat> for f32 {
+    type Output = Quat;
+
+    fn mul(self, q: Quat) -> Self::Output {
+        Quat {
+            x: self * q.x,
+            y: self * q.y,
+            z: self * q.z,
+            w: self * q.w,
+        }
+    }
+}
+
+impl Mul<f32> for Quat {
+    type Output = Quat;
+
+    fn mul(self, scalar: f32) -> Self::Output {
+        Quat {
+            x: self.x * scalar,
+            y: self.y * scalar,
+            z: self.z * scalar,
+            w: self.w * scalar,
+        }
+    }
+}
+
+impl Add for Quat {
+    type Output = Quat;
+
+    fn add(self, other: Quat) -> Self::Output {
+        Quat {
+            x: self.x + other.x,
+            y: self.y + other.y,
+            z: self.z + other.z,
+            w: self.w + other.w,
+        }
+    }
+}
+
+impl AddAssign for Quat {
+    fn add_assign(&mut self, other: Quat) {
+        self.x += other.x;
+        self.y += other.y;
+        self.z += other.z;
+        self.w += other.w;
+    }
+}
+
+impl Sub for Quat {
+    type Output = Quat;
+
+    fn sub(self, other: Quat) -> Self::Output {
+        Quat {
+            x: self.x - other.x,
+            y: self.y - other.y,
+            z: self.z - other.z,
+            w: self.w - other.w,
+        }
+    }
+}
+
+impl SubAssign for Quat {
+    fn sub_assign(&mut self, other: Quat) {
+        self.x -= other.x;
+        self.y -= other.y;
+        self.z -= other.z;
+        self.w -= other.w;
     }
 }
 

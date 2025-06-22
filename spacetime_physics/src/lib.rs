@@ -1,5 +1,5 @@
 use engine::collisions::Collider;
-use math::{Transform, Vec3};
+use math::{Quat, Vec3};
 use spacetimedb::{reducer, ReducerContext};
 use tables::{PhysicsWorld, RigidBody};
 
@@ -15,7 +15,8 @@ fn init(ctx: &ReducerContext) {
 
     // RigidBody::new(
     //     world_id,
-    //     Transform::from_xyz(0.0, 50.0, 0.0),
+    //     Vec3::new(0.0, 50.0, 0.0),
+    //     Quat::IDENTITY,
     //     Vec3::ZERO,
     //     Vec3::ZERO,
     //     1.0,
@@ -25,7 +26,8 @@ fn init(ctx: &ReducerContext) {
 
     RigidBody::new(
         world_id,
-        Transform::from_xyz(0.0, 1000.0, 0.0),
+        Vec3::new(0.0, 50.0, 0.0),
+        Quat::IDENTITY,
         Vec3::ZERO,
         Vec3::ZERO,
         1.0,
@@ -35,7 +37,8 @@ fn init(ctx: &ReducerContext) {
 
     RigidBody::new(
         world_id,
-        Transform::from_xyz(0.0, 0.0, 0.0),
+        Vec3::new(0.0, 0.0, 0.0),
+        Quat::IDENTITY,
         Vec3::ZERO,
         Vec3::ZERO,
         0.0,
