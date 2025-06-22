@@ -1,4 +1,4 @@
-use engine::collisions2::Collider;
+use engine::collisions::Collider;
 use math::{Transform, Vec3};
 use spacetimedb::{reducer, ReducerContext};
 use tables::{PhysicsWorld, RigidBody};
@@ -39,7 +39,7 @@ fn init(ctx: &ReducerContext) {
         Vec3::ZERO,
         Vec3::ZERO,
         0.0,
-        Collider::plane(-Vec3::Y),
+        Collider::plane(Vec3::Y),
     )
     .insert(ctx);
 }
