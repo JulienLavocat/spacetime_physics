@@ -14,8 +14,6 @@ pub struct PhysicsWorld {
     pub sub_step: u32,
     pub gravity: Vec3,
     pub precision: f32,
-    pub sleep_time: f32,
-    pub sleep_threshold: f32,
 }
 
 impl PhysicsWorld {
@@ -31,8 +29,6 @@ impl PhysicsWorld {
             sub_step: 4,
             gravity,
             precision: 1e-3,
-            sleep_time: 1.0,
-            sleep_threshold: 1e-4,
         }
     }
 
