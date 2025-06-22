@@ -1,8 +1,7 @@
 use core::panic;
 
 use parry3d::{
-    math::Isometry,
-    query::{contact, ContactManifold},
+    query::contact,
     shape::{Ball, HalfSpace},
 };
 
@@ -12,9 +11,9 @@ use super::CollisionPoint;
 
 pub fn test_collision(
     transform_a: &Transform,
-    collider_a: Collider,
+    collider_a: &Collider,
     transform_b: &Transform,
-    collider_b: Collider,
+    collider_b: &Collider,
     prediction: f32,
 ) -> Option<CollisionPoint> {
     let result = match (collider_a, collider_b) {

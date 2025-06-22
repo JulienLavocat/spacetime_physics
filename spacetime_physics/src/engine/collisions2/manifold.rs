@@ -2,6 +2,7 @@ use parry3d::query::Contact;
 
 use crate::math::Vec3;
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct CollisionPoint {
     /// Position of the contact on the first object.
     pub a: Vec3,
@@ -29,4 +30,15 @@ impl From<Contact> for CollisionPoint {
             distance: contact.dist,
         }
     }
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct Collision {
+    pub world_id: u64, // The ID of the physics world this collision occurred in
+    /// The ID of the first rigid body involved in the collision
+    pub a: u64,
+    /// The ID of the second rigid body involved in the collision
+    pub b: u64,
+    /// The collision points between the two colliders
+    pub points: CollisionPoint,
 }

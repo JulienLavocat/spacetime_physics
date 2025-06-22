@@ -1,4 +1,4 @@
-use collisions::{Collision, CollisionPoints};
+use collisions2::Collision;
 use log::debug;
 use solvers::{impulse::ImpulseSolver, position::PositionSolver, Solver};
 use spacetimedb::ReducerContext;
@@ -41,7 +41,7 @@ fn run_step(bodies: &mut [RigidBody], world: &PhysicsWorld, delta_time: f32) {
     integrate_velocity(bodies, delta_time);
     check_sleeping(world, bodies, delta_time);
 
-    let collisions = detect_collisions(bodies);
+    let collisions = detect_collisions(world, bodies);
     for collision in &collisions {
         debug!(
             "Detected collision between bodies {} and {}: {:?}",
@@ -87,7 +87,7 @@ fn integrate_velocity(bodies: &mut [RigidBody], delta_time: f32) {
     }
 }
 
-fn detect_collisions(bodies: &[RigidBody]) -> Vec<Collision> {
+fn detect_collisions(world: &PhysicsWorld, bodies: &[RigidBody]) -> Vec<Collision> {
     let mut collisions: Vec<Collision> = Vec::new();
 
     for (i, a) in bodies.iter().enumerate() {
@@ -100,9 +100,13 @@ fn detect_collisions(bodies: &[RigidBody]) -> Vec<Collision> {
                 continue;
             }
 
-            if let Some(collision) =
-                CollisionPoints::test(&a.collider, &a.transform, &b.collider, &b.transform)
-            {
+            if let Some(collision) = collisions2::test_collision(
+                &a.transform,
+                &a.collider,
+                &b.transform,
+                &b.collider,
+                world.precision,
+            ) {
                 collisions.push(Collision {
                     world_id: a.world_id,
                     a: a.id,

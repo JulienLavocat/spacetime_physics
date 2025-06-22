@@ -3,7 +3,7 @@ use std::fmt::Display;
 use spacetimedb::{table, ReducerContext, Table};
 
 use crate::{
-    engine::collisions::Collider,
+    engine::collisions2::Collider,
     math::{Transform, Vec3},
 };
 
