@@ -1,6 +1,6 @@
 use crate::tables::{PhysicsWorld, RigidBody};
 
-use super::collisions::Collision;
+use super::collisions2::Collision;
 
 pub(crate) mod impulse;
 pub(crate) mod position;

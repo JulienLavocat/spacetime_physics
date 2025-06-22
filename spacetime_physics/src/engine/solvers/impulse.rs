@@ -1,7 +1,7 @@
 use log::debug;
 
 use crate::{
-    engine::collisions::Collision,
+    engine::collisions2::Collision,
     tables::{PhysicsWorld, RigidBody},
 };
 
@@ -23,7 +23,7 @@ impl ImpulseSolver {
                 continue;
             }
 
-            let normal = collision.points.normal;
+            let normal = collision.points.normal_a;
             let relative_velocity = b.velocity - a.velocity;
             let vel_along_normal = relative_velocity.dot(normal);
 

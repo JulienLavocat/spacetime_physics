@@ -10,7 +10,6 @@ use super::vec_3_type::Vec3;
 #[sats(crate = __lib)]
 pub struct Plane {
     pub normal: Vec3,
-    pub distance: f32,
 }
 
 impl __sdk::InModule for Plane {

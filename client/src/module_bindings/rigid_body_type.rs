@@ -19,6 +19,10 @@ pub struct RigidBody {
     pub mass: f32,
     pub collider: Collider,
     pub inv_mass: f32,
+    pub restitution: f32,
+    pub friction: f32,
+    pub is_sleeping: bool,
+    pub sleep_timer: f32,
 }
 
 impl __sdk::InModule for RigidBody {

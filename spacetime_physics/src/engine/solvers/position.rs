@@ -1,7 +1,7 @@
 use log::debug;
 
 use crate::{
-    engine::collisions::Collision,
+    engine::collisions2::Collision,
     tables::{PhysicsWorld, RigidBody},
 };
 
@@ -26,8 +26,8 @@ impl Solver for PositionSolver {
                 continue;
             }
 
-            let normal = collision.points.normal;
-            let depth = collision.points.depth;
+            let normal = collision.points.normal_a;
+            let depth = collision.points.distance;
             let correction_depth = (depth - slop).max(0.0);
             let correction = normal * (correction_depth * beta);
 
@@ -44,7 +44,7 @@ impl Solver for PositionSolver {
 
             debug!(
                 "PositionSolver applied: a_position={} -> {}, b_position={} -> {} , correction={:?}",
-                a.transform.position, b.transform.position, -(correction * a_ratio), correction * b_ratio, correction
+                a.transform.position, -(correction * a_ratio), b.transform.position, correction * b_ratio, correction
             );
         }
     }
