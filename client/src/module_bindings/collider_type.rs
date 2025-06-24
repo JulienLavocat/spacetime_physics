@@ -4,6 +4,7 @@
 #![allow(unused, clippy::all)]
 use spacetimedb_sdk::__codegen::{self as __sdk, __lib, __sats, __ws};
 
+use super::cuboid_type::Cuboid;
 use super::plane_type::Plane;
 use super::sphere_type::Sphere;
 
@@ -13,6 +14,8 @@ pub enum Collider {
     Sphere(Sphere),
 
     Plane(Plane),
+
+    Cuboid(Cuboid),
 }
 
 impl __sdk::InModule for Collider {

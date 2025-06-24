@@ -8,17 +8,10 @@ use super::vec_3_type::Vec3;
 
 #[derive(__lib::ser::Serialize, __lib::de::Deserialize, Clone, PartialEq, Debug)]
 #[sats(crate = __lib)]
-pub struct PhysicsWorld {
-    pub id: u64,
-    pub ticks_per_second: f32,
-    pub scheduled_at: __sdk::ScheduleAt,
-    pub time_step: f32,
-    pub sub_step: u32,
-    pub gravity: Vec3,
-    pub precision: f32,
-    pub position_iterations: u32,
+pub struct Cuboid {
+    pub half_extents: Vec3,
 }
 
-impl __sdk::InModule for PhysicsWorld {
+impl __sdk::InModule for Cuboid {
     type Module = super::RemoteModule;
 }

@@ -24,7 +24,7 @@ pub struct RigidBody {
     #[builder(default = Quat::IDENTITY)]
     pub rotation: Quat,
     #[builder(default = Vec3::ZERO)]
-    pub velocity: Vec3,
+    pub linear_velocity: Vec3,
     #[builder(default = Vec3::ZERO)]
     pub angular_velocity: Vec3,
     #[builder(default = Mat3::IDENTITY)]
@@ -49,8 +49,8 @@ pub struct RigidBody {
     #[builder(default = 0.0)]
     pub restitution: f32,
 
-    #[builder(skip = velocity)]
-    pub pre_solve_velocity: Vec3,
+    #[builder(skip = linear_velocity)]
+    pub pre_solve_linear_velocity: Vec3,
     #[builder(skip = angular_velocity)]
     pub pre_solve_angular_velocity: Vec3,
 
@@ -93,7 +93,7 @@ impl Display for RigidBody {
         write!(
             f,
             "RigidBody(id={}, world_id={}, position={}, orientation={}, velocity={}, force={}, mass={}, inv_mass={})",
-            self.id, self.world_id, self.position, self.rotation, self.velocity, self.force, self.mass, self.inv_mass
+            self.id, self.world_id, self.position, self.rotation, self.linear_velocity, self.force, self.mass, self.inv_mass
         )
     }
 }

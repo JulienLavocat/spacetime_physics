@@ -138,6 +138,19 @@ fn on_rigid_body_inserted(
 
                 (mesh, material)
             }
+            Collider::Cuboid(cuboid) => {
+                let material = Some(materials.add(StandardMaterial {
+                    base_color: RED.into(),
+                    ..default()
+                }));
+                let mesh = Some(meshes.add(Cuboid::new(
+                    cuboid.half_extents.x * 2.0,
+                    cuboid.half_extents.y * 2.0,
+                    cuboid.half_extents.z * 2.0,
+                )));
+
+                (mesh, material)
+            }
         };
 
         let pos = event.row.position.clone();

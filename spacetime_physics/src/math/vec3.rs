@@ -115,6 +115,22 @@ impl Vec3 {
             self.x * matrix[2][0] + self.y * matrix[2][1] + self.z * matrix[2][2] + matrix[2][3];
         Self { x, y, z }
     }
+
+    pub fn abs(&self) -> Self {
+        Self {
+            x: self.x.abs(),
+            y: self.y.abs(),
+            z: self.z.abs(),
+        }
+    }
+
+    pub fn min(self, other: Vec3) -> Self {
+        Self {
+            x: self.x.min(other.x),
+            y: self.y.min(other.y),
+            z: self.z.min(other.z),
+        }
+    }
 }
 
 impl From<&Vec3> for Vec3 {
