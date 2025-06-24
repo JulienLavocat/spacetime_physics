@@ -111,6 +111,8 @@ fn on_rigid_body_inserted(
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
     for event in events.read() {
+        debug!("RigidBody inserted: {}", event.row.id);
+
         let body = event.row.clone();
 
         let (mesh, material) = match body.collider {
@@ -133,6 +135,7 @@ fn on_rigid_body_inserted(
                     ..default()
                 }));
                 let mesh = Some(meshes.add(Sphere::new(sphere.radius)));
+
                 (mesh, material)
             }
         };
@@ -173,7 +176,7 @@ fn on_rigid_body_updated(
             commands
                 .entity(entity)
                 .insert(Transform::from_xyz(pos.x, pos.y, pos.z));
-            println!("{}", event.new.position.y);
+            println!("{}: {}", event.new.id, event.new.position.y);
         }
     }
 }

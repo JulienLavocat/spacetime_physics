@@ -14,6 +14,7 @@ mod utils;
 
 pub fn step_world(ctx: &ReducerContext, world: &PhysicsWorld) {
     LogStopwatch::new("step_world");
+
     let mut bodies = ctx
         .db
         .physics_rigid_bodies()
@@ -25,11 +26,11 @@ pub fn step_world(ctx: &ReducerContext, world: &PhysicsWorld) {
 
     let dt = world.time_step / world.sub_step as f32;
 
-    let mut penetration_constraints = detect_collisions(bodies, world);
-    let penetration_constraints = penetration_constraints.as_mut_slice();
-
-    debug!("Collisions detected: {:?}", penetration_constraints);
-    for _ in 0..world.sub_step {
+    for i in 0..world.sub_step {
+        debug!("---------- substep: {} ----------", i);
+        let mut penetration_constraints = detect_collisions(bodies, world);
+        let penetration_constraints = penetration_constraints.as_mut_slice();
+        debug!("Collisions detected: {:?}", penetration_constraints);
         run_step(bodies, world, dt);
 
         for _ in 0..world.position_iterations {
@@ -39,16 +40,16 @@ pub fn step_world(ctx: &ReducerContext, world: &PhysicsWorld) {
         recompute_velocities(bodies, dt);
         solve_velocities(world, penetration_constraints, bodies, dt);
     }
+    debug!("---------- End of substeps ----------");
 
     for body in bodies {
-        if body.id == 1 {
-            debug!(
-                "Updating sphere position: {} -> {}, velocity: {}",
-                body.previous_position, body.position, body.velocity
-            );
-        }
+        debug!(
+            "Updating {} position: {} -> {}, velocity: {}, rotation: {}",
+            body.id, body.previous_position, body.position, body.velocity, body.rotation,
+        );
         body.update(ctx);
     }
+    debug!("-------------------------------------------------------------")
 }
 
 fn detect_collisions(bodies: &mut [RigidBody], world: &PhysicsWorld) -> Vec<PenetrationConstraint> {
@@ -93,6 +94,10 @@ fn run_step(bodies: &mut [RigidBody], world: &PhysicsWorld, delta_time: f32) {
 }
 
 fn integrate_rigid_body(world: &PhysicsWorld, body: &mut RigidBody, delta_time: f32) {
+    if body.is_static_or_sleeping() {
+        return;
+    }
+
     // --- Linear integration ---
 
     body.previous_position = body.position;
@@ -139,6 +144,11 @@ fn integrate_rigid_body(world: &PhysicsWorld, body: &mut RigidBody, delta_time: 
 
     body.force = Vec3::ZERO;
     body.torque = Vec3::ZERO;
+
+    debug!(
+        "Integrated body {}: position: {}, rotation: {}, velocity: {}, angular_velocity: {}",
+        body.id, body.position, body.rotation, body.velocity, body.angular_velocity
+    );
 }
 
 fn solve_constraints(
@@ -153,13 +163,24 @@ fn solve_constraints(
 
 fn recompute_velocities(bodies: &mut [RigidBody], delta_time: f32) {
     for body in bodies {
+        if body.is_static_or_sleeping() {
+            body.velocity = Vec3::ZERO;
+            body.angular_velocity = Vec3::ZERO;
+            continue;
+        }
+
         body.pre_solve_velocity = body.velocity;
         body.velocity = (body.position - body.previous_position) / delta_time;
 
         body.pre_solve_angular_velocity = body.angular_velocity;
-        let dq = body.rotation * body.previous_rotation.inverse();
+        let dq = (body.rotation * body.previous_rotation.inverse()).normalize();
         let omega = 2.0 * dq.xyz() / delta_time;
         body.angular_velocity = if dq.w >= 0.0 { omega } else { -omega };
+
+        debug!(
+            "Recomputed velocities for body {}: velocity: {} -> {}, angular_velocity: {} -> {}, dq: {}, omega: {}",
+            body.id,body.pre_solve_velocity, body.velocity, body.pre_solve_angular_velocity, body.angular_velocity, dq, omega
+        );
     }
 }
 
@@ -236,13 +257,25 @@ fn solve_velocities(
         );
 
         let p = delta_v / (wa + wb);
-        a.velocity += p * inv_mass_a;
-        a.angular_velocity +=
-            compute_delta_ang_velocity(inv_intertia_a, constraint.contact_point_a, p);
+        let previous_angular_velocity_a = a.angular_velocity;
+        let previous_angular_velocity_b = b.angular_velocity;
 
-        b.velocity -= p * inv_mass_b;
-        b.angular_velocity -=
-            compute_delta_ang_velocity(inv_intertia_b, constraint.contact_point_b, p);
+        if !a.is_static_or_sleeping() {
+            a.velocity += p * inv_mass_a;
+            a.angular_velocity +=
+                compute_delta_ang_velocity(inv_intertia_a, constraint.contact_point_a, p);
+        }
+
+        if !b.is_static_or_sleeping() {
+            b.velocity -= p * inv_mass_b;
+            b.angular_velocity -=
+                compute_delta_ang_velocity(inv_intertia_b, constraint.contact_point_b, p);
+        }
+
+        debug!(
+            "VelocityCorrection: a: {}, a_velocity: {}, a_angular_velocity: {} -> {}, b: {}, b_velocity: {}, b_angular_velocity: {} -> {}, delta_v: {}, p: {}",
+            a.id, a.velocity, previous_angular_velocity_a, a.angular_velocity, b.id, b.velocity, previous_angular_velocity_b, b.angular_velocity,  delta_v, p
+        );
     }
 }
 

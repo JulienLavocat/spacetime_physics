@@ -15,6 +15,7 @@ pub struct PhysicsWorld {
     pub sub_step: u32,
     pub gravity: Vec3,
     pub precision: f32,
+    pub position_iterations: u32,
 }
 
 impl __sdk::InModule for PhysicsWorld {

@@ -1,5 +1,6 @@
 use std::fmt::Display;
 
+use bon::{builder, Builder};
 use spacetimedb::{table, ReducerContext, Table};
 
 use crate::{
@@ -8,67 +9,58 @@ use crate::{
 };
 
 #[table(name = physics_rigid_bodies, public)]
-#[derive(Clone, Copy, Debug, Default, PartialEq)]
+#[derive(Builder, Clone, Copy, Debug, Default, PartialEq)]
+#[builder(derive(Debug, Clone))]
 pub struct RigidBody {
     #[primary_key]
     #[auto_inc]
+    #[builder(default = 0)]
     pub id: u64,
     #[index(btree)]
+    #[builder(default = 1)]
     pub world_id: u64,
+    #[builder(default = Vec3::ZERO)]
     pub position: Vec3,
+    #[builder(default = Quat::IDENTITY)]
     pub rotation: Quat,
+    #[builder(default = Vec3::ZERO)]
     pub velocity: Vec3,
+    #[builder(default = Vec3::ZERO)]
     pub angular_velocity: Vec3,
+    #[builder(default = Mat3::IDENTITY)]
     pub inertia_tensor: Mat3,
+    #[builder(skip = inertia_tensor.inverse())]
     pub inv_inertia_tensor: Option<Mat3>,
+    #[builder(default = Vec3::ZERO)]
     pub force: Vec3,
+
+    #[builder(default = 1.0)]
     pub mass: f32,
-    pub collider: Collider,
+    #[builder(skip = if mass > 0.0 { 1.0 / mass } else { 0.0 })]
     pub inv_mass: f32,
+
+    pub collider: Collider,
+
+    #[builder(default = Vec3::ZERO)]
     pub torque: Vec3,
-    pub previous_position: Vec3,
-    pub previous_rotation: Quat,
+
+    #[builder(default = 0.0)]
     pub friction: f32,
-    pub pre_solve_velocity: Vec3,
-    pub pre_solve_angular_velocity: Vec3,
+    #[builder(default = 0.0)]
     pub restitution: f32,
+
+    #[builder(skip = velocity)]
+    pub pre_solve_velocity: Vec3,
+    #[builder(skip = angular_velocity)]
+    pub pre_solve_angular_velocity: Vec3,
+
+    #[builder(skip = position)]
+    pub previous_position: Vec3,
+    #[builder(skip = rotation)]
+    pub previous_rotation: Quat,
 }
 
 impl RigidBody {
-    pub fn new(
-        world_id: u64,
-        position: Vec3,
-        rotation: Quat,
-        velocity: Vec3,
-        force: Vec3,
-        mass: f32,
-        collider: Collider,
-    ) -> Self {
-        let angular_velocity = Vec3::default();
-        let inertia_tensor = Mat3::IDENTITY;
-        Self {
-            id: 0,
-            world_id,
-            position,
-            rotation,
-            velocity,
-            force,
-            mass,
-            collider,
-            angular_velocity,
-            inv_mass: if mass > 0.0 { 1.0 / mass } else { 0.0 },
-            inertia_tensor,
-            inv_inertia_tensor: inertia_tensor.inverse(),
-            torque: Vec3::ZERO,
-            previous_position: position,
-            previous_rotation: rotation,
-            friction: 0.0,
-            pre_solve_velocity: velocity,
-            pre_solve_angular_velocity: angular_velocity,
-            restitution: 0.0,
-        }
-    }
-
     pub fn insert(self, ctx: &ReducerContext) -> Self {
         ctx.db.physics_rigid_bodies().insert(self)
     }
@@ -88,6 +80,11 @@ impl RigidBody {
             Some(inv) => inv,
             None => Mat3::IDENTITY, // Static body
         }
+    }
+
+    pub fn is_static_or_sleeping(&self) -> bool {
+        // TODO: Sleep logic
+        self.mass <= 0.0
     }
 }
 

@@ -1,9 +1,7 @@
 [package]
-name = "spacetime-module"
+name = "spacetime_physics"
 version = "0.1.0"
 edition = "2021"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [lib]
 crate-type = ["cdylib"]
@@ -12,3 +10,4 @@ crate-type = ["cdylib"]
 spacetimedb = { version = "1.1.2", features = ["unstable"] }
 log = "0.4"
 parry3d = "0.21.1"
+bon = "3.6.4"

@@ -1,3 +1,5 @@
+use log::debug;
+
 use crate::{
     math::{Mat3, Quat, Vec3},
     tables::RigidBody,
@@ -35,10 +37,31 @@ pub trait PositionConstraint: Constraint {
             None => return,
         };
 
-        body_a.position += p * inv_mass_a;
-        body_a.rotation += Self::get_delta_rot(rot_a, inv_inertia_a, ra, p);
-        body_b.position -= p * inv_mass_b;
-        body_b.rotation += Self::get_delta_rot(rot_b, inv_inertia_b, rb, -p);
+        let previous_position_a = body_a.position;
+        let previous_position_b = body_b.position;
+
+        if !body_a.is_static_or_sleeping() {
+            body_a.position += p * inv_mass_a;
+            body_a.rotation += Self::get_delta_rot(rot_a, inv_inertia_a, ra, p).normalize();
+        }
+
+        if !body_b.is_static_or_sleeping() {
+            body_b.position -= p * inv_mass_b;
+            body_b.rotation += Self::get_delta_rot(rot_b, inv_inertia_b, rb, -p).normalize();
+        }
+
+        debug!(
+            "PositionCorrection: body_a: {} pos_a: {} -> {}, body_b: {} pos_b: {} -> {}, delta_lagrange: {}, direction: {}, p: {}",
+            body_a.id,
+            previous_position_a,
+            body_a.position,
+            body_b.id,
+            previous_position_b,
+            body_b.position,
+            delta_lagrange,
+            direction,
+            p,
+        );
     }
 
     fn compute_generalized_inverse_mass(&self, body: &RigidBody, r: &Vec3, n: &Vec3) -> f32 {
