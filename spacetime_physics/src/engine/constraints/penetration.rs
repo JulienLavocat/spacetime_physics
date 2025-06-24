@@ -1,5 +1,7 @@
 use std::fmt::Display;
 
+use log::debug;
+
 use crate::{engine::utils::get_bodies_mut, math::Vec3, tables::RigidBody};
 
 use super::{position::PositionConstraint, Constraint};
@@ -73,6 +75,11 @@ impl PenetrationConstraint {
         self.apply_position_correction(body_a, body_b, delta_lagrange, &normal, &ra, &rb);
 
         self.normal_force = self.normal_lagrange * normal / dt.powi(2);
+
+        debug!(
+            "PenetrationConstraint contact solved: a: {}, b: {}, compliance: {}, normal_lagrange: {}, tangential_lagrange: {}",
+            self.a, self.b, self.compliance, self.normal_lagrange, self.tangential_lagrange
+        );
     }
 
     fn solve_friction(&mut self, body_a: &mut RigidBody, body_b: &mut RigidBody, dt: f32) {
@@ -117,6 +124,10 @@ impl PenetrationConstraint {
             self.tangential_lagrange += delta_lagrange;
             self.apply_position_correction(body_a, body_b, delta_lagrange, &tangent, &ra, &rb);
             self.static_friction_force = self.tangential_lagrange * tangent / dt.powi(2);
+            debug!(
+                "PenetrationConstraint friction solved: a: {}, b: {}, compliance: {}, normal_lagrange: {}, tangential_lagrange: {}",
+                self.a, self.b, self.compliance, self.normal_lagrange, self.tangential_lagrange
+            );
         }
     }
 }
@@ -125,7 +136,7 @@ impl Constraint for PenetrationConstraint {
     fn solve(&mut self, bodies: &mut [RigidBody], dt: f32) {
         let (body_a, body_b) = get_bodies_mut(self.a, self.b, bodies);
         self.solve_contact(body_a, body_b, dt);
-        self.solve_friction(body_a, body_b, dt);
+        // self.solve_friction(body_a, body_b, dt);
     }
 }
 

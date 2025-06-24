@@ -1,5 +1,5 @@
 use engine::collisions::Collider;
-use math::{Quat, Vec3};
+use math::Vec3;
 use spacetimedb::{reducer, ReducerContext};
 use tables::{PhysicsWorld, RigidBody};
 
@@ -9,42 +9,22 @@ pub mod tables;
 
 #[reducer(init)]
 fn init(ctx: &ReducerContext) {
-    let world_id = PhysicsWorld::new(60.0, Vec3::new(0.0, -9.81, 0.0))
-        .insert(ctx)
-        .id;
+    let world_id = PhysicsWorld::builder().build().insert(ctx).id;
 
-    // RigidBody::new(
-    //     world_id,
-    //     Vec3::new(0.0, 50.0, 0.0),
-    //     Quat::IDENTITY,
-    //     Vec3::ZERO,
-    //     Vec3::ZERO,
-    //     1.0,
-    //     Collider::sphere(2.0),
-    // )
-    // .insert(ctx);
+    RigidBody::builder()
+        .world_id(world_id)
+        .position(Vec3::new(1.0, 10.0, 0.0))
+        .collider(Collider::sphere(1.0))
+        .build()
+        .insert(ctx);
 
-    RigidBody::new(
-        world_id,
-        Vec3::new(0.0, 50.0, 0.0),
-        Quat::IDENTITY,
-        Vec3::ZERO,
-        Vec3::ZERO,
-        1.0,
-        Collider::sphere(1.0),
-    )
-    .insert(ctx);
-
-    RigidBody::new(
-        world_id,
-        Vec3::new(0.0, 0.0, 0.0),
-        Quat::IDENTITY,
-        Vec3::ZERO,
-        Vec3::ZERO,
-        0.0,
-        Collider::plane(Vec3::Y),
-    )
-    .insert(ctx);
+    RigidBody::builder()
+        .world_id(world_id)
+        .position(Vec3::new(0.0, 0.0, 0.0))
+        .collider(Collider::plane(Vec3::Y))
+        .mass(0.0)
+        .build()
+        .insert(ctx);
 }
 
 #[reducer]

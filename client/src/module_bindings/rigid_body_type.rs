@@ -22,9 +22,15 @@ pub struct RigidBody {
     pub inv_inertia_tensor: Option<Mat3>,
     pub force: Vec3,
     pub mass: f32,
-    pub collider: Collider,
     pub inv_mass: f32,
+    pub collider: Collider,
     pub torque: Vec3,
+    pub friction: f32,
+    pub restitution: f32,
+    pub pre_solve_velocity: Vec3,
+    pub pre_solve_angular_velocity: Vec3,
+    pub previous_position: Vec3,
+    pub previous_rotation: Quat,
 }
 
 impl __sdk::InModule for RigidBody {

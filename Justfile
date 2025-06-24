@@ -15,6 +15,9 @@ bindings:
 logs:
     spacetime logs {{module}}
 
+messages:
+    spacetime logs {{module}} --format json | jq -r '.message'
+
 sc: publish client
 
 all: publish bindings client

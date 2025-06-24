@@ -56,15 +56,11 @@ impl Quat {
     }
 
     pub fn inverse(&self) -> Self {
-        let len_squared = self.x * self.x + self.y * self.y + self.z * self.z + self.w * self.w;
-        if len_squared == 0.0 {
-            return Self::ZERO;
-        }
         Self {
-            x: -self.x / len_squared,
-            y: -self.y / len_squared,
-            z: -self.z / len_squared,
-            w: self.w / len_squared,
+            x: -self.x,
+            y: -self.y,
+            z: -self.z,
+            w: self.w,
         }
     }
 
