@@ -5,6 +5,7 @@
 use spacetimedb_sdk::__codegen::{self as __sdk, __lib, __sats, __ws};
 
 pub mod collider_type;
+pub mod cuboid_type;
 pub mod mat_3_type;
 pub mod physics_rigid_bodies_table;
 pub mod physics_step_world_reducer;
@@ -17,6 +18,7 @@ pub mod sphere_type;
 pub mod vec_3_type;
 
 pub use collider_type::Collider;
+pub use cuboid_type::Cuboid;
 pub use mat_3_type::Mat3;
 pub use physics_rigid_bodies_table::*;
 pub use physics_step_world_reducer::{

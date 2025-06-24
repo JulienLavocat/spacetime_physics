@@ -1,4 +1,3 @@
-use parry3d::shape::Ball;
 use spacetimedb::SpacetimeType;
 
 use crate::math::Vec3;
@@ -8,29 +7,21 @@ pub struct Sphere {
     pub radius: f32,
 }
 
-impl From<Sphere> for Ball {
-    fn from(s: Sphere) -> Self {
-        Ball::new(s.radius)
-    }
-}
-
 #[derive(SpacetimeType, Debug, Clone, Copy, PartialEq)]
 pub struct Plane {
     pub normal: Vec3,
 }
 
-impl From<&Plane> for parry3d::shape::HalfSpace {
-    fn from(value: &Plane) -> Self {
-        parry3d::shape::HalfSpace {
-            normal: value.normal.into(),
-        }
-    }
+#[derive(SpacetimeType, Debug, Clone, Copy, PartialEq)]
+pub struct Cuboid {
+    pub half_extents: Vec3,
 }
 
 #[derive(SpacetimeType, Clone, Copy, Debug, PartialEq)]
 pub enum Collider {
     Sphere(Sphere),
     Plane(Plane),
+    Cuboid(Cuboid),
 }
 
 impl Default for Collider {
@@ -46,5 +37,9 @@ impl Collider {
 
     pub fn plane(normal: Vec3) -> Self {
         Self::Plane(Plane { normal })
+    }
+
+    pub fn cuboid(half_extents: Vec3) -> Self {
+        Self::Cuboid(Cuboid { half_extents })
     }
 }

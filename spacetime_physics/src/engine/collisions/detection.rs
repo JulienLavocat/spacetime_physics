@@ -50,13 +50,6 @@ pub fn test_collision(
             &Ball::new(sphere_b.radius),
             prediction,
         ),
-        (Collider::Plane(plane), Collider::Sphere(sphere)) => contact(
-            &iso_a,
-            &HalfSpace::new(plane.normal.into()),
-            &iso_b,
-            &Ball::new(sphere.radius),
-            prediction,
-        ),
         (Collider::Sphere(sphere), Collider::Plane(plane)) => contact(
             &iso_a,
             &Ball::new(sphere.radius),
@@ -64,8 +57,56 @@ pub fn test_collision(
             &HalfSpace::new(plane.normal.into()),
             prediction,
         ),
+        (Collider::Sphere(sphere), Collider::Cuboid(cuboid)) => contact(
+            &iso_a,
+            &Ball::new(sphere.radius),
+            &iso_b,
+            &parry3d::shape::Cuboid::new(cuboid.half_extents.into()),
+            prediction,
+        ),
+
+        (Collider::Cuboid(cuboid), Collider::Sphere(sphere)) => contact(
+            &iso_a,
+            &parry3d::shape::Cuboid::new(cuboid.half_extents.into()),
+            &iso_b,
+            &Ball::new(sphere.radius),
+            prediction,
+        ),
+
+        (Collider::Cuboid(cuboid_a), Collider::Cuboid(cuboid_b)) => contact(
+            &iso_a,
+            &parry3d::shape::Cuboid::new(cuboid_a.half_extents.into()),
+            &iso_b,
+            &parry3d::shape::Cuboid::new(cuboid_b.half_extents.into()),
+            prediction,
+        ),
+        (Collider::Cuboid(plane), Collider::Plane(sphere)) => contact(
+            &iso_a,
+            &parry3d::shape::Cuboid::new(plane.half_extents.into()),
+            &iso_b,
+            &HalfSpace::new(sphere.normal.into()),
+            prediction,
+        ),
+
+        (Collider::Plane(plane), Collider::Sphere(sphere)) => contact(
+            &iso_a,
+            &HalfSpace::new(plane.normal.into()),
+            &iso_b,
+            &Ball::new(sphere.radius),
+            prediction,
+        ),
+        (Collider::Plane(plane), Collider::Cuboid(cuboid)) => contact(
+            &iso_a,
+            &HalfSpace::new(plane.normal.into()),
+            &iso_b,
+            &parry3d::shape::Cuboid::new(cuboid.half_extents.into()),
+            prediction,
+        ),
         _ => {
-            panic!("Unsupported collider types for collision detection");
+            panic!(
+                "Unsupported collider types for collision detection: {:?} and {:?}",
+                collider_a, collider_b
+            );
         }
     };
 
