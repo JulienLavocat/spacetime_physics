@@ -1,5 +1,3 @@
-use log::debug;
-
 use crate::{
     math::{Mat3, Quat, Vec3},
     tables::RigidBody,
@@ -16,9 +14,9 @@ pub trait PositionConstraint: Constraint {
         direction: &Vec3,
         ra: &Vec3,
         rb: &Vec3,
-    ) {
+    ) -> Option<(Vec3, Vec3, Vec3, Vec3, Vec3)> {
         if delta_lagrange.abs() < f32::EPSILON {
-            return;
+            return None;
         }
 
         let p = delta_lagrange * direction;
@@ -28,14 +26,8 @@ pub trait PositionConstraint: Constraint {
         let inv_mass_a = body_a.effective_inverse_mass();
         let inv_mass_b = body_b.effective_inverse_mass();
 
-        let inv_inertia_a = match body_a.inv_inertia_tensor {
-            Some(i) => i,
-            None => return, // static body
-        };
-        let inv_inertia_b = match body_b.inv_inertia_tensor {
-            Some(i) => i,
-            None => return,
-        };
+        let inv_inertia_a = body_a.inv_inertia_tensor?;
+        let inv_inertia_b = body_b.inv_inertia_tensor?;
 
         let previous_position_a = body_a.position;
         let previous_position_b = body_b.position;
@@ -50,18 +42,13 @@ pub trait PositionConstraint: Constraint {
             body_b.rotation += Self::get_delta_rot(rot_b, inv_inertia_b, rb, -p).normalize();
         }
 
-        debug!(
-            "PositionCorrection: body_a: {} pos_a: {} -> {}, body_b: {} pos_b: {} -> {}, delta_lagrange: {}, direction: {}, p: {}",
-            body_a.id,
+        Some((
             previous_position_a,
             body_a.position,
-            body_b.id,
             previous_position_b,
             body_b.position,
-            delta_lagrange,
-            direction,
             p,
-        );
+        ))
     }
 
     fn compute_generalized_inverse_mass(&self, body: &RigidBody, r: &Vec3, n: &Vec3) -> f32 {

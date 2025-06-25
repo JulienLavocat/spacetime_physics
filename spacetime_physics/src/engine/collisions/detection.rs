@@ -114,5 +114,18 @@ pub fn test_collision(
         panic!("Collision detection failed: {}", err);
     }
 
-    result.unwrap().map(|c| c.into())
+    result.unwrap().map(|contact| {
+        let world_a = contact.point1.into();
+        let world_b = contact.point2.into();
+        let local_a = rotation_a.inverse().rotate(world_a - position_a);
+        let local_b = rotation_b.inverse().rotate(world_b - position_b);
+        CollisionPoint {
+            world_a,
+            world_b,
+            local_a,
+            local_b,
+            normal: contact.normal1.into(),
+            distance: contact.dist,
+        }
+    })
 }
