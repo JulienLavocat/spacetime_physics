@@ -22,7 +22,7 @@ pub use cuboid_type::Cuboid;
 pub use mat_3_type::Mat3;
 pub use physics_rigid_bodies_table::*;
 pub use physics_step_world_reducer::{
-    physics_step_world, set_flags_for_physics_step_world, PhysicsStepWorldCallbackId,
+    PhysicsStepWorldCallbackId, physics_step_world, set_flags_for_physics_step_world,
 };
 pub use physics_world_table::*;
 pub use physics_world_type::PhysicsWorld;
@@ -400,21 +400,21 @@ impl __sdk::SubscriptionHandle for SubscriptionHandle {
 /// either a [`DbConnection`] or an [`EventContext`] and operate on either.
 pub trait RemoteDbContext:
     __sdk::DbContext<
-    DbView = RemoteTables,
-    Reducers = RemoteReducers,
-    SetReducerFlags = SetReducerFlags,
-    SubscriptionBuilder = __sdk::SubscriptionBuilder<RemoteModule>,
->
+        DbView = RemoteTables,
+        Reducers = RemoteReducers,
+        SetReducerFlags = SetReducerFlags,
+        SubscriptionBuilder = __sdk::SubscriptionBuilder<RemoteModule>,
+    >
 {
 }
 impl<
-        Ctx: __sdk::DbContext<
+    Ctx: __sdk::DbContext<
             DbView = RemoteTables,
             Reducers = RemoteReducers,
             SetReducerFlags = SetReducerFlags,
             SubscriptionBuilder = __sdk::SubscriptionBuilder<RemoteModule>,
         >,
-    > RemoteDbContext for Ctx
+> RemoteDbContext for Ctx
 {
 }
 

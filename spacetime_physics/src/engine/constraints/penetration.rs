@@ -77,13 +77,13 @@ impl PenetrationConstraint {
         self.normal_force = self.normal_lagrange * normal / dt.powi(2);
 
         debug!(
-            "PenetrationConstraint contact solved: a: {}, b: {}, compliance: {}, normal_lagrange: {}, tangential_lagrange: {}",
+            "[PenetrationConstraint] contact: a: {}, b: {}, compliance: {}, normal_lagrange: {}, tangential_lagrange: {}",
             self.a, self.b, self.compliance, self.normal_lagrange, self.tangential_lagrange
         );
     }
 
     fn solve_friction(&mut self, body_a: &mut RigidBody, body_b: &mut RigidBody, dt: f32) {
-        let penetraion = self.penetration_depth;
+        let penetration = self.penetration_depth;
         let normal = self.normal;
         let compliance = self.compliance;
         let lagrange = self.tangential_lagrange;
@@ -96,39 +96,44 @@ impl PenetrationConstraint {
         let prev_pb = body_b.previous_position + body_b.previous_rotation.rotate(self.local_rb);
 
         let delta_p = (pa - prev_pa) - (pb - prev_pb);
-        let delta_p_tangential = delta_p - delta_p.dot(normal) * normal;
+        let delta_p_tangential = delta_p - normal * normal.dot(delta_p);
 
         let sliding_length = delta_p_tangential.length();
         if sliding_length < f32::EPSILON {
             return; // No sliding
         }
-        let tangent = delta_p_tangential / sliding_length;
+
+        let tangent = delta_p.normalize();
 
         let wa = self.compute_generalized_inverse_mass(body_a, &ra, &tangent);
         let wb = self.compute_generalized_inverse_mass(body_b, &rb, &tangent);
 
-        let gradients = [tangent, -tangent];
-        let w = [wa, wb];
+        let w_total = wa + wb;
 
-        let static_coefficient = 0.5 * (body_a.friction + body_b.friction);
+        let static_coefficient = body_a.friction.combine(&body_b.friction).static_friction;
 
-        if sliding_length > static_coefficient * penetraion {
-            let delta_lagrange = self.compute_lagrange_update(
-                lagrange,
-                sliding_length,
-                &gradients,
-                &w,
-                compliance,
-                dt,
-            );
-            self.tangential_lagrange += delta_lagrange;
-            self.apply_position_correction(body_a, body_b, delta_lagrange, &tangent, &ra, &rb);
-            self.static_friction_force = self.tangential_lagrange * tangent / dt.powi(2);
-            debug!(
-                "PenetrationConstraint friction solved: a: {}, b: {}, compliance: {}, normal_lagrange: {}, tangential_lagrange: {}",
-                self.a, self.b, self.compliance, self.normal_lagrange, self.tangential_lagrange
-            );
-        }
+        let delta_lambda = -delta_p_tangential.dot(tangent) / (w_total + compliance / dt.powi(2));
+        let new_lambda = self.tangential_lagrange + delta_lambda;
+
+        let friction_limit = static_coefficient * self.normal_lagrange;
+        let clamped_lambda = new_lambda.clamp(-friction_limit, friction_limit);
+        let clamped_delta_lambda = clamped_lambda - self.tangential_lagrange;
+
+        self.tangential_lagrange = clamped_lambda;
+        self.apply_position_correction(body_a, body_b, clamped_delta_lambda, &tangent, &ra, &rb);
+
+        self.static_friction_force = self.tangential_lagrange * tangent / dt.powi(2);
+        debug!(
+        "[PenetrationConstraint] friction: a: {}, b: {}, λₜ: {}, λₙ: {}, μs: {}, Δpₜ: {}, friction_limit: {}, tangent: {}",
+        self.a,
+        self.b,
+        self.tangential_lagrange,
+        self.normal_lagrange,
+        static_coefficient,
+        delta_p_tangential,
+        friction_limit,
+        tangent
+    );
     }
 }
 
@@ -136,7 +141,7 @@ impl Constraint for PenetrationConstraint {
     fn solve(&mut self, bodies: &mut [RigidBody], dt: f32) {
         let (body_a, body_b) = get_bodies_mut(self.a, self.b, bodies);
         self.solve_contact(body_a, body_b, dt);
-        // self.solve_friction(body_a, body_b, dt);
+        self.solve_friction(body_a, body_b, dt);
     }
 }
 

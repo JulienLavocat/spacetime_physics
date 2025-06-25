@@ -1,12 +1,53 @@
 use std::fmt::Display;
 
 use bon::{builder, Builder};
-use spacetimedb::{table, ReducerContext, Table};
+use spacetimedb::{table, ReducerContext, SpacetimeType, Table};
 
 use crate::{
     engine::collisions::Collider,
     math::{Mat3, Quat, Vec3},
 };
+
+#[derive(SpacetimeType, Debug, Clone, Copy, PartialEq)]
+pub struct Friction {
+    pub static_friction: f32,
+    pub dynamic_friction: f32,
+}
+
+impl Friction {
+    pub fn new(static_friction: f32, dynamic_friction: f32) -> Self {
+        Self {
+            static_friction,
+            dynamic_friction,
+        }
+    }
+
+    pub fn combine(&self, other: &Self) -> Self {
+        Self {
+            static_friction: (self.static_friction + other.static_friction) / 2.0,
+            dynamic_friction: (self.dynamic_friction + other.dynamic_friction) / 2.0,
+        }
+    }
+}
+
+impl Default for Friction {
+    fn default() -> Self {
+        Self {
+            static_friction: 0.5,
+            dynamic_friction: 0.3,
+        }
+    }
+}
+
+impl Display for Friction {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "Friction(static={}, dynamic={})",
+            self.static_friction, self.dynamic_friction
+        )
+    }
+}
 
 #[table(name = physics_rigid_bodies, public)]
 #[derive(Builder, Clone, Copy, Debug, Default, PartialEq)]
@@ -44,8 +85,8 @@ pub struct RigidBody {
     #[builder(default = Vec3::ZERO)]
     pub torque: Vec3,
 
-    #[builder(default = 0.0)]
-    pub friction: f32,
+    #[builder(default = Friction::default())]
+    pub friction: Friction,
     #[builder(default = 0.0)]
     pub restitution: f32,
 
