@@ -59,8 +59,9 @@ impl PenetrationConstraint {
         let normal = self.normal;
         let compliance = self.compliance;
         let lagrange = self.normal_lagrange;
-        let ra = self.world_a;
-        let rb = self.world_b;
+
+        let ra = self.world_a - body_a.position;
+        let rb = self.world_b - body_b.position;
 
         if penetraion >= 0.0 {
             return;

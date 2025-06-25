@@ -42,6 +42,17 @@ impl Quat {
         }
     }
 
+    pub fn from_axis_angle(axis: Vec3, angle: f32) -> Self {
+        let half_angle = angle * 0.5;
+        let sin_half_angle = half_angle.sin();
+        Self {
+            x: axis.x * sin_half_angle,
+            y: axis.y * sin_half_angle,
+            z: axis.z * sin_half_angle,
+            w: half_angle.cos(),
+        }
+    }
+
     pub fn normalize(self) -> Self {
         let len = (self.x * self.x + self.y * self.y + self.z * self.z + self.w * self.w).sqrt();
         if len == 0.0 {
