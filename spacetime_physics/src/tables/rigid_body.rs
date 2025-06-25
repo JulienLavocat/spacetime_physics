@@ -10,22 +10,22 @@ use crate::{
 
 #[derive(SpacetimeType, Debug, Clone, Copy, PartialEq)]
 pub struct Friction {
-    pub static_friction: f32,
-    pub dynamic_friction: f32,
+    pub static_coefficient: f32,
+    pub dynamic_coefficient: f32,
 }
 
 impl Friction {
     pub fn new(static_friction: f32, dynamic_friction: f32) -> Self {
         Self {
-            static_friction,
-            dynamic_friction,
+            static_coefficient: static_friction,
+            dynamic_coefficient: dynamic_friction,
         }
     }
 
     pub fn combine(&self, other: &Self) -> Self {
         Self {
-            static_friction: (self.static_friction + other.static_friction) / 2.0,
-            dynamic_friction: (self.dynamic_friction + other.dynamic_friction) / 2.0,
+            static_coefficient: (self.static_coefficient + other.static_coefficient) / 2.0,
+            dynamic_coefficient: (self.dynamic_coefficient + other.dynamic_coefficient) / 2.0,
         }
     }
 }
@@ -33,8 +33,8 @@ impl Friction {
 impl Default for Friction {
     fn default() -> Self {
         Self {
-            static_friction: 0.5,
-            dynamic_friction: 0.3,
+            static_coefficient: 0.5,
+            dynamic_coefficient: 0.3,
         }
     }
 }
@@ -44,7 +44,7 @@ impl Display for Friction {
         write!(
             f,
             "Friction(static={}, dynamic={})",
-            self.static_friction, self.dynamic_friction
+            self.static_coefficient, self.dynamic_coefficient
         )
     }
 }

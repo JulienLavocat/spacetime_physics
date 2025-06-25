@@ -77,15 +77,7 @@ fn detect_collisions(bodies: &mut [RigidBody], world: &PhysicsWorld) -> Vec<Pene
                     continue; // No penetration
                 }
 
-                constraints.push(PenetrationConstraint::new(
-                    body_a,
-                    body_b,
-                    collision.a,
-                    collision.b,
-                    collision.normal,
-                    collision.distance,
-                    0.0,
-                ));
+                constraints.push(PenetrationConstraint::new(body_a, body_b, collision, 0.0));
             }
         }
     }
@@ -207,12 +199,12 @@ fn solve_velocities(
         let pre_solve_contact_vel1 = compute_contact_vel(
             body1.pre_solve_linear_velocity,
             body1.pre_solve_angular_velocity,
-            constraint.contact_point_a,
+            constraint.world_a,
         );
         let pre_solve_contact_vel2 = compute_contact_vel(
             body2.pre_solve_linear_velocity,
             body2.pre_solve_angular_velocity,
-            constraint.contact_point_b,
+            constraint.world_b,
         );
         let pre_solve_relative_vel = pre_solve_contact_vel1 - pre_solve_contact_vel2;
         let pre_solve_normal_vel = normal.dot(pre_solve_relative_vel);
@@ -221,12 +213,12 @@ fn solve_velocities(
         let contact_vel1 = compute_contact_vel(
             body1.linear_velocity,
             body1.angular_velocity,
-            constraint.contact_point_a,
+            constraint.world_a,
         );
         let contact_vel2 = compute_contact_vel(
             body2.linear_velocity,
             body2.angular_velocity,
-            constraint.contact_point_b,
+            constraint.world_b,
         );
         let relative_vel = contact_vel1 - contact_vel2;
         let normal_vel = normal.dot(relative_vel);
@@ -237,7 +229,7 @@ fn solve_velocities(
         let inv_inertia1 = body1.effective_inverse_inertia();
         let inv_inertia2 = body2.effective_inverse_inertia();
 
-        let friction_coefficient = body1.friction.combine(&body2.friction).dynamic_friction;
+        let friction_coefficient = body1.friction.combine(&body2.friction).dynamic_coefficient;
         let restitution_coefficient = (body1.restitution + body2.restitution) * 0.5;
 
         // Compute dynamic friction
@@ -268,28 +260,20 @@ fn solve_velocities(
         let delta_v_dir = delta_v / delta_v_length;
 
         // Compute generalized inverse masses
-        let w1 = constraint.compute_generalized_inverse_mass(
-            body1,
-            &constraint.contact_point_a,
-            &delta_v_dir,
-        );
-        let w2 = constraint.compute_generalized_inverse_mass(
-            body2,
-            &constraint.contact_point_b,
-            &delta_v_dir,
-        );
+        let w1 =
+            constraint.compute_generalized_inverse_mass(body1, &constraint.world_a, &delta_v_dir);
+        let w2 =
+            constraint.compute_generalized_inverse_mass(body2, &constraint.world_b, &delta_v_dir);
 
         // Compute velocity impulse and apply velocity updates (equation 33)
         let p = delta_v / (w1 + w2);
         if !body1.is_static_or_sleeping() {
             body1.linear_velocity += p * inv_mass1;
-            body1.angular_velocity +=
-                compute_delta_ang_vel(inv_inertia1, constraint.contact_point_a, p);
+            body1.angular_velocity += compute_delta_ang_vel(inv_inertia1, constraint.world_a, p);
         }
         if !body2.is_static_or_sleeping() {
             body2.linear_velocity -= p * inv_mass2;
-            body2.angular_velocity -=
-                compute_delta_ang_vel(inv_inertia2, constraint.contact_point_b, p);
+            body2.angular_velocity -= compute_delta_ang_vel(inv_inertia2, constraint.world_b, p);
         }
 
         debug!(
