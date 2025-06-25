@@ -6,6 +6,7 @@ use spacetimedb_sdk::__codegen::{self as __sdk, __lib, __sats, __ws};
 
 pub mod collider_type;
 pub mod cuboid_type;
+pub mod friction_type;
 pub mod mat_3_type;
 pub mod physics_rigid_bodies_table;
 pub mod physics_step_world_reducer;
@@ -19,10 +20,11 @@ pub mod vec_3_type;
 
 pub use collider_type::Collider;
 pub use cuboid_type::Cuboid;
+pub use friction_type::Friction;
 pub use mat_3_type::Mat3;
 pub use physics_rigid_bodies_table::*;
 pub use physics_step_world_reducer::{
-    PhysicsStepWorldCallbackId, physics_step_world, set_flags_for_physics_step_world,
+    physics_step_world, set_flags_for_physics_step_world, PhysicsStepWorldCallbackId,
 };
 pub use physics_world_table::*;
 pub use physics_world_type::PhysicsWorld;
@@ -400,21 +402,21 @@ impl __sdk::SubscriptionHandle for SubscriptionHandle {
 /// either a [`DbConnection`] or an [`EventContext`] and operate on either.
 pub trait RemoteDbContext:
     __sdk::DbContext<
-        DbView = RemoteTables,
-        Reducers = RemoteReducers,
-        SetReducerFlags = SetReducerFlags,
-        SubscriptionBuilder = __sdk::SubscriptionBuilder<RemoteModule>,
-    >
+    DbView = RemoteTables,
+    Reducers = RemoteReducers,
+    SetReducerFlags = SetReducerFlags,
+    SubscriptionBuilder = __sdk::SubscriptionBuilder<RemoteModule>,
+>
 {
 }
 impl<
-    Ctx: __sdk::DbContext<
+        Ctx: __sdk::DbContext<
             DbView = RemoteTables,
             Reducers = RemoteReducers,
             SetReducerFlags = SetReducerFlags,
             SubscriptionBuilder = __sdk::SubscriptionBuilder<RemoteModule>,
         >,
-> RemoteDbContext for Ctx
+    > RemoteDbContext for Ctx
 {
 }
 

@@ -9,11 +9,11 @@ pub mod tables;
 
 #[reducer(init)]
 fn init(ctx: &ReducerContext) {
-    let world_id = PhysicsWorld::builder().build().insert(ctx).id;
+    let world_id = PhysicsWorld::builder().sub_step(10).build().insert(ctx).id;
 
     RigidBody::builder()
         .world_id(world_id)
-        .position(Vec3::new(1.0, 3.0, 0.0))
+        .position(Vec3::new(1.0, 100.0, 0.0))
         .collider(Collider::sphere(1.0))
         .build()
         .insert(ctx);
