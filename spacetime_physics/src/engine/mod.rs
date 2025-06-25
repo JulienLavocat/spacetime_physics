@@ -95,7 +95,7 @@ fn detect_collisions(bodies: &mut [RigidBody], world: &PhysicsWorld) -> Vec<Pene
 fn integrate_bodies(bodies: &mut [RigidBody], world: &PhysicsWorld, delta_time: f32) {
     for body in bodies {
         if body.is_static_or_sleeping() {
-            return;
+            continue;
         }
 
         // --- Linear integration ---
@@ -146,7 +146,7 @@ fn integrate_bodies(bodies: &mut [RigidBody], world: &PhysicsWorld, delta_time: 
         body.torque = Vec3::ZERO;
 
         debug!(
-            "Integrated body {}: position: {}, rotation: {}, velocity: {}, angular_velocity: {}",
+            "[Integrate] body {}: position: {}, rotation: {}, velocity: {}, angular_velocity: {}",
             body.id, body.position, body.rotation, body.linear_velocity, body.angular_velocity
         );
     }
@@ -175,12 +175,19 @@ fn recompute_velocities(bodies: &mut [RigidBody], delta_time: f32) {
 
         body.pre_solve_angular_velocity = body.angular_velocity;
         let dq = (body.rotation * body.previous_rotation.inverse()).normalize();
-        let omega = 2.0 * dq.xyz() / delta_time;
-        body.angular_velocity = if dq.w >= 0.0 { omega } else { -omega };
+        let angle = 2.0 * dq.w.acos();
+        let sin_half = (1.0 - dq.w * dq.w).sqrt();
+        let axis = if sin_half > 1e-5 {
+            dq.xyz() / sin_half
+        } else {
+            Vec3::Z
+        };
+
+        body.angular_velocity = axis * angle / delta_time;
 
         debug!(
-            "Recomputed velocities for body {}: velocity: {} -> {}, angular_velocity: {} -> {}, dq: {}, omega: {}",
-            body.id,body.pre_solve_linear_velocity, body.linear_velocity, body.pre_solve_angular_velocity, body.angular_velocity, dq, omega
+            "[RecomputeVelocities] body {}: velocity: {} -> {}, angular_velocity: {} -> {}, dq: {}, axis: {}, angle: {}",
+            body.id,body.pre_solve_linear_velocity, body.linear_velocity, body.pre_solve_angular_velocity, body.angular_velocity, dq, axis, angle
         );
     }
 }
@@ -230,7 +237,7 @@ fn solve_velocities(
         let inv_inertia1 = body1.effective_inverse_inertia();
         let inv_inertia2 = body2.effective_inverse_inertia();
 
-        let friction_coefficient = (body1.friction + body2.friction) * 0.5;
+        let friction_coefficient = body1.friction.combine(&body2.friction).dynamic_friction;
         let restitution_coefficient = (body1.restitution + body2.restitution) * 0.5;
 
         // Compute dynamic friction
@@ -284,6 +291,11 @@ fn solve_velocities(
             body2.angular_velocity -=
                 compute_delta_ang_vel(inv_inertia2, constraint.contact_point_b, p);
         }
+
+        debug!(
+            "[SolveVelocities]: a: {}, b: {}, normal: {}, normal_vel: {}, tangent_vel: {}, delta_v: {}, delta_v_length: {}, a_linear_velocity: {}, a_angular_velocity: {}, b_linear_velocity: {}, b_angular_velocity: {}",
+            constraint.a, constraint.b, normal, normal_vel, tangent_vel, delta_v, delta_v_length, body1.linear_velocity, body1.angular_velocity, body2.linear_velocity, body2.angular_velocity
+        );
     }
 }
 
@@ -312,8 +324,12 @@ fn get_dynamic_friction(
     let normal_force = normal_lagrange / sub_dt.powi(2);
 
     // Velocity update caused by dynamic friction, never exceeds the magnitude of the tangential velocity itself
-    -tangent_vel / tangent_vel_magnitude
-        * (sub_dt * coefficient * normal_force.abs()).min(tangent_vel_magnitude)
+    let dir = if tangent_vel_magnitude > 1e-6 {
+        tangent_vel / tangent_vel_magnitude
+    } else {
+        Vec3::ZERO
+    };
+    -dir * (sub_dt * coefficient * normal_force.abs()).min(tangent_vel_magnitude)
 }
 fn get_restitution(
     normal: Vec3,
@@ -334,7 +350,7 @@ fn get_restitution(
 fn debug_bodies(bodies: &[RigidBody]) {
     for body in bodies {
         debug!(
-            "Body {}: position: {}, rotation: {}, velocity: {}, angular_velocity: {}, force: {}, torque: {}",
+            "[Body] {}: position: {}, rotation: {}, velocity: {}, angular_velocity: {}, force: {}, torque: {}",
             body.id, body.position, body.rotation, body.linear_velocity, body.angular_velocity, body.force, body.torque
         );
     }
