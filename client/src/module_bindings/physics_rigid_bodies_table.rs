@@ -3,6 +3,7 @@
 
 #![allow(unused, clippy::all)]
 use super::collider_type::Collider;
+use super::friction_type::Friction;
 use super::mat_3_type::Mat3;
 use super::quat_type::Quat;
 use super::rigid_body_type::RigidBody;

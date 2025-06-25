@@ -1,6 +1,6 @@
 module := "stdb-physics"
 
-publish:
+server:
     spacetime publish -p spacetime_physics {{module}} -y -c
 
 delete:
@@ -18,6 +18,11 @@ logs:
 messages:
     spacetime logs {{module}} --format json | jq -r '.message'
 
-sc: publish client
+sc: server client
 
-all: publish bindings client
+sm sleep='1':
+    just server 
+    sleep {{sleep}}
+    just messages
+
+all: server bindings client

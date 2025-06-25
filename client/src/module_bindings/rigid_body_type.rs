@@ -5,6 +5,7 @@
 use spacetimedb_sdk::__codegen::{self as __sdk, __lib, __sats, __ws};
 
 use super::collider_type::Collider;
+use super::friction_type::Friction;
 use super::mat_3_type::Mat3;
 use super::quat_type::Quat;
 use super::vec_3_type::Vec3;
@@ -16,18 +17,18 @@ pub struct RigidBody {
     pub world_id: u64,
     pub position: Vec3,
     pub rotation: Quat,
-    pub velocity: Vec3,
+    pub linear_velocity: Vec3,
     pub angular_velocity: Vec3,
-    pub inertia_tensor: Mat3,
-    pub inv_inertia_tensor: Option<Mat3>,
     pub force: Vec3,
     pub mass: f32,
     pub inv_mass: f32,
     pub collider: Collider,
+    pub inertia_tensor: Mat3,
+    pub inv_inertia_tensor: Option<Mat3>,
     pub torque: Vec3,
-    pub friction: f32,
+    pub friction: Friction,
     pub restitution: f32,
-    pub pre_solve_velocity: Vec3,
+    pub pre_solve_linear_velocity: Vec3,
     pub pre_solve_angular_velocity: Vec3,
     pub previous_position: Vec3,
     pub previous_rotation: Quat,

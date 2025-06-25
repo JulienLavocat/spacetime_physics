@@ -31,7 +31,7 @@ impl Mat3 {
         m33: 1.0,
     };
 
-    const ZERO: Self = Self {
+    pub const ZERO: Self = Self {
         m11: 0.0,
         m12: 0.0,
         m13: 0.0,
@@ -65,6 +65,20 @@ impl Mat3 {
             m31,
             m32,
             m33,
+        }
+    }
+
+    pub fn from_diagonal(diagonal: Vec3) -> Self {
+        Self {
+            m11: diagonal.x,
+            m12: 0.0,
+            m13: 0.0,
+            m21: 0.0,
+            m22: diagonal.y,
+            m23: 0.0,
+            m31: 0.0,
+            m32: 0.0,
+            m33: diagonal.z,
         }
     }
 

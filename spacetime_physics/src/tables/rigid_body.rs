@@ -68,10 +68,7 @@ pub struct RigidBody {
     pub linear_velocity: Vec3,
     #[builder(default = Vec3::ZERO)]
     pub angular_velocity: Vec3,
-    #[builder(default = Mat3::IDENTITY)]
-    pub inertia_tensor: Mat3,
-    #[builder(skip = inertia_tensor.inverse())]
-    pub inv_inertia_tensor: Option<Mat3>,
+
     #[builder(default = Vec3::ZERO)]
     pub force: Vec3,
 
@@ -81,6 +78,11 @@ pub struct RigidBody {
     pub inv_mass: f32,
 
     pub collider: Collider,
+
+    #[builder(default = collider.inertia_tensor(mass))]
+    pub inertia_tensor: Mat3,
+    #[builder(skip = inertia_tensor.inverse())]
+    pub inv_inertia_tensor: Option<Mat3>,
 
     #[builder(default = Vec3::ZERO)]
     pub torque: Vec3,
@@ -119,7 +121,7 @@ impl RigidBody {
         // TODO: Take into account locked axes
         match self.inv_inertia_tensor {
             Some(inv) => inv,
-            None => Mat3::IDENTITY, // Static body
+            None => Mat3::ZERO, // Static body
         }
     }
 
