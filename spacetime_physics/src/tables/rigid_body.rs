@@ -9,6 +9,29 @@ use crate::{
 };
 
 #[derive(SpacetimeType, Debug, Clone, Copy, PartialEq)]
+pub struct Restitution {
+    pub coefficient: f32,
+}
+
+impl Restitution {
+    pub fn new(coefficient: f32) -> Self {
+        Self { coefficient }
+    }
+
+    pub fn combine(&self, other: &Self) -> Self {
+        Self {
+            coefficient: (self.coefficient + other.coefficient) / 2.0,
+        }
+    }
+}
+
+impl Default for Restitution {
+    fn default() -> Self {
+        Self { coefficient: 0.0 }
+    }
+}
+
+#[derive(SpacetimeType, Debug, Clone, Copy, PartialEq)]
 pub struct Friction {
     pub static_coefficient: f32,
     pub dynamic_coefficient: f32,
@@ -89,8 +112,8 @@ pub struct RigidBody {
 
     #[builder(default = Friction::default())]
     pub friction: Friction,
-    #[builder(default = 0.0)]
-    pub restitution: f32,
+    #[builder(default = Restitution::default())]
+    pub restitution: Restitution,
 
     #[builder(skip = linear_velocity)]
     pub pre_solve_linear_velocity: Vec3,
@@ -120,7 +143,10 @@ impl RigidBody {
     pub fn effective_inverse_inertia(&self) -> Mat3 {
         // TODO: Take into account locked axes
         match self.inv_inertia_tensor {
-            Some(inv) => inv,
+            Some(inv) => {
+                let r = self.rotation.to_mat3();
+                r * inv * r.transpose()
+            }
             None => Mat3::ZERO, // Static body
         }
     }

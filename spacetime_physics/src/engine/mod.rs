@@ -154,7 +154,7 @@ fn solve_constraints(
         .for_each(|constraint| constraint.solve(bodies, delta_time));
 }
 
-fn recompute_velocities(bodies: &mut [RigidBody], delta_time: f32) {
+fn recompute_velocities(bodies: &mut [RigidBody], dt: f32) {
     for body in bodies {
         if body.is_static_or_sleeping() {
             body.linear_velocity = Vec3::ZERO;
@@ -163,23 +163,19 @@ fn recompute_velocities(bodies: &mut [RigidBody], delta_time: f32) {
         }
 
         body.pre_solve_linear_velocity = body.linear_velocity;
-        body.linear_velocity = (body.position - body.previous_position) / delta_time;
+        body.linear_velocity = (body.position - body.previous_position) / dt;
 
         body.pre_solve_angular_velocity = body.angular_velocity;
-        let dq = (body.rotation * body.previous_rotation.inverse()).normalize();
-        let angle = 2.0 * dq.w.acos();
-        let sin_half = (1.0 - dq.w * dq.w).sqrt();
-        let axis = if sin_half > 1e-5 {
-            dq.xyz() / sin_half
-        } else {
-            Vec3::Z
-        };
-
-        body.angular_velocity = axis * angle / delta_time;
+        body.angular_velocity =
+            (body.rotation * body.previous_rotation.inverse()).as_radians() / dt;
 
         debug!(
-            "[RecomputeVelocities] body {}: velocity: {} -> {}, angular_velocity: {} -> {}, dq: {}, axis: {}, angle: {}",
-            body.id,body.pre_solve_linear_velocity, body.linear_velocity, body.pre_solve_angular_velocity, body.angular_velocity, dq, axis, angle
+            "[RecomputeVelocities] body {}: velocity: {} -> {}, angular_velocity: {} -> {}",
+            body.id,
+            body.pre_solve_linear_velocity,
+            body.linear_velocity,
+            body.pre_solve_angular_velocity,
+            body.angular_velocity
         );
     }
 }
@@ -230,7 +226,7 @@ fn solve_velocities(
         let inv_inertia2 = body2.effective_inverse_inertia();
 
         let friction_coefficient = body1.friction.combine(&body2.friction).dynamic_coefficient;
-        let restitution_coefficient = (body1.restitution + body2.restitution) * 0.5;
+        let restitution_coefficient = body1.restitution.combine(&body2.restitution).coefficient;
 
         // Compute dynamic friction
         let friction_impulse = get_dynamic_friction(

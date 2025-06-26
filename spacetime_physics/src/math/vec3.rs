@@ -9,6 +9,8 @@ use parry3d::{
 };
 use spacetimedb::SpacetimeType;
 
+use super::Mat3;
+
 #[derive(SpacetimeType, Default, Debug, Clone, Copy, PartialEq)]
 pub struct Vec3 {
     pub x: f32,
@@ -321,6 +323,18 @@ impl MulAssign for &mut Vec3 {
         self.x *= rhs.x;
         self.y *= rhs.y;
         self.z *= rhs.z;
+    }
+}
+
+impl Mul<Mat3> for Vec3 {
+    type Output = Vec3;
+
+    fn mul(self, rhs: Mat3) -> Self::Output {
+        Vec3 {
+            x: self.x * rhs.m11 + self.y * rhs.m12 + self.z * rhs.m13,
+            y: self.x * rhs.m21 + self.y * rhs.m22 + self.z * rhs.m23,
+            z: self.x * rhs.m31 + self.y * rhs.m32 + self.z * rhs.m33,
+        }
     }
 }
 

@@ -16,19 +16,19 @@ fn init(ctx: &ReducerContext) {
         .insert(ctx)
         .id;
 
-    // RigidBody::builder()
-    //     .world_id(world_id)
-    //     .position(Vec3::new(1.0, 10.0, 0.0))
-    //     .collider(Collider::sphere(1.0))
-    //     .build()
-    //     .insert(ctx);
-
     RigidBody::builder()
         .world_id(world_id)
-        .position(Vec3::new(0.0, 5.0, 0.0))
-        .collider(Collider::cuboid(Vec3::new(1.0, 1.0, 1.0)))
+        .position(Vec3::new(10.0, 50.0, 10.0))
+        .collider(Collider::sphere(1.0))
         .build()
         .insert(ctx);
+
+    // RigidBody::builder()
+    //     .world_id(world_id)
+    //     .position(Vec3::new(0.0, 5.0, 0.0))
+    //     .collider(Collider::cuboid(Vec3::new(1.0, 1.0, 1.0)))
+    //     .build()
+    //     .insert(ctx);
 
     RigidBody::builder()
         .world_id(world_id)
