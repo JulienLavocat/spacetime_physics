@@ -53,6 +53,19 @@ impl Quat {
         }
     }
 
+    pub fn from_scaled_axis(delta_angle: Vec3) -> Quat {
+        let half_angle = delta_angle.length() * 0.5;
+        let sin_half_angle = half_angle.sin();
+        let axis = delta_angle.normalize();
+
+        Quat {
+            x: axis.x * sin_half_angle,
+            y: axis.y * sin_half_angle,
+            z: axis.z * sin_half_angle,
+            w: half_angle.cos(),
+        }
+    }
+
     pub fn normalize(self) -> Self {
         let len = (self.x * self.x + self.y * self.y + self.z * self.z + self.w * self.w).sqrt();
         if len == 0.0 {
