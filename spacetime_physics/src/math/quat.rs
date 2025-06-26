@@ -5,7 +5,7 @@ use std::{
 
 use spacetimedb::SpacetimeType;
 
-use super::Vec3;
+use super::{Mat3, Vec3};
 
 #[derive(SpacetimeType, Debug, Clone, Copy, PartialEq, Default)]
 pub struct Quat {
@@ -92,6 +92,38 @@ impl Quat {
         );
 
         vec + (uv * (2.0 * self.w)) + uuv
+    }
+
+    pub fn to_mat3(&self) -> Mat3 {
+        let x2 = self.x * self.x;
+        let y2 = self.y * self.y;
+        let z2 = self.z * self.z;
+        let xy = self.x * self.y;
+        let xz = self.x * self.z;
+        let yz = self.y * self.z;
+        let wx = self.w * self.x;
+        let wy = self.w * self.y;
+        let wz = self.w * self.z;
+
+        Mat3::new(
+            1.0 - 2.0 * (y2 + z2),
+            2.0 * (xy - wz),
+            2.0 * (xz + wy),
+            2.0 * (xy + wz),
+            1.0 - 2.0 * (x2 + z2),
+            2.0 * (yz - wx),
+            2.0 * (xz - wy),
+            2.0 * (yz + wx),
+            1.0 - 2.0 * (x2 + y2),
+        )
+    }
+
+    pub fn as_radians(&self) -> Vec3 {
+        Vec3::new(
+            self.x.to_radians(),
+            self.y.to_radians(),
+            self.z.to_radians(),
+        )
     }
 }
 

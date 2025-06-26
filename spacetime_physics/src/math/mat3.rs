@@ -110,6 +110,40 @@ impl Mat3 {
             m33: (self.m11 * self.m22 - self.m12 * self.m21) * inv_det,
         })
     }
+
+    pub fn transpose(&self) -> Self {
+        Self {
+            m11: self.m11,
+            m12: self.m21,
+            m13: self.m31,
+            m21: self.m12,
+            m22: self.m22,
+            m23: self.m32,
+            m31: self.m13,
+            m32: self.m23,
+            m33: self.m33,
+        }
+    }
+}
+
+impl Mul<Mat3> for Mat3 {
+    type Output = Self;
+
+    fn mul(self, other: Self) -> Self::Output {
+        Self {
+            m11: self.m11 * other.m11 + self.m12 * other.m21 + self.m13 * other.m31,
+            m12: self.m11 * other.m12 + self.m12 * other.m22 + self.m13 * other.m32,
+            m13: self.m11 * other.m13 + self.m12 * other.m23 + self.m13 * other.m33,
+
+            m21: self.m21 * other.m11 + self.m22 * other.m21 + self.m23 * other.m31,
+            m22: self.m21 * other.m12 + self.m22 * other.m22 + self.m23 * other.m32,
+            m23: self.m21 * other.m13 + self.m22 * other.m23 + self.m23 * other.m33,
+
+            m31: self.m31 * other.m11 + self.m32 * other.m21 + self.m33 * other.m31,
+            m32: self.m31 * other.m12 + self.m32 * other.m22 + self.m33 * other.m32,
+            m33: self.m31 * other.m13 + self.m32 * other.m23 + self.m33 * other.m33,
+        }
+    }
 }
 
 impl Mul<Vec3> for Mat3 {
