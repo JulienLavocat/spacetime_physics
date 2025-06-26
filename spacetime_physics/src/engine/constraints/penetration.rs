@@ -60,8 +60,8 @@ impl PenetrationConstraint {
         let compliance = self.compliance;
         let lagrange = self.normal_lagrange;
 
-        let ra = self.world_a - body_a.position;
-        let rb = self.world_b - body_b.position;
+        let ra = body_a.rotation.rotate(self.local_a);
+        let rb = body_b.rotation.rotate(self.local_b);
 
         if penetraion >= 0.0 {
             return;

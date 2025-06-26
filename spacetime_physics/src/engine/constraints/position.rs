@@ -45,9 +45,11 @@ pub trait PositionConstraint: Constraint {
         body.position += sign * p * body.effective_inverse_mass();
 
         let inv_inertia = body.effective_inverse_inertia();
-        let angle = 0.5 * (inv_inertia * r.cross(p));
-        let dq = Quat::from_xyz(angle, 0.0);
-        body.rotation = (body.rotation + dq).normalize();
+        let delta_angle = sign * inv_inertia * r.cross(*p);
+
+        // Proper quaternion integration for angular correction
+        let dq = Quat::from_scaled_axis(delta_angle);
+        body.rotation = (dq * body.rotation).normalize();
     }
 
     fn compute_generalized_inverse_mass(&self, body: &RigidBody, r: &Vec3, n: &Vec3) -> f32 {

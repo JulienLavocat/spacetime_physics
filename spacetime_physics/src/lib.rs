@@ -18,7 +18,7 @@ fn init(ctx: &ReducerContext) {
 
     RigidBody::builder()
         .world_id(world_id)
-        .position(Vec3::new(10.0, 50.0, 10.0))
+        .position(Vec3::new(1.0, 5.0, 0.0))
         .collider(Collider::sphere(1.0))
         .build()
         .insert(ctx);

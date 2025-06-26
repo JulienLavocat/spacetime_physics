@@ -123,15 +123,8 @@ fn integrate_bodies(bodies: &mut [RigidBody], world: &PhysicsWorld, delta_time: 
         // ω ← ω + h * α
         body.angular_velocity += delta_time * angular_acceleration;
 
-        let omega_quat = Quat {
-            x: body.angular_velocity.x,
-            y: body.angular_velocity.y,
-            z: body.angular_velocity.z,
-            w: 0.0,
-        };
-
         // q ← q + 0.5 * h * q × ω
-        let dq = 0.5 * omega_quat * body.rotation;
+        let dq = 0.5 * Quat::from_xyz(body.angular_velocity, 0.0) * body.rotation;
         body.rotation = (body.rotation + dq * delta_time).normalize();
 
         body.force = Vec3::ZERO;
@@ -273,8 +266,8 @@ fn solve_velocities(
         }
 
         debug!(
-            "[SolveVelocities]: a: {}, b: {}, normal: {}, normal_vel: {}, tangent_vel: {}, delta_v: {}, delta_v_length: {}, a_linear_velocity: {}, a_angular_velocity: {}, b_linear_velocity: {}, b_angular_velocity: {}",
-            constraint.a, constraint.b, normal, normal_vel, tangent_vel, delta_v, delta_v_length, body1.linear_velocity, body1.angular_velocity, body2.linear_velocity, body2.angular_velocity
+            "[SolveVelocities]: a: {}, b: {}, normal: {}, normal_vel: {}, tangent_vel: {}, friction_impulse: {}, restitution_impulse: {}, delta_v: {}, delta_v_length: {}, a_linear_velocity: {}, a_angular_velocity: {}, b_linear_velocity: {}, b_angular_velocity: {}",
+            constraint.a, constraint.b, normal, normal_vel, tangent_vel, friction_impulse, restitution_impulse, delta_v, delta_v_length, body1.linear_velocity, body1.angular_velocity, body2.linear_velocity, body2.angular_velocity
         );
     }
 }
@@ -311,6 +304,7 @@ fn get_dynamic_friction(
     };
     -dir * (sub_dt * coefficient * normal_force.abs()).min(tangent_vel_magnitude)
 }
+
 fn get_restitution(
     normal: Vec3,
     normal_vel: f32,
@@ -324,7 +318,14 @@ fn get_restitution(
         coefficient = 0.0;
     }
 
-    normal * (-normal_vel + (-coefficient * pre_solve_normal_vel).min(0.0))
+    let restitution = normal * (-normal_vel + (-coefficient * pre_solve_normal_vel).min(0.0));
+
+    debug!(
+        "[GetRestitution] normal: {}, normal_vel: {}, pre_solve_normal_vel: {}, coefficient: {}, restitution: {}",
+        normal, normal_vel, pre_solve_normal_vel, coefficient, restitution
+    );
+
+    restitution
 }
 
 fn debug_bodies(bodies: &[RigidBody]) {
