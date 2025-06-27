@@ -72,6 +72,14 @@ impl Display for Friction {
     }
 }
 
+#[derive(SpacetimeType, Debug, Clone, Copy, PartialEq, Default)]
+pub enum RigidBodyType {
+    Static,
+    #[default]
+    Dynamic,
+    Kinematic,
+}
+
 #[table(name = physics_rigid_bodies, public)]
 #[derive(Builder, Clone, Copy, Debug, Default, PartialEq)]
 #[builder(derive(Debug, Clone))]
@@ -124,6 +132,9 @@ pub struct RigidBody {
     pub previous_position: Vec3,
     #[builder(skip = rotation)]
     pub previous_rotation: Quat,
+
+    #[builder(default = RigidBodyType::default())]
+    pub body_type: RigidBodyType,
 }
 
 impl RigidBody {
@@ -151,9 +162,12 @@ impl RigidBody {
         }
     }
 
-    pub fn is_static_or_sleeping(&self) -> bool {
-        // TODO: Sleep logic
-        self.mass <= 0.0
+    pub fn is_dynamic(&self) -> bool {
+        self.body_type == RigidBodyType::Dynamic
+    }
+
+    pub fn is_kinematic(&self) -> bool {
+        self.body_type == RigidBodyType::Kinematic
     }
 }
 

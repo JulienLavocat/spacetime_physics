@@ -8,11 +8,10 @@ use spacetimedb_sdk::__codegen::{self as __sdk, __lib, __sats, __ws};
 
 #[derive(__lib::ser::Serialize, __lib::de::Deserialize, Clone, PartialEq, Debug)]
 #[sats(crate = __lib)]
-pub struct Friction {
-    pub static_coefficient: f32,
-    pub dynamic_coefficient: f32,
+pub struct Restitution {
+    pub coefficient: f32,
 }
 
-impl __sdk::InModule for Friction {
+impl __sdk::InModule for Restitution {
     type Module = super::RemoteModule;
 }

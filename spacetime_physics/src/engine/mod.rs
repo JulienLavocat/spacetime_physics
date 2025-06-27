@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use constraints::{Constraint, PenetrationConstraint, PositionConstraint};
 use log::debug;
 use spacetimedb::{log_stopwatch::LogStopwatch, ReducerContext};
@@ -12,8 +14,14 @@ pub mod collisions;
 mod constraints;
 mod utils;
 
-pub fn step_world(ctx: &ReducerContext, world: &PhysicsWorld) {
-    LogStopwatch::new("step_world");
+pub type KinematicBody = (u64, (Vec3, Quat));
+
+pub fn step_world(
+    ctx: &ReducerContext,
+    world: &PhysicsWorld,
+    kinematic_entities: &[KinematicBody],
+) {
+    let sw = LogStopwatch::new("step_world");
 
     let mut bodies = ctx
         .db
@@ -23,6 +31,8 @@ pub fn step_world(ctx: &ReducerContext, world: &PhysicsWorld) {
         .collect::<Vec<_>>();
     bodies.sort_by_key(|body| body.id);
     let bodies = bodies.as_mut_slice();
+
+    sync_kinematic_bodies(kinematic_entities, bodies);
 
     let dt = world.time_step / world.sub_step as f32;
 
@@ -54,7 +64,30 @@ pub fn step_world(ctx: &ReducerContext, world: &PhysicsWorld) {
         );
         body.update(ctx);
     }
-    debug!("-------------------------------------------------------------")
+    debug!("-------------------------------------------------------------");
+
+    sw.end();
+}
+
+fn sync_kinematic_bodies(kinematic_entities: &[KinematicBody], bodies: &mut [RigidBody]) {
+    let kine: HashMap<u64, (Vec3, Quat)> = kinematic_entities
+        .iter()
+        .map(|c| (c.0, (c.1 .0, c.1 .1)))
+        .collect();
+
+    for body in bodies {
+        if !body.is_kinematic() {
+            continue;
+        }
+
+        let (position, rotation) = match kine.get(&body.id) {
+            Some((pos, rot)) => (pos, rot),
+            None => continue, // No kinematic data for this body
+        };
+
+        body.rotation = *rotation;
+        body.position = *position;
+    }
 }
 
 fn detect_collisions(bodies: &mut [RigidBody], world: &PhysicsWorld) -> Vec<PenetrationConstraint> {
@@ -86,7 +119,7 @@ fn detect_collisions(bodies: &mut [RigidBody], world: &PhysicsWorld) -> Vec<Pene
 
 fn integrate_bodies(bodies: &mut [RigidBody], world: &PhysicsWorld, delta_time: f32) {
     for body in bodies {
-        if body.is_static_or_sleeping() {
+        if !body.is_dynamic() {
             continue;
         }
 
@@ -149,7 +182,7 @@ fn solve_constraints(
 
 fn recompute_velocities(bodies: &mut [RigidBody], dt: f32) {
     for body in bodies {
-        if body.is_static_or_sleeping() {
+        if !body.is_dynamic() {
             body.linear_velocity = Vec3::ZERO;
             body.angular_velocity = Vec3::ZERO;
             continue;
@@ -256,11 +289,11 @@ fn solve_velocities(
 
         // Compute velocity impulse and apply velocity updates (equation 33)
         let p = delta_v / (w1 + w2);
-        if !body1.is_static_or_sleeping() {
+        if body1.is_dynamic() {
             body1.linear_velocity += p * inv_mass1;
             body1.angular_velocity += compute_delta_ang_vel(inv_inertia1, constraint.world_a, p);
         }
-        if !body2.is_static_or_sleeping() {
+        if body2.is_dynamic() {
             body2.linear_velocity -= p * inv_mass2;
             body2.angular_velocity -= compute_delta_ang_vel(inv_inertia2, constraint.world_b, p);
         }

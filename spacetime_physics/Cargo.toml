@@ -3,11 +3,8 @@ name = "spacetime_physics"
 version = "0.1.0"
 edition = "2021"
 
-[lib]
-crate-type = ["cdylib"]
-
 [dependencies]
-spacetimedb = { version = "1.1.2", features = ["unstable"] }
+spacetimedb = { version = "1.2.0", features = ["unstable"] }
 log = "0.4"
 parry3d = "0.21.1"
 bon = "3.6.4"

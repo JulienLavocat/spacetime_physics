@@ -1,0 +1,12 @@
+[package]
+name = "spacetime-module"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+spacetimedb = "1.2.0"
+log = "0.4"
+spacetime_physics = {path = "../spacetime_physics"}
