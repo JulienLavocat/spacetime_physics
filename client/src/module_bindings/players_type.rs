@@ -6,13 +6,16 @@
 #![allow(unused, clippy::all)]
 use spacetimedb_sdk::__codegen::{self as __sdk, __lib, __sats, __ws};
 
+use super::vec_3_type::Vec3;
+
 #[derive(__lib::ser::Serialize, __lib::de::Deserialize, Clone, PartialEq, Debug)]
 #[sats(crate = __lib)]
-pub struct Friction {
-    pub static_coefficient: f32,
-    pub dynamic_coefficient: f32,
+pub struct Players {
+    pub id: __sdk::Identity,
+    pub pos: Vec3,
+    pub rigid_body_id: u64,
 }
 
-impl __sdk::InModule for Friction {
+impl __sdk::InModule for Players {
     type Module = super::RemoteModule;
 }

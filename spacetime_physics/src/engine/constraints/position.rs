@@ -24,11 +24,11 @@ pub trait PositionConstraint: Constraint {
         let previous_position_a = body_a.position;
         let previous_position_b = body_b.position;
 
-        if !body_a.is_static_or_sleeping() {
+        if body_a.is_dynamic() {
             Self::apply_body_correction(body_a, &p, ra, 1.0);
         }
 
-        if !body_b.is_static_or_sleeping() {
+        if body_b.is_dynamic() {
             Self::apply_body_correction(body_b, &p, rb, -1.0);
         }
 

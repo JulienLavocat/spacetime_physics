@@ -1,7 +1,7 @@
 module := "stdb-physics"
 
 server:
-    spacetime publish -p spacetime_physics {{module}} -y -c
+    spacetime publish -p server {{module}} -y -c
 
 delete:
     spacetime delete {{module}} -y
@@ -10,7 +10,7 @@ client:
     cargo run --bin client
 
 bindings:
-    spacetime generate --lang rust --out-dir ./client/src/module_bindings --project-path spacetime_physics
+    spacetime generate --lang rust --out-dir ./client/src/module_bindings --project-path server 
 
 logs:
     spacetime logs {{module}}

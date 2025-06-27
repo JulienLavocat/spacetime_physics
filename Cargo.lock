@@ -5439,6 +5439,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "spacetime-module"
+version = "0.1.0"
+dependencies = [
+ "log",
+ "spacetime_physics",
+ "spacetimedb",
+]
+
+[[package]]
 name = "spacetime_physics"
 version = "0.1.0"
 dependencies = [
@@ -5450,9 +5459,9 @@ dependencies = [
 
 [[package]]
 name = "spacetimedb"
-version = "1.1.2"
+version = "1.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "41cfbca6e4796309179af17942f37f5e1a7297e7a91fa33d2a20ccad48f50e35"
+checksum = "bf788061790df2c044398dd21342aecc4a19950058e3a2a5c53659a26d62b074"
 dependencies = [
  "bytemuck",
  "derive_more 0.99.20",
@@ -5468,9 +5477,9 @@ dependencies = [
 
 [[package]]
 name = "spacetimedb-bindings-macro"
-version = "1.1.2"
+version = "1.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1c60767c5e80fb1d0753834b894c9c3f9eb0ddba351ef4681fe714ff1024e727"
+checksum = "135f9af56c58a5ed97a7d1b9bee60104c866a46e705ab79f57e5f918ad276bdc"
 dependencies = [
  "heck 0.4.1",
  "humantime",
@@ -5482,18 +5491,18 @@ dependencies = [
 
 [[package]]
 name = "spacetimedb-bindings-sys"
-version = "1.1.2"
+version = "1.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4b5f6d06e1df203c97ecb7cd404e6a9a1920bfc3b7e16b40d650be6bfabe3292"
+checksum = "c9c71a65f572fc9233d7d035f117a5d0671df54d20e6abf627417ef4fbc41450"
 dependencies = [
  "spacetimedb-primitives",
 ]
 
 [[package]]
 name = "spacetimedb-client-api-messages"
-version = "1.1.2"
+version = "1.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4719dcabb2a4c20be50c52a94ab8db9efa04900dcda20f89734c17f6cc1d30b3"
+checksum = "a113aa7b243b7461904301e37f86dfa9e4ea803e4fb0b11f1eac057f052d0cb3"
 dependencies = [
  "brotli",
  "bytes",
@@ -5515,9 +5524,9 @@ dependencies = [
 
 [[package]]
 name = "spacetimedb-data-structures"
-version = "1.1.2"
+version = "1.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f857c5f4ea6c3d13f9d78d3aaa36fd31d1879331fdd15d3f1de0ecbc4e6e1968"
+checksum = "4f61fac3c0d82a0558824abfd6bcb5dc5e6fac934e002cac55e2e224a94b59c5"
 dependencies = [
  "ahash",
  "hashbrown 0.15.4",
@@ -5528,9 +5537,9 @@ dependencies = [
 
 [[package]]
 name = "spacetimedb-lib"
-version = "1.1.2"
+version = "1.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "69e1c1bac730f946c8ac07d9e71aee934eb1a82c02dcb6757a3763cdab808d1f"
+checksum = "4b4416b57d422452d1e06273b2ff5ceedb90020f74a06d88f39ce1c979b5be7e"
 dependencies = [
  "anyhow",
  "bitflags 2.9.1",
@@ -5551,9 +5560,9 @@ dependencies = [
 
 [[package]]
 name = "spacetimedb-metrics"
-version = "1.1.2"
+version = "1.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "68f8d70c3f417131b9d9fc0e5c929a374d8e98e1039161b140f4153174d46daf"
+checksum = "6b10e593a9b44d660e1d1dacde1ac2977bf08b51e970ad11043689a2d8c3bf46"
 dependencies = [
  "arrayvec",
  "itertools 0.12.1",
@@ -5563,9 +5572,9 @@ dependencies = [
 
 [[package]]
 name = "spacetimedb-primitives"
-version = "1.1.2"
+version = "1.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f149b0933112064b4d3424bfae9b6dc694d4bc2e3ca80b6974a0628e81b61c70"
+checksum = "c5a3d9c671b8d54371dd40f146c82cc8ae7039533ce034cbcc7dd618dfe35fc7"
 dependencies = [
  "bitflags 2.9.1",
  "either",
@@ -5575,9 +5584,9 @@ dependencies = [
 
 [[package]]
 name = "spacetimedb-sats"
-version = "1.1.2"
+version = "1.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e0e4739251061b529df194318f78c85482dff282d41175eeefe1a1f9c5ce556f"
+checksum = "b0dd6d73cae3213342a9144266e486e27a23b317b9601ca5cb4735f8407bcdd1"
 dependencies = [
  "anyhow",
  "arrayvec",
@@ -5604,9 +5613,9 @@ dependencies = [
 
 [[package]]
 name = "spacetimedb-sdk"
-version = "1.1.1"
+version = "1.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "38a7ce9dbd42c366c6cec1a9361ab0eaf3bb5c9c1b634fc4f91820a3bf689245"
+checksum = "4438023af69b8b95e2e12779456ba4f7e507d3027bd4df3b156b6d5bab6903f0"
 dependencies = [
  "anymap",
  "base64 0.21.7",
