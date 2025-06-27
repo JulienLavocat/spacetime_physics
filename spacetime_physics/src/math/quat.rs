@@ -3,6 +3,7 @@ use std::{
     ops::{Add, AddAssign, Mul, Sub, SubAssign},
 };
 
+use parry3d::na::{Quaternion, UnitQuaternion};
 use spacetimedb::SpacetimeType;
 
 use super::{Mat3, Vec3};
@@ -137,6 +138,13 @@ impl Quat {
             self.y.to_radians(),
             self.z.to_radians(),
         )
+    }
+}
+
+impl From<Quat> for UnitQuaternion<f32> {
+    fn from(value: Quat) -> Self {
+        let quaternion = Quaternion::new(value.x, value.y, value.z, value.w);
+        UnitQuaternion::from_quaternion(quaternion)
     }
 }
 

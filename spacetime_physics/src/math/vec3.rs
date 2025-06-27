@@ -5,7 +5,7 @@ use std::{
 
 use parry3d::{
     math::{Point, Vector},
-    na::Unit,
+    na::{Translation3, Unit},
 };
 use spacetimedb::SpacetimeType;
 
@@ -191,6 +191,18 @@ impl From<Point<f32>> for Vec3 {
             y: p.y,
             z: p.z,
         }
+    }
+}
+
+impl From<Vec3> for Point<f32> {
+    fn from(v: Vec3) -> Self {
+        Point::new(v.x, v.y, v.z)
+    }
+}
+
+impl From<Vec3> for Translation3<f32> {
+    fn from(v: Vec3) -> Self {
+        Translation3::new(v.x, v.y, v.z)
     }
 }
 

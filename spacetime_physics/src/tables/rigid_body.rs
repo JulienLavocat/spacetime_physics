@@ -1,11 +1,12 @@
 use std::fmt::Display;
 
 use bon::{builder, Builder};
+use parry3d::na::Isometry3;
 use spacetimedb::{table, ReducerContext, SpacetimeType, Table};
 
 use crate::{
-    engine::collisions::Collider,
     math::{Mat3, Quat, Vec3},
+    Collider,
 };
 
 #[derive(SpacetimeType, Debug, Clone, Copy, PartialEq)]
@@ -178,5 +179,17 @@ impl Display for RigidBody {
             "RigidBody(id={}, world_id={}, position={}, orientation={}, velocity={}, force={}, mass={}, inv_mass={})",
             self.id, self.world_id, self.position, self.rotation, self.linear_velocity, self.force, self.mass, self.inv_mass
         )
+    }
+}
+
+impl From<RigidBody> for Isometry3<f32> {
+    fn from(value: RigidBody) -> Self {
+        Isometry3::from_parts(value.position.into(), value.rotation.into())
+    }
+}
+
+impl From<&RigidBody> for Isometry3<f32> {
+    fn from(value: &RigidBody) -> Self {
+        Isometry3::from_parts(value.position.into(), value.rotation.into())
     }
 }

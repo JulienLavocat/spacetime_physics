@@ -9,9 +9,9 @@ use utils::get_bodies_mut;
 use crate::{
     math::{Mat3, Quat, Vec3},
     tables::{physics_rigid_bodies, PhysicsWorld, RigidBody},
+    test_collision,
 };
 
-pub mod collisions;
 mod constraints;
 mod log_stopwatch;
 mod utils;
@@ -114,15 +114,7 @@ fn detect_collisions(bodies: &mut [RigidBody], world: &PhysicsWorld) -> Vec<Pene
             let (left, right) = bodies.split_at_mut(j);
             let body_a = &mut left[i];
             let body_b = &mut right[0];
-            if let Some(collision) = collisions::test_collision(
-                &body_a.position,
-                &body_a.rotation,
-                &body_a.collider,
-                &body_b.position,
-                &body_b.rotation,
-                &body_b.collider,
-                world.precision,
-            ) {
+            if let Some(collision) = test_collision(body_a, body_b, world.precision) {
                 if collision.distance >= 0.0 {
                     continue; // No penetration
                 }

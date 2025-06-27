@@ -2,11 +2,7 @@ use std::fmt::Display;
 
 use log::debug;
 
-use crate::{
-    engine::{collisions::CollisionPoint, utils::get_bodies_mut},
-    math::Vec3,
-    tables::RigidBody,
-};
+use crate::{engine::utils::get_bodies_mut, math::Vec3, tables::RigidBody, CollisionPoint};
 
 use super::{position::PositionConstraint, Constraint};
 

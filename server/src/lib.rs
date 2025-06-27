@@ -1,9 +1,11 @@
+use core::f32;
+
+use log::info;
 use spacetime_physics::{
-    collisions::Collider,
     math::{Quat, Vec3},
-    physics_rigid_bodies,
     physics_world::physics_world,
-    schedule_physics_step_world, step_world, KinematicBody, PhysicsWorld, RigidBody, RigidBodyType,
+    raycast_all, schedule_physics_step_world, step_world, Collider, KinematicBody, PhysicsWorld,
+    RigidBody, RigidBodyType,
 };
 use spacetimedb::{reducer, table, Identity, ReducerContext, ScheduleAt, Table};
 
@@ -11,71 +13,72 @@ use spacetimedb::{reducer, table, Identity, ReducerContext, ScheduleAt, Table};
 pub struct Players {
     #[primary_key]
     pub id: Identity,
-    pub pos: Vec3,
+    pub position: Vec3,
+    pub rotation: Quat,
     pub rigid_body_id: u64,
 }
 
 #[table(name = physics_ticks, scheduled(physics_tick_world), public)]
-pub struct PhysicTick {
+pub struct PhysicsWorldTick {
     #[primary_key]
     pub world_id: u64,
     pub scheduled_at: ScheduleAt,
 }
 
-#[spacetimedb::reducer(init)]
+#[reducer(init)]
 pub fn init(ctx: &ReducerContext) {
     let world = PhysicsWorld::builder()
+        .ticks_per_second(60.0) // The reducer responsible for stepping the physics world will be scheduled at 60Hz, see TickWorld bellow
         .gravity(Vec3::new(0.0, -9.81, 0.0))
         .build()
         .insert(ctx);
 
-    ctx.db.physics_ticks().insert(PhysicTick {
+    // Create a small sphere that will fal towards the ground
+    RigidBody::builder()
+        .position(Vec3::new(0.0, 5.0, 0.0))
+        .collider(Collider::sphere(1.0))
+        .body_type(RigidBodyType::Dynamic)
+        .build()
+        .insert(ctx);
+
+    // Create a large static plane that will act as the ground
+    RigidBody::builder()
+        .position(Vec3::new(0.0, 10.0, 0.0))
+        .collider(Collider::plane(Vec3::Y))
+        .body_type(RigidBodyType::Static)
+        .build()
+        .insert(ctx);
+
+    // Schedule the physics tick for the world
+    ctx.db.physics_ticks().insert(PhysicsWorldTick {
         world_id: world.id,
         scheduled_at: schedule_physics_step_world(&world),
     });
 }
 
-#[reducer(client_connected)]
-fn on_connect(ctx: &ReducerContext) {
-    // Create a rigid body representing the player's collider
-    let rb = RigidBody::builder()
-        .position(Vec3::new(0.0, 1.0, 0.0))
-        .collider(Collider::sphere(1.0))
-        .body_type(RigidBodyType::Kinematic)
-        .build()
-        .insert(ctx);
-
-    // Insert the player into the database with the rigid body ID
-    ctx.db.players().insert(Players {
-        id: ctx.sender,
-        pos: Vec3::new(0.0, 1.0, 0.0),
-        rigid_body_id: rb.id,
-    });
-}
-
-#[reducer(client_disconnected)]
-fn on_disconnected(ctx: &ReducerContext) {
-    // Remove the player and their rigid body from the database
-    if let Some(player) = ctx.db.players().id().find(ctx.sender) {
-        ctx.db.players().id().delete(ctx.sender);
-        ctx.db
-            .physics_rigid_bodies()
-            .id()
-            .delete(player.rigid_body_id);
-    }
-}
-
 #[reducer]
-pub fn physics_tick_world(ctx: &ReducerContext, tick: PhysicTick) {
-    // spacetime_physics let the end user manage how the world should be stepped
+pub fn physics_tick_world(ctx: &ReducerContext, tick: PhysicsWorldTick) {
+    // spacetime_physics let the end user manage how and when the world should be stepped
     let world = ctx.db.physics_world().id().find(tick.world_id).unwrap();
 
+    // You can have kinematic entities, which are entities that are not affected by physics but can still interact with the physics world.
+    // In this example player's positions are updated by the client directly
     let kinematic_entities = ctx
         .db
         .players()
         .iter()
-        .map(|c| (c.rigid_body_id, (c.pos, Quat::IDENTITY)))
+        .map(|c| (c.rigid_body_id, (c.position, c.rotation)))
         .collect::<Vec<KinematicBody>>();
 
+    // Update the physics world and synchorinze the kinematic entities positions and rotations
     step_world(ctx, &world, kinematic_entities.as_slice());
+
+    // This is an exampole of how to perform a raycast in the physics world.
+    // You can use this in any reducer to implement shooting, picking, etc.
+    let origin = Vec3::ZERO;
+    let direction = Vec3::splat(100.0);
+    let max_distance = f32::MAX;
+    for item in raycast_all(ctx, world.id, origin, direction, max_distance, true) {
+        info!("Raycast hit: {:?}", item);
+    }
 }
