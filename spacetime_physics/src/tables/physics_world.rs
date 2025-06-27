@@ -45,10 +45,15 @@ pub struct PhysicsWorld {
     /// The number of position iterations to perform during the physics step. This should be as low
     /// as possible while still achieving stable results, a value of 1 is usually sufficient.
     pub position_iterations: u32,
-    #[builder(default = false)]
+
     /// If true, the physics world will log detailed debug information to the console. This is very
     /// verbose and should only be used for debugging purposes.
+    #[builder(default = false)]
     pub debug: bool,
+
+    /// If true, the physics world will log the time taken for each physics step to the console.
+    #[builder(default = false)]
+    pub debug_time: bool,
 }
 
 impl PhysicsWorld {

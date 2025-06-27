@@ -2,7 +2,8 @@ use std::collections::HashMap;
 
 use constraints::{Constraint, PenetrationConstraint, PositionConstraint};
 use log::debug;
-use spacetimedb::{log_stopwatch::LogStopwatch, ReducerContext};
+use log_stopwatch::LogStopwatch;
+use spacetimedb::ReducerContext;
 use utils::get_bodies_mut;
 
 use crate::{
@@ -12,6 +13,7 @@ use crate::{
 
 pub mod collisions;
 mod constraints;
+mod log_stopwatch;
 mod utils;
 
 pub type KinematicBody = (u64, (Vec3, Quat));
@@ -21,7 +23,7 @@ pub fn step_world(
     world: &PhysicsWorld,
     kinematic_entities: &[KinematicBody],
 ) {
-    let sw = LogStopwatch::new("step_world");
+    let sw = LogStopwatch::new(world, &format!("step_world_{}", world.id));
 
     let mut bodies = ctx
         .db
@@ -37,12 +39,17 @@ pub fn step_world(
     let dt = world.time_step / world.sub_step as f32;
 
     for i in 0..world.sub_step {
-        debug!("---------- substep: {} ----------", i);
+        if world.debug {
+            debug!("---------- substep: {} ----------", i);
+        }
+
         // TODO: Use Broad Phase outside of the loop and narrowly-resolve them once here
         let mut penetration_constraints = detect_collisions(bodies, world);
         let penetration_constraints = penetration_constraints.as_mut_slice();
 
-        debug!("Collisions detected: {:?}", penetration_constraints);
+        if world.debug {
+            debug!("Collisions detected: {:?}", penetration_constraints);
+        }
 
         integrate_bodies(bodies, world, dt);
 
@@ -50,21 +57,31 @@ pub fn step_world(
             solve_constraints(penetration_constraints, bodies, dt);
         }
 
-        recompute_velocities(bodies, dt);
+        recompute_velocities(world, bodies, dt);
         solve_velocities(world, penetration_constraints, bodies, dt);
 
-        debug_bodies(bodies);
+        if world.debug {
+            debug_bodies(bodies);
+        }
     }
-    debug!("---------- End of substeps ----------");
+
+    if world.debug {
+        debug!("---------- End of substeps ----------");
+    }
 
     for body in bodies {
-        debug!(
-            "Updating {} position: {} -> {}, velocity: {}, rotation: {}",
-            body.id, body.previous_position, body.position, body.linear_velocity, body.rotation,
-        );
+        if world.debug {
+            debug!(
+                "Updating {} position: {} -> {}, velocity: {}, rotation: {}",
+                body.id, body.previous_position, body.position, body.linear_velocity, body.rotation,
+            );
+        }
         body.update(ctx);
     }
-    debug!("-------------------------------------------------------------");
+
+    if world.debug {
+        debug!("-------------------------------------------------------------");
+    }
 
     sw.end();
 }
@@ -163,10 +180,12 @@ fn integrate_bodies(bodies: &mut [RigidBody], world: &PhysicsWorld, delta_time: 
         body.force = Vec3::ZERO;
         body.torque = Vec3::ZERO;
 
-        debug!(
+        if world.debug {
+            debug!(
             "[Integrate] body {}: position: {}, rotation: {}, velocity: {}, angular_velocity: {}",
             body.id, body.position, body.rotation, body.linear_velocity, body.angular_velocity
         );
+        }
     }
 }
 
@@ -180,7 +199,7 @@ fn solve_constraints(
         .for_each(|constraint| constraint.solve(bodies, delta_time));
 }
 
-fn recompute_velocities(bodies: &mut [RigidBody], dt: f32) {
+fn recompute_velocities(world: &PhysicsWorld, bodies: &mut [RigidBody], dt: f32) {
     for body in bodies {
         if !body.is_dynamic() {
             body.linear_velocity = Vec3::ZERO;
@@ -195,14 +214,16 @@ fn recompute_velocities(bodies: &mut [RigidBody], dt: f32) {
         body.angular_velocity =
             (body.rotation * body.previous_rotation.inverse()).as_radians() / dt;
 
-        debug!(
-            "[RecomputeVelocities] body {}: velocity: {} -> {}, angular_velocity: {} -> {}",
-            body.id,
-            body.pre_solve_linear_velocity,
-            body.linear_velocity,
-            body.pre_solve_angular_velocity,
-            body.angular_velocity
-        );
+        if world.debug {
+            debug!(
+                "[RecomputeVelocities] body {}: velocity: {} -> {}, angular_velocity: {} -> {}",
+                body.id,
+                body.pre_solve_linear_velocity,
+                body.linear_velocity,
+                body.pre_solve_angular_velocity,
+                body.angular_velocity
+            );
+        }
     }
 }
 
@@ -264,6 +285,7 @@ fn solve_velocities(
 
         // Compute restitution
         let restitution_impulse = get_restitution(
+            world,
             normal,
             normal_vel,
             pre_solve_normal_vel,
@@ -298,10 +320,12 @@ fn solve_velocities(
             body2.angular_velocity -= compute_delta_ang_vel(inv_inertia2, constraint.world_b, p);
         }
 
-        debug!(
+        if world.debug {
+            debug!(
             "[SolveVelocities]: a: {}, b: {}, normal: {}, normal_vel: {}, tangent_vel: {}, friction_impulse: {}, restitution_impulse: {}, delta_v: {}, delta_v_length: {}, a_linear_velocity: {}, a_angular_velocity: {}, b_linear_velocity: {}, b_angular_velocity: {}",
             constraint.a, constraint.b, normal, normal_vel, tangent_vel, friction_impulse, restitution_impulse, delta_v, delta_v_length, body1.linear_velocity, body1.angular_velocity, body2.linear_velocity, body2.angular_velocity
         );
+        }
     }
 }
 
@@ -339,6 +363,7 @@ fn get_dynamic_friction(
 }
 
 fn get_restitution(
+    world: &PhysicsWorld,
     normal: Vec3,
     normal_vel: f32,
     pre_solve_normal_vel: f32,
@@ -353,10 +378,12 @@ fn get_restitution(
 
     let restitution = normal * (-normal_vel + (-coefficient * pre_solve_normal_vel).min(0.0));
 
-    debug!(
+    if world.debug {
+        debug!(
         "[GetRestitution] normal: {}, normal_vel: {}, pre_solve_normal_vel: {}, coefficient: {}, restitution: {}",
         normal, normal_vel, pre_solve_normal_vel, coefficient, restitution
     );
+    }
 
     restitution
 }
