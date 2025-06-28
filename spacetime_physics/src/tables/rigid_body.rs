@@ -143,6 +143,17 @@ impl RigidBody {
         ctx.db.physics_rigid_bodies().insert(self)
     }
 
+    pub fn all(ctx: &ReducerContext, world_id: u64) -> Vec<Self> {
+        let mut bodies = ctx
+            .db
+            .physics_rigid_bodies()
+            .world_id()
+            .filter(world_id)
+            .collect::<Vec<_>>();
+        bodies.sort_by_key(|body| body.id);
+        bodies
+    }
+
     pub fn update(self, ctx: &ReducerContext) -> Self {
         ctx.db.physics_rigid_bodies().id().update(self)
     }

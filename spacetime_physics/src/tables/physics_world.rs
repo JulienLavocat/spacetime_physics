@@ -5,6 +5,8 @@ use spacetimedb::{table, ReducerContext, ScheduleAt, Table, TimeDuration};
 
 use crate::math::Vec3;
 
+pub type PhysicsWorldId = u64;
+
 pub fn schedule_physics_step_world(world: &PhysicsWorld) -> ScheduleAt {
     ScheduleAt::Interval(TimeDuration::from_duration(Duration::from_secs_f32(
         1.0 / world.ticks_per_second,
@@ -54,6 +56,10 @@ pub struct PhysicsWorld {
     /// If true, the physics world will log the time taken for each physics step to the console.
     #[builder(default = false)]
     pub debug_time: bool,
+
+    /// If true, the physics world will log the number of triggers enter / exit events to the console.
+    #[builder(default = false)]
+    pub debug_triggers: bool,
 }
 
 impl PhysicsWorld {
