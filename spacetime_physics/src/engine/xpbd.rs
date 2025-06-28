@@ -56,7 +56,7 @@ pub(crate) fn integrate_bodies(bodies: &mut [RigidBody], world: &PhysicsWorld, d
         body.force = Vec3::ZERO;
         body.torque = Vec3::ZERO;
 
-        if world.debug {
+        if world.debug_substep() {
             debug!(
             "[Integrate] body {}: position: {}, rotation: {}, velocity: {}, angular_velocity: {}",
             body.id, body.position, body.rotation, body.linear_velocity, body.angular_velocity
@@ -66,13 +66,14 @@ pub(crate) fn integrate_bodies(bodies: &mut [RigidBody], world: &PhysicsWorld, d
 }
 
 pub(crate) fn solve_constraints(
+    world: &PhysicsWorld,
     contact_constraints: &mut [PenetrationConstraint],
     bodies: &mut [RigidBody],
     delta_time: f32,
 ) {
     contact_constraints
         .iter_mut()
-        .for_each(|constraint| constraint.solve(bodies, delta_time));
+        .for_each(|constraint| constraint.solve(world, bodies, delta_time));
 }
 
 pub(crate) fn recompute_velocities(world: &PhysicsWorld, bodies: &mut [RigidBody], dt: f32) {
@@ -90,7 +91,7 @@ pub(crate) fn recompute_velocities(world: &PhysicsWorld, bodies: &mut [RigidBody
         body.angular_velocity =
             (body.rotation * body.previous_rotation.inverse()).as_radians() / dt;
 
-        if world.debug {
+        if world.debug_substep() {
             debug!(
                 "[RecomputeVelocities] body {}: velocity: {} -> {}, angular_velocity: {} -> {}",
                 body.id,

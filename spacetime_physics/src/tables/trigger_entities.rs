@@ -1,4 +1,7 @@
-use std::collections::{HashMap, HashSet};
+use std::{
+    collections::{HashMap, HashSet},
+    fmt::Display,
+};
 
 use bon::Builder;
 use spacetimedb::{table, ReducerContext, Table};
@@ -12,9 +15,6 @@ pub type PhysicsTriggerEntitiesMap = HashMap<PhysicsTriggerId, HashSet<PhysicsTr
 #[table(name = physics_trigger_entities)]
 #[derive(Builder, Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct PhysicsTriggerEntity {
-    #[primary_key]
-    pub id: u64,
-
     #[index(btree)]
     pub trigger_id: u64,
 
@@ -43,5 +43,15 @@ impl PhysicsTriggerEntity {
 
     pub fn insert(self, ctx: &ReducerContext) -> Self {
         ctx.db.physics_trigger_entities().insert(self)
+    }
+}
+
+impl Display for PhysicsTriggerEntity {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "PhysicsTriggerEntity(trigger_id: {}, world_id: {}, entity_id: {})",
+            self.trigger_id, self.world_id, self.entity_id
+        )
     }
 }

@@ -4,10 +4,10 @@ mod position;
 pub use penetration::*;
 pub use position::*;
 
-use crate::{math::Vec3, tables::RigidBody};
+use crate::{math::Vec3, tables::RigidBody, PhysicsWorld};
 
 pub(crate) trait Constraint {
-    fn solve(&mut self, bodies: &mut [RigidBody], delta_time: f32);
+    fn solve(&mut self, world: &PhysicsWorld, bodies: &mut [RigidBody], delta_time: f32);
 
     fn compute_lagrange_update(
         &self,

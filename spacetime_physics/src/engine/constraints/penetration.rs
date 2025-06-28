@@ -2,7 +2,9 @@ use std::fmt::Display;
 
 use log::debug;
 
-use crate::{engine::utils::get_bodies_mut, math::Vec3, tables::RigidBody, CollisionPoint};
+use crate::{
+    engine::utils::get_bodies_mut, math::Vec3, tables::RigidBody, CollisionPoint, PhysicsWorld,
+};
 
 use super::{position::PositionConstraint, Constraint};
 
@@ -49,7 +51,13 @@ impl PenetrationConstraint {
         }
     }
 
-    fn solve_contact(&mut self, body_a: &mut RigidBody, body_b: &mut RigidBody, dt: f32) {
+    fn solve_contact(
+        &mut self,
+        world: &PhysicsWorld,
+        body_a: &mut RigidBody,
+        body_b: &mut RigidBody,
+        dt: f32,
+    ) {
         // Shorter aliases for readability
         let penetraion = self.penetration_depth;
         let normal = self.normal;
@@ -77,17 +85,25 @@ impl PenetrationConstraint {
         if let Some((body_a_prev_pos, body_a_pos, body_b_prev_pos, body_b_pos, p)) =
             self.apply_position_correction(body_a, body_b, delta_lagrange, &normal, &ra, &rb)
         {
-            debug!(
+            if world.debug_constraints() {
+                debug!(
                 "[PenetrationConstraint] contact: a: {}, a_pos: {} -> {}, b: {}, b_pos: {} -> {}, p: {},, compliance: {}, normal_lagrange: {}, tangential_lagrange: {}",
                 self.a, body_a_prev_pos, body_a_pos,
                 self.b, body_b_prev_pos, body_b_pos,
                 p,
                 self.compliance, self.normal_lagrange, self.tangential_lagrange
             );
+            }
         }
     }
 
-    fn solve_friction(&mut self, body1: &mut RigidBody, body2: &mut RigidBody, dt: f32) {
+    fn solve_friction(
+        &mut self,
+        world: &PhysicsWorld,
+        body1: &mut RigidBody,
+        body2: &mut RigidBody,
+        dt: f32,
+    ) {
         // Shorter aliases
         let penetration = self.penetration_depth;
         let normal = self.normal;
@@ -136,15 +152,22 @@ impl PenetrationConstraint {
 
             // Update static friction force using the equation f = lambda * n / h^2
             self.static_friction_force = self.tangent_lagrange * tangent / dt.powi(2);
+
+            if world.debug_constraints() {
+                debug!(
+                    "[PenetrationConstraint] static friction: a: {}, b: {}, tangent_lagrange: {}, static_friction_force: {}",
+                    self.a, self.b, self.tangent_lagrange, self.static_friction_force
+                );
+            }
         }
     }
 }
 
 impl Constraint for PenetrationConstraint {
-    fn solve(&mut self, bodies: &mut [RigidBody], dt: f32) {
+    fn solve(&mut self, world: &PhysicsWorld, bodies: &mut [RigidBody], dt: f32) {
         let (body_a, body_b) = get_bodies_mut(self.a, self.b, bodies);
-        self.solve_contact(body_a, body_b, dt);
-        self.solve_friction(body_a, body_b, dt);
+        self.solve_contact(world, body_a, body_b, dt);
+        self.solve_friction(world, body_a, body_b, dt);
     }
 }
 

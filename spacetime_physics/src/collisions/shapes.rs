@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use spacetimedb::SpacetimeType;
 
 use crate::math::{Mat3, Vec3};
@@ -48,6 +50,16 @@ impl Collider {
             Collider::Plane(_) => Mat3::ZERO,
             Collider::Sphere(sphere) => sphere_inertia_tensor(mass, sphere.radius),
             Collider::Cuboid(cuboid) => cuboid_inertia_tensor(mass, cuboid.half_extents),
+        }
+    }
+}
+
+impl Display for Collider {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Collider::Sphere(sphere) => write!(f, "Sphere(radius: {})", sphere.radius),
+            Collider::Plane(plane) => write!(f, "Plane(normal: {})", plane.normal),
+            Collider::Cuboid(cuboid) => write!(f, "Cuboid(half_extents: {})", cuboid.half_extents),
         }
     }
 }

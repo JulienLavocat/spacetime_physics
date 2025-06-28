@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use bon::{builder, Builder};
 use parry3d::na::Isometry3;
 use spacetimedb::{table, ReducerContext, Table};
@@ -49,5 +51,15 @@ impl From<PhysicsTrigger> for Isometry3<f32> {
 impl From<&PhysicsTrigger> for Isometry3<f32> {
     fn from(trigger: &PhysicsTrigger) -> Self {
         Isometry3::from_parts(trigger.position.into(), trigger.rotation.into())
+    }
+}
+
+impl Display for PhysicsTrigger {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "PhysicsTrigger(id: {}, world_id: {}, position: {}, rotation: {}, collider: {})",
+            self.id, self.world_id, self.position, self.rotation, self.collider
+        )
     }
 }

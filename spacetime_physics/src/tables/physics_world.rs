@@ -48,6 +48,22 @@ pub struct PhysicsWorld {
     /// as possible while still achieving stable results, a value of 1 is usually sufficient.
     pub position_iterations: u32,
 
+    /// The dilation factor for the QBVH (Quantized Bounding Volume Hierarchy) used for collision detection.
+    /// This factor determines how much the bounding volumes are expanded to account for movement
+    /// and ensure that fast-moving objects are still detected for collisions.
+    #[builder(default = 0.001)]
+    pub qvbh_dilation_factor: f32,
+
+    /// How many units are in one meter in the physics world. This is used to convert between
+    /// game units and real-world units.
+    /// For example, if 100px = 1m in the game, then this value should be set to 100.0.
+    #[builder(default = 1.0)]
+    pub length_unit: f32,
+
+    /// The maximal distance separating two objects that will generate predictive contacts.
+    #[builder(default = 0.002)]
+    pub normalized_prediction_distance: f32,
+
     /// If true, the physics world will log detailed debug information to the console. This is very
     /// verbose and should only be used for debugging purposes.
     #[builder(default = false)]
@@ -60,11 +76,55 @@ pub struct PhysicsWorld {
     /// If true, the physics world will log the number of triggers enter / exit events to the console.
     #[builder(default = false)]
     pub debug_triggers: bool,
+
+    /// If true, the physics world will log the collisions detected during the broad phase to the console.
+    #[builder(default = false)]
+    pub debug_broad_phase: bool,
+
+    /// If true, the physics world will log the raycasts hits to the console.
+    #[builder(default = false)]
+    pub debug_raycasts: bool,
+
+    /// If true, the physics world will log the constraints being solved to the console.
+    #[builder(default = false)]
+    pub debug_constraints: bool,
+
+    /// If true, the physics world will log the sub-steps being performed to the console.
+    #[builder(default = false)]
+    pub debug_substep: bool,
 }
 
 impl PhysicsWorld {
     pub fn insert(self, ctx: &ReducerContext) -> Self {
         ctx.db.physics_world().insert(self)
+    }
+
+    pub fn prediction_distance(&self) -> f32 {
+        self.normalized_prediction_distance * self.length_unit
+    }
+
+    pub fn debug_broad_phase(&self) -> bool {
+        self.debug || self.debug_broad_phase
+    }
+
+    pub fn debug_time(&self) -> bool {
+        self.debug || self.debug_time
+    }
+
+    pub fn debug_triggers(&self) -> bool {
+        self.debug || self.debug_triggers
+    }
+
+    pub fn debug_raycasts(&self) -> bool {
+        self.debug || self.debug_raycasts
+    }
+
+    pub fn debug_constraints(&self) -> bool {
+        self.debug || self.debug_constraints
+    }
+
+    pub fn debug_substep(&self) -> bool {
+        self.debug || self.debug_substep
     }
 }
 

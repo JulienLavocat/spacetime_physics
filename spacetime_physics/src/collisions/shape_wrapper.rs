@@ -1,10 +1,10 @@
+use super::Collider;
 use parry3d::{
+    bounding_volume::{Aabb, BoundingVolume},
     na::Isometry3,
     query::{intersection_test, Contact, Ray, RayCast, RayIntersection, Unsupported},
     shape::{Ball, Cuboid, HalfSpace},
 };
-
-use super::Collider;
 
 /// Acts as a wrapper around spacetime_physics colliders and Parry's shapes,
 pub enum ShapeWrapper {
@@ -14,6 +14,14 @@ pub enum ShapeWrapper {
 }
 
 impl ShapeWrapper {
+    pub fn collision_aabb(&self, isometry: &Isometry3<f32>, prediction_distance: f32) -> Aabb {
+        match self {
+            ShapeWrapper::Sphere(sphere) => sphere.aabb(isometry).loosened(prediction_distance),
+            ShapeWrapper::Plane(plane) => plane.aabb(isometry).loosened(prediction_distance),
+            ShapeWrapper::Cuboid(cuboid) => cuboid.aabb(isometry).loosened(prediction_distance),
+        }
+    }
+
     pub fn cast_ray_and_get_normal(
         &self,
         isometry: &Isometry3<f32>,

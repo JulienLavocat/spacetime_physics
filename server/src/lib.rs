@@ -30,7 +30,7 @@ pub fn init(ctx: &ReducerContext) {
     let world = PhysicsWorld::builder()
         .ticks_per_second(60.0) // The reducer responsible for stepping the physics world will be scheduled at 60Hz, see TickWorld bellow
         .gravity(Vec3::new(0.0, -9.81, 0.0))
-        .debug_triggers(true)
+        .debug_broad_phase(true)
         .build()
         .insert(ctx);
 
@@ -42,9 +42,16 @@ pub fn init(ctx: &ReducerContext) {
         .build()
         .insert(ctx);
 
+    RigidBody::builder()
+        .position(Vec3::new(0.0, 98.0, 0.0))
+        .collider(Collider::cuboid(Vec3::new(1.0, 1.0, 1.0)))
+        .body_type(RigidBodyType::Dynamic)
+        .build()
+        .insert(ctx);
+
     // Create a large static plane that will act as the ground
     // RigidBody::builder()
-    //     .position(Vec3::new(0.0, 10.0, 0.0))
+    //     .position(Vec3::new(0.0, 0.0, 0.0))
     //     .collider(Collider::plane(Vec3::Y))
     //     .body_type(RigidBodyType::Static)
     //     .build()
@@ -85,6 +92,8 @@ pub fn physics_tick_world(ctx: &ReducerContext, tick: PhysicsWorldTick) {
     let direction = Vec3::splat(100.0);
     let max_distance = f32::MAX;
     for item in raycast_all(ctx, world.id, origin, direction, max_distance, true) {
-        info!("Raycast hit: {:?}", item);
+        if world.debug_raycasts {
+            info!("Raycast hit: {}", item);
+        }
     }
 }

@@ -9,6 +9,8 @@ use crate::{
     Collider,
 };
 
+pub type RigidBodyId = u64;
+
 #[derive(SpacetimeType, Debug, Clone, Copy, PartialEq)]
 pub struct Restitution {
     pub coefficient: f32,

@@ -3,7 +3,8 @@ use std::collections::{HashMap, HashSet};
 use constraints::PenetrationConstraint;
 use log::debug;
 use log_stopwatch::LogStopwatch;
-use spacetimedb::ReducerContext;
+use qvbh::Qbvh;
+use spacetimedb::{ReducerContext, Table};
 use xpbd::{integrate_bodies, recompute_velocities, solve_constraints, solve_velocities};
 
 use crate::{
@@ -17,6 +18,7 @@ use crate::{
 
 mod constraints;
 mod log_stopwatch;
+mod qvbh;
 mod utils;
 mod xpbd;
 
@@ -36,8 +38,17 @@ pub fn step_world(
 
     sync_kinematic_bodies(kinematic_entities, bodies);
 
+    let mut qvbh = Qbvh::from_bodies(world, bodies);
+    let broad_phase_pairs = qvbh.broad_phase();
+    if world.debug_broad_phase() {
+        debug!(
+            "[PhysicsWorld#{}] [BroadPhase] pairs: {:?}",
+            world.id, broad_phase_pairs
+        );
+    }
+
     for i in 0..world.sub_step {
-        if world.debug {
+        if world.debug_substep() {
             debug!("---------- substep: {} ----------", i);
         }
 
@@ -45,14 +56,14 @@ pub fn step_world(
         let mut penetration_constraints = detect_collisions(world, bodies);
         let penetration_constraints = penetration_constraints.as_mut_slice();
 
-        if world.debug {
+        if world.debug_substep() {
             debug!("Collisions detected: {:?}", penetration_constraints);
         }
 
         integrate_bodies(bodies, world, dt);
 
         for _ in 0..world.position_iterations {
-            solve_constraints(penetration_constraints, bodies, dt);
+            solve_constraints(world, penetration_constraints, bodies, dt);
         }
 
         recompute_velocities(world, bodies, dt);
@@ -84,6 +95,15 @@ pub fn step_world(
     }
 
     sw.end();
+}
+
+fn debug_bodies(bodies: &[RigidBody]) {
+    for body in bodies {
+        debug!(
+            "[Body] {}: position: {}, rotation: {}, velocity: {}, angular_velocity: {}, force: {}, torque: {}",
+            body.id, body.position, body.rotation, body.linear_velocity, body.angular_velocity, body.force, body.torque
+        );
+    }
 }
 
 fn sync_kinematic_bodies(
@@ -130,15 +150,6 @@ fn detect_collisions(world: &PhysicsWorld, bodies: &mut [RigidBody]) -> Vec<Pene
     constraints
 }
 
-fn debug_bodies(bodies: &[RigidBody]) {
-    for body in bodies {
-        debug!(
-            "[Body] {}: position: {}, rotation: {}, velocity: {}, angular_velocity: {}, force: {}, torque: {}",
-            body.id, body.position, body.rotation, body.linear_velocity, body.angular_velocity, body.force, body.torque
-        );
-    }
-}
-
 fn detect_triggers(ctx: &ReducerContext, world: &PhysicsWorld, bodies: &[RigidBody]) {
     let triggers = PhysicsTrigger::all(world.id, ctx);
     let triggers = triggers.as_slice();
@@ -158,7 +169,6 @@ fn detect_triggers(ctx: &ReducerContext, world: &PhysicsWorld, bodies: &[RigidBo
             {
                 if is_intersecting {
                     entities_inside.insert(PhysicsTriggerEntity {
-                        id: 0,
                         trigger_id: trigger.id,
                         world_id: world.id,
                         entity_id: body.id,
@@ -175,16 +185,17 @@ fn detect_triggers(ctx: &ReducerContext, world: &PhysicsWorld, bodies: &[RigidBo
         let deleted_entities = old_entities.difference(&entities_inside);
         let added_entities = entities_inside.difference(&old_entities);
 
-        if world.debug_triggers && !trigger_entities.is_empty() {
+        if world.debug_triggers() && !trigger_entities.is_empty() {
             debug!(
-                "[Trigger] {}: old_entities: {:?}, new_entities: {:?}, deleted: {:?}, added: {:?}",
-                trigger.id, old_entities, entities_inside, deleted_entities, added_entities
+                "[PhysicsWorld#{}] [Trigger] {}: previous_entities: {:?}, current_entities: {:?}, deleted: {:?}, added: {:?}",
+                world.id, trigger.id, old_entities, entities_inside, deleted_entities, added_entities
             );
         }
 
         for entity in deleted_entities {
-            ctx.db.physics_trigger_entities().id().delete(entity.id);
+            ctx.db.physics_trigger_entities().delete(*entity);
         }
+
         for entity in added_entities {
             entity.insert(ctx);
         }
