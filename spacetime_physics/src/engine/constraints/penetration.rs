@@ -2,9 +2,7 @@ use std::fmt::Display;
 
 use log::debug;
 
-use crate::{
-    engine::utils::get_bodies_mut, math::Vec3, tables::RigidBody, CollisionPoint, PhysicsWorld,
-};
+use crate::{math::Vec3, tables::RigidBody, utils::get_bodies_mut, CollisionPoint, PhysicsWorld};
 
 use super::{position::PositionConstraint, Constraint};
 
@@ -27,12 +25,7 @@ pub struct PenetrationConstraint {
 }
 
 impl PenetrationConstraint {
-    pub fn new(
-        a: &mut RigidBody,
-        b: &mut RigidBody,
-        point: CollisionPoint,
-        compliance: f32,
-    ) -> Self {
+    pub fn new(a: &RigidBody, b: &RigidBody, point: CollisionPoint, compliance: f32) -> Self {
         Self {
             a: a.id,
             b: b.id,

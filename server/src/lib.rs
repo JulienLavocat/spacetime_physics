@@ -7,7 +7,7 @@ use spacetime_physics::{
     raycast_all, schedule_physics_step_world, step_world, Collider, PhysicsTrigger, PhysicsWorld,
     RigidBody, RigidBodyType,
 };
-use spacetimedb::{reducer, table, Identity, ReducerContext, ScheduleAt, Table};
+use spacetimedb::{rand::Rng, reducer, table, Identity, ReducerContext, ScheduleAt, Table};
 
 #[table(name = players)]
 pub struct Players {
@@ -30,36 +30,46 @@ pub fn init(ctx: &ReducerContext) {
     let world = PhysicsWorld::builder()
         .ticks_per_second(60.0) // The reducer responsible for stepping the physics world will be scheduled at 60Hz, see TickWorld bellow
         .gravity(Vec3::new(0.0, -9.81, 0.0))
-        .debug_broad_phase(true)
+        .sub_step(1)
+        .debug_time(true)
+        // .debug_broad_phase(true)
+        // .debug_narrow_phase(true)
         .build()
         .insert(ctx);
 
+    let range = -100000.0..100000.0;
+    for _ in 0..10000 {
+        RigidBody::builder()
+            .position(Vec3::new(
+                ctx.rng().gen_range(range.clone()),
+                100.0,
+                ctx.rng().gen_range(range.clone()),
+            ))
+            .collider(Collider::cuboid(Vec3::new(1.0, 1.0, 1.0)))
+            .body_type(RigidBodyType::Dynamic)
+            .build()
+            .insert(ctx);
+    }
+
     // Create a small sphere that will fal towards the ground
     RigidBody::builder()
-        .position(Vec3::new(0.0, 100.0, 0.0))
+        .position(Vec3::new(0.0, 10.0, 0.0))
         .collider(Collider::sphere(1.0))
         .body_type(RigidBodyType::Dynamic)
         .build()
         .insert(ctx);
 
+    // Floor
     RigidBody::builder()
-        .position(Vec3::new(0.0, 98.0, 0.0))
-        .collider(Collider::cuboid(Vec3::new(1.0, 1.0, 1.0)))
-        .body_type(RigidBodyType::Dynamic)
+        .position(Vec3::new(0.0, -1.0, 0.0))
+        .collider(Collider::cuboid(Vec3::new(1000.0, 1.0, 1000.0)))
+        .body_type(RigidBodyType::Static)
         .build()
         .insert(ctx);
 
-    // Create a large static plane that will act as the ground
-    // RigidBody::builder()
-    //     .position(Vec3::new(0.0, 0.0, 0.0))
-    //     .collider(Collider::plane(Vec3::Y))
-    //     .body_type(RigidBodyType::Static)
-    //     .build()
-    //     .insert(ctx);
-
     PhysicsTrigger::builder()
         .world_id(world.id)
-        .collider(Collider::cuboid(Vec3::new(10.0, 100.0, 10.0)))
+        .collider(Collider::cuboid(Vec3::new(1000.0, 1000.0, 1000.0)))
         .build()
         .insert(ctx);
 

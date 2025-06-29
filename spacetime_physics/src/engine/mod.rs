@@ -1,9 +1,7 @@
 use std::collections::{HashMap, HashSet};
 
-use constraints::PenetrationConstraint;
-use log::debug;
-use log_stopwatch::LogStopwatch;
-use qvbh::Qbvh;
+use collision_detection::CollisionDetection;
+use log::{debug, trace};
 use spacetimedb::{ReducerContext, Table};
 use xpbd::{integrate_bodies, recompute_velocities, solve_constraints, solve_velocities};
 
@@ -11,15 +9,12 @@ use crate::{
     math::{Quat, Vec3},
     physics_trigger_entities,
     tables::{PhysicsWorld, RigidBody},
-    test_collision,
     trigger::PhysicsTrigger,
     PhysicsTriggerEntity, ShapeWrapper,
 };
 
+mod collision_detection;
 mod constraints;
-mod log_stopwatch;
-mod qvbh;
-mod utils;
 mod xpbd;
 
 pub type KinematicBody = (u64, (Vec3, Quat));
@@ -29,7 +24,7 @@ pub fn step_world(
     world: &PhysicsWorld,
     kinematic_entities: impl Iterator<Item = KinematicBody>,
 ) {
-    let sw = LogStopwatch::new(world, &format!("step_world_{}", world.id));
+    let sw = world.stopwatch("step_world");
 
     let mut binding = RigidBody::all(ctx, world.id);
     let bodies = binding.as_mut_slice();
@@ -38,22 +33,26 @@ pub fn step_world(
 
     sync_kinematic_bodies(kinematic_entities, bodies);
 
-    let mut qvbh = Qbvh::from_bodies(world, bodies);
-    let broad_phase_pairs = qvbh.broad_phase();
+    let mut collision_detection = CollisionDetection::new();
+    collision_detection.broad_phase(world, bodies);
+
     if world.debug_broad_phase() {
         debug!(
             "[PhysicsWorld#{}] [BroadPhase] pairs: {:?}",
-            world.id, broad_phase_pairs
+            world.id,
+            collision_detection.broad_phase_pairs().len()
         );
     }
 
     for i in 0..world.sub_step {
+        let sw = world.stopwatch(&format!("substep_{}", i));
         if world.debug_substep() {
             debug!("---------- substep: {} ----------", i);
         }
 
         // TODO: Use Broad Phase outside of the loop and narrowly-resolve them once here
-        let mut penetration_constraints = detect_collisions(world, bodies);
+        let mut penetration_constraints =
+            collision_detection.narrow_phase_constraints(world, bodies);
         let penetration_constraints = penetration_constraints.as_mut_slice();
 
         if world.debug_substep() {
@@ -72,6 +71,8 @@ pub fn step_world(
         if world.debug {
             debug_bodies(bodies);
         }
+
+        sw.end();
     }
 
     detect_triggers(ctx, world, bodies);
@@ -80,7 +81,12 @@ pub fn step_world(
         debug!("---------- End of substeps ----------");
     }
 
+    let update_sw = world.stopwatch("update_bodies");
     for body in bodies {
+        if !body.is_dirty() {
+            continue; // Skip bodies that are not dirty
+        }
+
         if world.debug {
             debug!(
                 "Updating {} position: {} -> {}, velocity: {}, rotation: {}",
@@ -89,6 +95,7 @@ pub fn step_world(
         }
         body.update(ctx);
     }
+    update_sw.end();
 
     if world.debug {
         debug!("-------------------------------------------------------------");
@@ -129,28 +136,8 @@ fn sync_kinematic_bodies(
     }
 }
 
-fn detect_collisions(world: &PhysicsWorld, bodies: &mut [RigidBody]) -> Vec<PenetrationConstraint> {
-    let mut constraints = Vec::new();
-
-    for i in 0..bodies.len() {
-        for j in (i + 1)..bodies.len() {
-            let (left, right) = bodies.split_at_mut(j);
-            let body_a = &mut left[i];
-            let body_b = &mut right[0];
-            if let Some(collision) = test_collision(body_a, body_b, world.precision) {
-                if collision.distance >= 0.0 {
-                    continue; // No penetration
-                }
-
-                constraints.push(PenetrationConstraint::new(body_a, body_b, collision, 0.0));
-            }
-        }
-    }
-
-    constraints
-}
-
 fn detect_triggers(ctx: &ReducerContext, world: &PhysicsWorld, bodies: &[RigidBody]) {
+    let sw = world.stopwatch("detect_triggers");
     let triggers = PhysicsTrigger::all(world.id, ctx);
     let triggers = triggers.as_slice();
     let trigger_entities = PhysicsTriggerEntity::all(ctx, world.id);
@@ -200,4 +187,5 @@ fn detect_triggers(ctx: &ReducerContext, world: &PhysicsWorld, bodies: &[RigidBo
             entity.insert(ctx);
         }
     }
+    sw.end();
 }

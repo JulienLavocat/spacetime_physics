@@ -2,6 +2,7 @@ mod collisions;
 mod engine;
 mod queries;
 mod tables;
+mod utils;
 
 pub mod math;
 

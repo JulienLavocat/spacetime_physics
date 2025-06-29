@@ -3,7 +3,7 @@ use std::{fmt::Display, time::Duration};
 use bon::{builder, Builder};
 use spacetimedb::{table, ReducerContext, ScheduleAt, Table, TimeDuration};
 
-use crate::math::Vec3;
+use crate::{math::Vec3, utils::LogStopwatch};
 
 pub type PhysicsWorldId = u64;
 
@@ -81,6 +81,14 @@ pub struct PhysicsWorld {
     #[builder(default = false)]
     pub debug_broad_phase: bool,
 
+    /// If true, the physics world will log the collisions detected during the narrow phase to the console.
+    #[builder(default = false)]
+    pub debug_narrow_phase: bool,
+
+    /// If true, the physics world will log both broad and narrow phase collision information to the console.
+    #[builder(default = false)]
+    pub debug_broad_narrow_phase: bool,
+
     /// If true, the physics world will log the raycasts hits to the console.
     #[builder(default = false)]
     pub debug_raycasts: bool,
@@ -104,7 +112,11 @@ impl PhysicsWorld {
     }
 
     pub fn debug_broad_phase(&self) -> bool {
-        self.debug || self.debug_broad_phase
+        self.debug || self.debug_broad_phase || self.debug_broad_narrow_phase
+    }
+
+    pub fn debug_narrow_phase(&self) -> bool {
+        self.debug || self.debug_narrow_phase || self.debug_broad_narrow_phase
     }
 
     pub fn debug_time(&self) -> bool {
@@ -125,6 +137,10 @@ impl PhysicsWorld {
 
     pub fn debug_substep(&self) -> bool {
         self.debug || self.debug_substep
+    }
+
+    pub fn stopwatch(&self, name: &str) -> LogStopwatch {
+        LogStopwatch::new(self, &format!("world_{}_{}", self.id, name))
     }
 }
 

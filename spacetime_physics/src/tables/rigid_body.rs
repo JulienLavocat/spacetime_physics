@@ -160,6 +160,10 @@ impl RigidBody {
         ctx.db.physics_rigid_bodies().id().update(self)
     }
 
+    pub fn delete(&self, ctx: &ReducerContext) {
+        ctx.db.physics_rigid_bodies().id().delete(self.id);
+    }
+
     pub fn effective_inverse_mass(&self) -> Vec3 {
         // TODO: Take into account locked axes
         Vec3::splat(self.inv_mass)
@@ -182,6 +186,10 @@ impl RigidBody {
 
     pub fn is_kinematic(&self) -> bool {
         self.body_type == RigidBodyType::Kinematic
+    }
+
+    pub fn is_dirty(&self) -> bool {
+        self.position != self.previous_position || self.rotation != self.previous_rotation
     }
 }
 

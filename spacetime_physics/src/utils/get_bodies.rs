@@ -1,0 +1,51 @@
+use crate::tables::RigidBody;
+
+/// Retrieves mutable references to two `RigidBody` instances by their IDs from a slice of bodies.
+/// This function assumes that the bodies are sorted by their IDs and that the IDs are unique.
+pub fn get_bodies_mut(
+    id_a: u64,
+    id_b: u64,
+    bodies: &mut [RigidBody],
+) -> (&mut RigidBody, &mut RigidBody) {
+    assert!(id_a != id_b);
+
+    // Assume bodies are sorted by id
+    let (min_id, max_id) = if id_a < id_b {
+        (id_a, id_b)
+    } else {
+        (id_b, id_a)
+    };
+
+    let mid = bodies
+        .binary_search_by_key(&max_id, |b| b.id)
+        .expect("ID not found");
+    let (left, right) = bodies.split_at_mut(mid);
+    let a = left
+        .binary_search_by_key(&min_id, |b| b.id)
+        .map(|i| &mut left[i])
+        .expect("ID not found");
+    let b = &mut right[0];
+    (a, b)
+}
+
+pub fn get_bodies(id_a: u64, id_b: u64, bodies: &[RigidBody]) -> (&RigidBody, &RigidBody) {
+    assert!(id_a != id_b);
+
+    // Assume bodies are sorted by id
+    let (min_id, max_id) = if id_a < id_b {
+        (id_a, id_b)
+    } else {
+        (id_b, id_a)
+    };
+
+    let mid = bodies
+        .binary_search_by_key(&max_id, |b| b.id)
+        .expect("ID not found");
+    let (left, right) = bodies.split_at(mid);
+    let a = left
+        .binary_search_by_key(&min_id, |b| b.id)
+        .map(|i| &left[i])
+        .expect("ID not found");
+    let b = &right[0];
+    (a, b)
+}

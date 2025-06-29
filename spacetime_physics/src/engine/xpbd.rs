@@ -2,15 +2,14 @@ use log::debug;
 
 use crate::{
     math::{Mat3, Quat, Vec3},
+    utils::get_bodies_mut,
     PhysicsWorld, RigidBody,
 };
 
-use super::{
-    constraints::{Constraint, PenetrationConstraint, PositionConstraint},
-    utils::get_bodies_mut,
-};
+use super::constraints::{Constraint, PenetrationConstraint, PositionConstraint};
 
 pub(crate) fn integrate_bodies(bodies: &mut [RigidBody], world: &PhysicsWorld, delta_time: f32) {
+    let sw = world.stopwatch("integrate_bodies");
     for body in bodies {
         if !body.is_dynamic() {
             continue;
@@ -63,6 +62,7 @@ pub(crate) fn integrate_bodies(bodies: &mut [RigidBody], world: &PhysicsWorld, d
         );
         }
     }
+    sw.end();
 }
 
 pub(crate) fn solve_constraints(
@@ -71,12 +71,15 @@ pub(crate) fn solve_constraints(
     bodies: &mut [RigidBody],
     delta_time: f32,
 ) {
+    let sw = world.stopwatch("solve_constraints");
     contact_constraints
         .iter_mut()
         .for_each(|constraint| constraint.solve(world, bodies, delta_time));
+    sw.end();
 }
 
 pub(crate) fn recompute_velocities(world: &PhysicsWorld, bodies: &mut [RigidBody], dt: f32) {
+    let sw = world.stopwatch("recompute_velocities");
     for body in bodies {
         if !body.is_dynamic() {
             body.linear_velocity = Vec3::ZERO;
@@ -102,6 +105,7 @@ pub(crate) fn recompute_velocities(world: &PhysicsWorld, bodies: &mut [RigidBody
             );
         }
     }
+    sw.end();
 }
 
 pub(crate) fn solve_velocities(
@@ -110,6 +114,7 @@ pub(crate) fn solve_velocities(
     bodies: &mut [RigidBody],
     dt: f32,
 ) {
+    let sw = world.stopwatch("solve_velocities");
     for constraint in penetration_constraints {
         let (body1, body2) = get_bodies_mut(constraint.a, constraint.b, bodies);
         let normal = constraint.normal;
@@ -204,6 +209,7 @@ pub(crate) fn solve_velocities(
         );
         }
     }
+    sw.end();
 }
 
 fn compute_contact_vel(lin_vel: Vec3, ang_vel: Vec3, r: Vec3) -> Vec3 {
