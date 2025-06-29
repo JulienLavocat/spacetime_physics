@@ -88,15 +88,15 @@ impl Mat3 {
             + self.m13 * (self.m21 * self.m32 - self.m22 * self.m31)
     }
 
-    pub fn inverse(&self) -> Option<Self> {
+    pub fn inverse(&self) -> Self {
         let det = self.determinant();
         if det.abs() < f32::EPSILON {
-            return None; // Matrix cannot be inverted
+            return Mat3::ZERO;
         }
 
         let inv_det = 1.0 / det;
 
-        Some(Self {
+        Self {
             m11: (self.m22 * self.m33 - self.m23 * self.m32) * inv_det,
             m12: -(self.m12 * self.m33 - self.m13 * self.m32) * inv_det,
             m13: (self.m12 * self.m23 - self.m13 * self.m22) * inv_det,
@@ -108,7 +108,7 @@ impl Mat3 {
             m31: (self.m21 * self.m32 - self.m22 * self.m31) * inv_det,
             m32: -(self.m11 * self.m32 - self.m12 * self.m31) * inv_det,
             m33: (self.m11 * self.m22 - self.m12 * self.m21) * inv_det,
-        })
+        }
     }
 
     pub fn transpose(&self) -> Self {

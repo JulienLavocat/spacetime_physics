@@ -3,7 +3,7 @@ use std::fmt::Display;
 use parry3d::query::Ray;
 use spacetimedb::ReducerContext;
 
-use crate::{math::Vec3, physics_rigid_bodies, RigidBody, ShapeWrapper};
+use crate::{math::Vec3, RigidBodyEntity};
 
 #[derive(Debug, Clone)]
 pub struct RacyCastHit {
@@ -31,12 +31,12 @@ pub fn raycast_all(
     max_distance: f32,
     solid: bool,
 ) -> impl Iterator<Item = RacyCastHit> {
-    let bodies = ctx.db.physics_rigid_bodies().world_id().filter(world_id);
+    let bodies = RigidBodyEntity::all(ctx, world_id).into_iter();
     raycast_all_with_rigid_bodies(bodies, origin, direction, max_distance, solid)
 }
 
 pub fn raycast_all_with_rigid_bodies(
-    bodies: impl Iterator<Item = RigidBody>,
+    entities: impl Iterator<Item = RigidBodyEntity>,
     origin: Vec3,
     direction: Vec3,
     max_distance: f32,
@@ -44,10 +44,9 @@ pub fn raycast_all_with_rigid_bodies(
 ) -> impl Iterator<Item = RacyCastHit> {
     let ray = Ray::new(origin.into(), direction.into());
 
-    bodies.filter_map(move |body| {
-        let isometry = body.into();
-        let shape: ShapeWrapper = body.collider.into();
-        shape
+    entities.filter_map(move |body| {
+        let isometry = body.rb.into();
+        body.shape
             .cast_ray_and_get_normal(&isometry, &ray, max_distance, solid)
             .map(|intersection| RacyCastHit {
                 distance: intersection.time_of_impact,

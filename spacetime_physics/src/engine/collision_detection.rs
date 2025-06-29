@@ -5,11 +5,9 @@ use parry3d::{
     partitioning::Qbvh as QbvhImpl, query::visitors::BoundingVolumeIntersectionsSimultaneousVisitor,
 };
 
-use crate::{
-    test_collision, utils::get_bodies, Collider, PhysicsWorld, RigidBody, RigidBodyId, ShapeWrapper,
-};
+use crate::{test_collision, utils::get_bodies, PhysicsWorld, RigidBodyId};
 
-use super::constraints::PenetrationConstraint;
+use super::{constraints::PenetrationConstraint, physic_entity::RigidBodyEntity};
 
 pub struct CollisionDetection {
     qbvh: QbvhImpl<RigidBodyId>,
@@ -30,30 +28,18 @@ impl CollisionDetection {
         &self.pairs
     }
 
-    pub fn broad_phase(&mut self, world: &PhysicsWorld, bodies: &[RigidBody]) {
+    pub fn broad_phase(&mut self, world: &PhysicsWorld, entities: &[RigidBodyEntity]) {
         let sw = world.stopwatch("broad_phase");
         let prediction_distance = world.prediction_distance();
 
-        debug!(
-            "[PhysicsWorld#{}] [BroadPhase] bodies: {}, prediction_distance: {}, dilation_factor: {}",
-            world.id,
-            bodies.len(),
-            prediction_distance,
-            world.qvbh_dilation_factor
-        );
         let rebuild_sw = world.stopwatch("broad_phase_rebuild");
         self.qbvh.clear_and_rebuild(
-            bodies.iter().map(|body| {
-                let aabb = ShapeWrapper::from(body.collider)
-                    .collision_aabb(&body.into(), prediction_distance);
+            entities.iter().map(|entity| {
+                let aabb = entity
+                    .shape
+                    .collision_aabb(&entity.into(), prediction_distance);
 
-                if let Collider::Plane(_) = body.collider {
-                    debug!(
-                        "[PhysicsWorld#{}] [BroadPhase] body {}: Plane AABB: {:?}",
-                        world.id, body.id, aabb
-                    );
-                }
-                (body.id, aabb)
+                (entity.id, aabb)
             }),
             world.qvbh_dilation_factor,
         );
@@ -81,7 +67,7 @@ impl CollisionDetection {
     pub fn narrow_phase_constraints(
         &self,
         world: &PhysicsWorld,
-        bodies: &mut [RigidBody],
+        bodies: &mut [RigidBodyEntity],
     ) -> Vec<PenetrationConstraint> {
         let sw = world.stopwatch("narrow_phase");
         let mut constraints = Vec::new();

@@ -1,6 +1,6 @@
 use crate::{
     math::{Quat, Vec3},
-    tables::RigidBody,
+    RigidBodyEntity,
 };
 
 use super::Constraint;
@@ -8,8 +8,8 @@ use super::Constraint;
 pub trait PositionConstraint: Constraint {
     fn apply_position_correction(
         &self,
-        body_a: &mut RigidBody,
-        body_b: &mut RigidBody,
+        body_a: &mut RigidBodyEntity,
+        body_b: &mut RigidBodyEntity,
         delta_lagrange: f32,
         direction: &Vec3,
         ra: &Vec3,
@@ -21,40 +21,40 @@ pub trait PositionConstraint: Constraint {
 
         let p = delta_lagrange * direction;
 
-        let previous_position_a = body_a.position;
-        let previous_position_b = body_b.position;
+        let previous_position_a = body_a.rb.position;
+        let previous_position_b = body_b.rb.position;
 
-        if body_a.is_dynamic() {
+        if body_a.rb.is_dynamic() {
             Self::apply_body_correction(body_a, &p, ra, 1.0);
         }
 
-        if body_b.is_dynamic() {
+        if body_b.rb.is_dynamic() {
             Self::apply_body_correction(body_b, &p, rb, -1.0);
         }
 
         Some((
             previous_position_a,
-            body_a.position,
+            body_a.rb.position,
             previous_position_b,
-            body_b.position,
+            body_b.rb.position,
             p,
         ))
     }
 
-    fn apply_body_correction(body: &mut RigidBody, p: &Vec3, r: &Vec3, sign: f32) {
-        body.position += sign * p * body.effective_inverse_mass();
+    fn apply_body_correction(body: &mut RigidBodyEntity, p: &Vec3, r: &Vec3, sign: f32) {
+        body.rb.position += sign * p * body.effective_inverse_mass();
 
         let inv_inertia = body.effective_inverse_inertia();
         let delta_angle = sign * inv_inertia * r.cross(*p);
 
         // Proper quaternion integration for angular correction
         let dq = Quat::from_scaled_axis(delta_angle);
-        body.rotation = (dq * body.rotation).normalize();
+        body.rb.rotation = (dq * body.rb.rotation).normalize();
     }
 
-    fn compute_generalized_inverse_mass(&self, body: &RigidBody, r: &Vec3, n: &Vec3) -> f32 {
+    fn compute_generalized_inverse_mass(&self, body: &RigidBodyEntity, r: &Vec3, n: &Vec3) -> f32 {
         let inv_inertia = body.effective_inverse_inertia();
         let r_cross_n = r.cross(n);
-        body.inv_mass + r_cross_n.dot(inv_inertia * r_cross_n)
+        body.rb.inv_mass + r_cross_n.dot(inv_inertia * r_cross_n)
     }
 }

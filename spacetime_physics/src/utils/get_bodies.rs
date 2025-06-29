@@ -1,12 +1,12 @@
-use crate::tables::RigidBody;
+use crate::{tables::RigidBody, RigidBodyEntity};
 
 /// Retrieves mutable references to two `RigidBody` instances by their IDs from a slice of bodies.
 /// This function assumes that the bodies are sorted by their IDs and that the IDs are unique.
 pub fn get_bodies_mut(
     id_a: u64,
     id_b: u64,
-    bodies: &mut [RigidBody],
-) -> (&mut RigidBody, &mut RigidBody) {
+    bodies: &mut [RigidBodyEntity],
+) -> (&mut RigidBodyEntity, &mut RigidBodyEntity) {
     assert!(id_a != id_b);
 
     // Assume bodies are sorted by id
@@ -28,7 +28,11 @@ pub fn get_bodies_mut(
     (a, b)
 }
 
-pub fn get_bodies(id_a: u64, id_b: u64, bodies: &[RigidBody]) -> (&RigidBody, &RigidBody) {
+pub fn get_bodies(
+    id_a: u64,
+    id_b: u64,
+    bodies: &[RigidBodyEntity],
+) -> (&RigidBodyEntity, &RigidBodyEntity) {
     assert!(id_a != id_b);
 
     // Assume bodies are sorted by id

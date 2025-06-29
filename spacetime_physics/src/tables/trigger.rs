@@ -4,10 +4,7 @@ use bon::{builder, Builder};
 use parry3d::na::Isometry3;
 use spacetimedb::{table, ReducerContext, Table};
 
-use crate::{
-    math::{Quat, Vec3},
-    Collider,
-};
+use crate::math::{Quat, Vec3};
 
 #[table(name = physics_triggers)]
 #[derive(Builder, Debug, Clone, Copy, PartialEq)]
@@ -25,7 +22,7 @@ pub struct PhysicsTrigger {
     #[builder(default = Quat::IDENTITY)]
     pub rotation: Quat,
 
-    pub collider: Collider,
+    pub collider_id: u64,
 }
 
 impl PhysicsTrigger {
@@ -33,7 +30,7 @@ impl PhysicsTrigger {
         ctx.db.physics_triggers().insert(self)
     }
 
-    pub fn all(world_id: u64, ctx: &ReducerContext) -> Vec<Self> {
+    pub fn all(ctx: &ReducerContext, world_id: u64) -> Vec<Self> {
         ctx.db
             .physics_triggers()
             .world_id()
@@ -59,7 +56,7 @@ impl Display for PhysicsTrigger {
         write!(
             f,
             "PhysicsTrigger(id: {}, world_id: {}, position: {}, rotation: {}, collider: {})",
-            self.id, self.world_id, self.position, self.rotation, self.collider
+            self.id, self.world_id, self.position, self.rotation, self.collider_id
         )
     }
 }

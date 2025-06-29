@@ -1,0 +1,54 @@
+use parry3d::na::Isometry3;
+use spacetimedb::ReducerContext;
+
+use crate::{
+    math::{Mat3, Vec3},
+    Collider, PhysicsWorldId, RigidBody, ShapeWrapper,
+};
+
+pub struct RigidBodyEntity {
+    pub id: u64,
+    pub rb: RigidBody,
+    pub shape: ShapeWrapper,
+    pub inertia_tensor: Mat3,
+    pub inv_inertia_tensor: Mat3,
+}
+
+impl RigidBodyEntity {
+    pub fn new(rigid_body: RigidBody, collider: Collider) -> Self {
+        let inertia_tensor = collider.inertia_tensor(rigid_body.mass);
+        Self {
+            id: rigid_body.id,
+            rb: rigid_body,
+            shape: ShapeWrapper::from(collider),
+            inertia_tensor,
+            inv_inertia_tensor: inertia_tensor.inverse(),
+        }
+    }
+
+    pub fn all(ctx: &ReducerContext, world_id: PhysicsWorldId) -> Vec<Self> {
+        let colliders = Collider::all(ctx, world_id);
+        let mut entities: Vec<_> = RigidBody::all(ctx, world_id)
+            .map(move |rb| RigidBodyEntity::new(rb, *colliders.get(&rb.collider_id).unwrap()))
+            .collect();
+        entities.sort_by_key(|e| e.id);
+        entities
+    }
+
+    pub fn effective_inverse_mass(&self) -> Vec3 {
+        // TODO: Take into account locked axes
+        Vec3::splat(self.rb.inv_mass)
+    }
+
+    pub fn effective_inverse_inertia(&self) -> Mat3 {
+        // TODO: Take into account locked axes
+        let r = self.rb.rotation.to_mat3();
+        r * self.inv_inertia_tensor * r.transpose()
+    }
+}
+
+impl From<&RigidBodyEntity> for Isometry3<f32> {
+    fn from(value: &RigidBodyEntity) -> Self {
+        value.rb.into()
+    }
+}

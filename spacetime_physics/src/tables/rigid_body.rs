@@ -4,10 +4,7 @@ use bon::{builder, Builder};
 use parry3d::na::Isometry3;
 use spacetimedb::{table, ReducerContext, SpacetimeType, Table};
 
-use crate::{
-    math::{Mat3, Quat, Vec3},
-    Collider,
-};
+use crate::math::{Quat, Vec3};
 
 pub type RigidBodyId = u64;
 
@@ -111,13 +108,6 @@ pub struct RigidBody {
     #[builder(skip = if mass > 0.0 { 1.0 / mass } else { 0.0 })]
     pub inv_mass: f32,
 
-    pub collider: Collider,
-
-    #[builder(default = collider.inertia_tensor(mass))]
-    pub inertia_tensor: Mat3,
-    #[builder(skip = inertia_tensor.inverse())]
-    pub inv_inertia_tensor: Option<Mat3>,
-
     #[builder(default = Vec3::ZERO)]
     pub torque: Vec3,
 
@@ -138,6 +128,8 @@ pub struct RigidBody {
 
     #[builder(default = RigidBodyType::default())]
     pub body_type: RigidBodyType,
+
+    pub collider_id: u64,
 }
 
 impl RigidBody {
@@ -145,15 +137,8 @@ impl RigidBody {
         ctx.db.physics_rigid_bodies().insert(self)
     }
 
-    pub fn all(ctx: &ReducerContext, world_id: u64) -> Vec<Self> {
-        let mut bodies = ctx
-            .db
-            .physics_rigid_bodies()
-            .world_id()
-            .filter(world_id)
-            .collect::<Vec<_>>();
-        bodies.sort_by_key(|body| body.id);
-        bodies
+    pub fn all(ctx: &ReducerContext, world_id: u64) -> impl Iterator<Item = RigidBody> {
+        ctx.db.physics_rigid_bodies().world_id().filter(world_id)
     }
 
     pub fn update(self, ctx: &ReducerContext) -> Self {
@@ -167,17 +152,6 @@ impl RigidBody {
     pub fn effective_inverse_mass(&self) -> Vec3 {
         // TODO: Take into account locked axes
         Vec3::splat(self.inv_mass)
-    }
-
-    pub fn effective_inverse_inertia(&self) -> Mat3 {
-        // TODO: Take into account locked axes
-        match self.inv_inertia_tensor {
-            Some(inv) => {
-                let r = self.rotation.to_mat3();
-                r * inv * r.transpose()
-            }
-            None => Mat3::ZERO, // Static body
-        }
     }
 
     pub fn is_dynamic(&self) -> bool {

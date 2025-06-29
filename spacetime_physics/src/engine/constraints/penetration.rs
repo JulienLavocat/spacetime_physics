@@ -2,7 +2,7 @@ use std::fmt::Display;
 
 use log::debug;
 
-use crate::{math::Vec3, tables::RigidBody, utils::get_bodies_mut, CollisionPoint, PhysicsWorld};
+use crate::{math::Vec3, utils::get_bodies_mut, CollisionPoint, PhysicsWorld, RigidBodyEntity};
 
 use super::{position::PositionConstraint, Constraint};
 
@@ -25,7 +25,12 @@ pub struct PenetrationConstraint {
 }
 
 impl PenetrationConstraint {
-    pub fn new(a: &RigidBody, b: &RigidBody, point: CollisionPoint, compliance: f32) -> Self {
+    pub fn new(
+        a: &RigidBodyEntity,
+        b: &RigidBodyEntity,
+        point: CollisionPoint,
+        compliance: f32,
+    ) -> Self {
         Self {
             a: a.id,
             b: b.id,
@@ -47,8 +52,8 @@ impl PenetrationConstraint {
     fn solve_contact(
         &mut self,
         world: &PhysicsWorld,
-        body_a: &mut RigidBody,
-        body_b: &mut RigidBody,
+        body_a: &mut RigidBodyEntity,
+        body_b: &mut RigidBodyEntity,
         dt: f32,
     ) {
         // Shorter aliases for readability
@@ -57,8 +62,8 @@ impl PenetrationConstraint {
         let compliance = self.compliance;
         let lagrange = self.normal_lagrange;
 
-        let ra = body_a.rotation.rotate(self.local_a);
-        let rb = body_b.rotation.rotate(self.local_b);
+        let ra = body_a.rb.rotation.rotate(self.local_a);
+        let rb = body_b.rb.rotation.rotate(self.local_b);
 
         if penetraion >= 0.0 {
             return;
@@ -93,8 +98,8 @@ impl PenetrationConstraint {
     fn solve_friction(
         &mut self,
         world: &PhysicsWorld,
-        body1: &mut RigidBody,
-        body2: &mut RigidBody,
+        body1: &mut RigidBodyEntity,
+        body2: &mut RigidBodyEntity,
         dt: f32,
     ) {
         // Shorter aliases
@@ -106,10 +111,10 @@ impl PenetrationConstraint {
         let r2 = self.world_b;
 
         // Compute contact positions at the current state and before substep integration
-        let p1 = body1.position + body1.rotation.rotate(self.local_a);
-        let p2 = body2.position + body2.rotation.rotate(self.local_b);
-        let prev_p1 = body1.previous_position + body1.previous_rotation.rotate(self.local_a);
-        let prev_p2 = body2.previous_position + body2.previous_rotation.rotate(self.local_b);
+        let p1 = body1.rb.position + body1.rb.rotation.rotate(self.local_a);
+        let p2 = body2.rb.position + body2.rb.rotation.rotate(self.local_b);
+        let prev_p1 = body1.rb.previous_position + body1.rb.previous_rotation.rotate(self.local_a);
+        let prev_p2 = body2.rb.previous_position + body2.rb.previous_rotation.rotate(self.local_b);
 
         // Compute relative motion of the contact points and get the tangential component
         let delta_p = (p1 - prev_p1) - (p2 - prev_p2);
@@ -131,7 +136,11 @@ impl PenetrationConstraint {
         let w = [w1, w2];
 
         // Compute combined friction coefficients
-        let static_coefficient = body1.friction.combine(&body2.friction).static_coefficient;
+        let static_coefficient = body1
+            .rb
+            .friction
+            .combine(&body2.rb.friction)
+            .static_coefficient;
 
         // Apply static friction if |delta_x_perp| < mu_s * d
         if sliding_len < static_coefficient * penetration {
@@ -157,7 +166,7 @@ impl PenetrationConstraint {
 }
 
 impl Constraint for PenetrationConstraint {
-    fn solve(&mut self, world: &PhysicsWorld, bodies: &mut [RigidBody], dt: f32) {
+    fn solve(&mut self, world: &PhysicsWorld, bodies: &mut [RigidBodyEntity], dt: f32) {
         let (body_a, body_b) = get_bodies_mut(self.a, self.b, bodies);
         self.solve_contact(world, body_a, body_b, dt);
         self.solve_friction(world, body_a, body_b, dt);

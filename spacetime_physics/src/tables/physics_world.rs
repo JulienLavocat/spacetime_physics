@@ -1,16 +1,14 @@
 use std::{fmt::Display, time::Duration};
 
 use bon::{builder, Builder};
-use spacetimedb::{table, ReducerContext, ScheduleAt, Table, TimeDuration};
+use spacetimedb::{table, ReducerContext, ScheduleAt, Table};
 
 use crate::{math::Vec3, utils::LogStopwatch};
 
 pub type PhysicsWorldId = u64;
 
-pub fn schedule_physics_step_world(world: &PhysicsWorld) -> ScheduleAt {
-    ScheduleAt::Interval(TimeDuration::from_duration(Duration::from_secs_f32(
-        1.0 / world.ticks_per_second,
-    )))
+pub fn schedule_next_physics_tick(ctx: &ReducerContext, world: &PhysicsWorld) -> ScheduleAt {
+    (ctx.timestamp + Duration::from_millis((1000.0 / world.ticks_per_second) as u64)).into()
 }
 
 #[table(name = physics_world, public)]

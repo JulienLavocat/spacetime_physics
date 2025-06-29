@@ -4,7 +4,7 @@ use log::info;
 use spacetime_physics::{
     math::{Quat, Vec3},
     physics_world::physics_world,
-    raycast_all, schedule_physics_step_world, step_world, Collider, PhysicsTrigger, PhysicsWorld,
+    raycast_all, schedule_next_physics_tick, step_world, Collider, PhysicsTrigger, PhysicsWorld,
     RigidBody, RigidBodyType,
 };
 use spacetimedb::{rand::Rng, reducer, table, Identity, ReducerContext, ScheduleAt, Table};
@@ -21,6 +21,8 @@ pub struct Players {
 #[table(name = physics_ticks, scheduled(physics_tick_world))]
 pub struct PhysicsWorldTick {
     #[primary_key]
+    #[auto_inc]
+    pub id: u64,
     pub world_id: u64,
     pub scheduled_at: ScheduleAt,
 }
@@ -34,18 +36,20 @@ pub fn init(ctx: &ReducerContext) {
         .debug_time(true)
         // .debug_broad_phase(true)
         // .debug_narrow_phase(true)
+        // .debug(true)
         .build()
         .insert(ctx);
 
     let range = -100000.0..100000.0;
-    for _ in 0..10000 {
+    let sphere_collider = Collider::sphere(world.id, 1.0).insert(ctx).id;
+    for _ in 0..5000 {
         RigidBody::builder()
             .position(Vec3::new(
                 ctx.rng().gen_range(range.clone()),
                 100.0,
                 ctx.rng().gen_range(range.clone()),
             ))
-            .collider(Collider::cuboid(Vec3::new(1.0, 1.0, 1.0)))
+            .collider_id(sphere_collider)
             .body_type(RigidBodyType::Dynamic)
             .build()
             .insert(ctx);
@@ -54,29 +58,36 @@ pub fn init(ctx: &ReducerContext) {
     // Create a small sphere that will fal towards the ground
     RigidBody::builder()
         .position(Vec3::new(0.0, 10.0, 0.0))
-        .collider(Collider::sphere(1.0))
+        .collider_id(sphere_collider)
         .body_type(RigidBodyType::Dynamic)
         .build()
         .insert(ctx);
 
     // Floor
+    let floor_collider = Collider::cuboid(world.id, Vec3::new(1000.0, 1.0, 1000.0))
+        .insert(ctx)
+        .id;
     RigidBody::builder()
         .position(Vec3::new(0.0, -1.0, 0.0))
-        .collider(Collider::cuboid(Vec3::new(1000.0, 1.0, 1000.0)))
+        .collider_id(floor_collider)
         .body_type(RigidBodyType::Static)
         .build()
         .insert(ctx);
 
+    let trigger_collider = Collider::cuboid(world.id, Vec3::new(1000.0, 1000.0, 1000.0))
+        .insert(ctx)
+        .id;
     PhysicsTrigger::builder()
         .world_id(world.id)
-        .collider(Collider::cuboid(Vec3::new(1000.0, 1000.0, 1000.0)))
+        .collider_id(trigger_collider)
         .build()
         .insert(ctx);
 
     // Schedule the physics tick for the world
     ctx.db.physics_ticks().insert(PhysicsWorldTick {
+        id: 0,
         world_id: world.id,
-        scheduled_at: schedule_physics_step_world(&world),
+        scheduled_at: ctx.timestamp.into(),
     });
 }
 
@@ -96,7 +107,7 @@ pub fn physics_tick_world(ctx: &ReducerContext, tick: PhysicsWorldTick) {
     // Update the physics world and synchorinze the kinematic entities positions and rotations
     step_world(ctx, &world, kinematic_entities);
 
-    // This is an exampole of how to perform a raycast in the physics world.
+    // This is an example of how to perform a raycast in the physics world.
     // You can use this in any reducer to implement shooting, picking, etc.
     let origin = Vec3::ZERO;
     let direction = Vec3::splat(100.0);
@@ -106,4 +117,11 @@ pub fn physics_tick_world(ctx: &ReducerContext, tick: PhysicsWorldTick) {
             info!("Raycast hit: {}", item);
         }
     }
+
+    ctx.db.physics_ticks().delete(tick);
+    ctx.db.physics_ticks().insert(PhysicsWorldTick {
+        id: 0,
+        world_id: world.id,
+        scheduled_at: schedule_next_physics_tick(ctx, &world),
+    });
 }
