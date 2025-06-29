@@ -1,12 +1,12 @@
 use core::panic;
 
-use crate::RigidBodyEntity;
+use crate::RigidBodyData;
 
 use super::CollisionPoint;
 
 pub fn test_collision(
-    body_a: &RigidBodyEntity,
-    body_b: &RigidBodyEntity,
+    body_a: &RigidBodyData,
+    body_b: &RigidBodyData,
     prediction: f32,
 ) -> Option<CollisionPoint> {
     let iso_a = body_a.into();

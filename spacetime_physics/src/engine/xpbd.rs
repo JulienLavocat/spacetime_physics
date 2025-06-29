@@ -8,11 +8,11 @@ use crate::{
 
 use super::{
     constraints::{Constraint, PenetrationConstraint, PositionConstraint},
-    RigidBodyEntity,
+    RigidBodyData,
 };
 
 pub(crate) fn integrate_bodies(
-    bodies: &mut [RigidBodyEntity],
+    bodies: &mut [RigidBodyData],
     world: &PhysicsWorld,
     delta_time: f32,
 ) {
@@ -72,7 +72,7 @@ pub(crate) fn integrate_bodies(
 pub(crate) fn solve_constraints(
     world: &PhysicsWorld,
     contact_constraints: &mut [PenetrationConstraint],
-    bodies: &mut [RigidBodyEntity],
+    bodies: &mut [RigidBodyData],
     delta_time: f32,
 ) {
     let sw = world.stopwatch("solve_constraints");
@@ -82,7 +82,7 @@ pub(crate) fn solve_constraints(
     sw.end();
 }
 
-pub(crate) fn recompute_velocities(world: &PhysicsWorld, bodies: &mut [RigidBodyEntity], dt: f32) {
+pub(crate) fn recompute_velocities(world: &PhysicsWorld, bodies: &mut [RigidBodyData], dt: f32) {
     let sw = world.stopwatch("recompute_velocities");
     for body in bodies {
         if !body.rb.is_dynamic() {
@@ -115,7 +115,7 @@ pub(crate) fn recompute_velocities(world: &PhysicsWorld, bodies: &mut [RigidBody
 pub(crate) fn solve_velocities(
     world: &PhysicsWorld,
     penetration_constraints: &[PenetrationConstraint],
-    bodies: &mut [RigidBodyEntity],
+    bodies: &mut [RigidBodyData],
     dt: f32,
 ) {
     let sw = world.stopwatch("solve_velocities");

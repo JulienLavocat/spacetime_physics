@@ -6,10 +6,10 @@ pub use position::*;
 
 use crate::{math::Vec3, PhysicsWorld};
 
-use super::RigidBodyEntity;
+use super::RigidBodyData;
 
 pub(crate) trait Constraint {
-    fn solve(&mut self, world: &PhysicsWorld, bodies: &mut [RigidBodyEntity], dt: f32);
+    fn solve(&mut self, world: &PhysicsWorld, bodies: &mut [RigidBodyData], dt: f32);
 
     fn compute_lagrange_update(
         &self,

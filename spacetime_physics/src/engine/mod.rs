@@ -12,10 +12,10 @@ use crate::{
 
 mod collision_detection;
 mod constraints;
-mod physic_entity;
+mod rigid_body_data;
 mod xpbd;
 
-pub use physic_entity::RigidBodyEntity;
+pub use rigid_body_data::RigidBodyData;
 
 pub type KinematicBody = (u64, (Vec3, Quat));
 
@@ -26,7 +26,7 @@ pub fn step_world(
 ) {
     let sw = world.stopwatch("step_world");
 
-    let mut entities: Vec<_> = RigidBodyEntity::all(ctx, world.id);
+    let mut entities: Vec<_> = RigidBodyData::all(ctx, world.id);
     let entities = entities.as_mut_slice();
 
     let dt = world.time_step / world.sub_step as f32;
@@ -105,7 +105,7 @@ pub fn step_world(
     sw.end();
 }
 
-fn debug_bodies(bodies: &[RigidBodyEntity]) {
+fn debug_bodies(bodies: &[RigidBodyData]) {
     for body in bodies {
         debug!(
             "[Body] {}: position: {}, rotation: {}, velocity: {}, angular_velocity: {}, force: {}, torque: {}",
@@ -116,7 +116,7 @@ fn debug_bodies(bodies: &[RigidBodyEntity]) {
 
 fn sync_kinematic_bodies(
     kinematic_entities: impl Iterator<Item = KinematicBody>,
-    entities: &mut [RigidBodyEntity],
+    entities: &mut [RigidBodyData],
 ) {
     let kine: HashMap<u64, (Vec3, Quat)> = kinematic_entities
         .map(|c| (c.0, (c.1 .0, c.1 .1)))
@@ -137,7 +137,7 @@ fn sync_kinematic_bodies(
     }
 }
 
-fn detect_triggers(_ctx: &ReducerContext, _world: &PhysicsWorld, _bodies: &[RigidBodyEntity]) {
+fn detect_triggers(_ctx: &ReducerContext, _world: &PhysicsWorld, _bodies: &[RigidBodyData]) {
     // let sw = world.stopwatch("detect_triggers");
     // let triggers = PhysicsTrigger::all(ctx, world.id);
     // let colliders = Collider::all(ctx, world.id);

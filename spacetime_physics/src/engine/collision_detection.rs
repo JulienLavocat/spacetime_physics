@@ -7,7 +7,7 @@ use parry3d::{
 
 use crate::{test_collision, utils::get_bodies, PhysicsWorld, RigidBodyId};
 
-use super::{constraints::PenetrationConstraint, physic_entity::RigidBodyEntity};
+use super::{constraints::PenetrationConstraint, rigid_body_data::RigidBodyData};
 
 pub struct CollisionDetection {
     qbvh: QbvhImpl<RigidBodyId>,
@@ -28,7 +28,7 @@ impl CollisionDetection {
         &self.pairs
     }
 
-    pub fn broad_phase(&mut self, world: &PhysicsWorld, entities: &[RigidBodyEntity]) {
+    pub fn broad_phase(&mut self, world: &PhysicsWorld, entities: &[RigidBodyData]) {
         let sw = world.stopwatch("broad_phase");
         let prediction_distance = world.prediction_distance();
 
@@ -67,7 +67,7 @@ impl CollisionDetection {
     pub fn narrow_phase_constraints(
         &self,
         world: &PhysicsWorld,
-        bodies: &mut [RigidBodyEntity],
+        bodies: &mut [RigidBodyData],
     ) -> Vec<PenetrationConstraint> {
         let sw = world.stopwatch("narrow_phase");
         let mut constraints = Vec::new();

@@ -1,6 +1,6 @@
 use crate::{
     math::{Quat, Vec3},
-    RigidBodyEntity,
+    RigidBodyData,
 };
 
 use super::Constraint;
@@ -8,8 +8,8 @@ use super::Constraint;
 pub trait PositionConstraint: Constraint {
     fn apply_position_correction(
         &self,
-        body_a: &mut RigidBodyEntity,
-        body_b: &mut RigidBodyEntity,
+        body_a: &mut RigidBodyData,
+        body_b: &mut RigidBodyData,
         delta_lagrange: f32,
         direction: &Vec3,
         ra: &Vec3,
@@ -41,7 +41,7 @@ pub trait PositionConstraint: Constraint {
         ))
     }
 
-    fn apply_body_correction(body: &mut RigidBodyEntity, p: &Vec3, r: &Vec3, sign: f32) {
+    fn apply_body_correction(body: &mut RigidBodyData, p: &Vec3, r: &Vec3, sign: f32) {
         body.rb.position += sign * p * body.effective_inverse_mass();
 
         let inv_inertia = body.effective_inverse_inertia();
@@ -52,7 +52,7 @@ pub trait PositionConstraint: Constraint {
         body.rb.rotation = (dq * body.rb.rotation).normalize();
     }
 
-    fn compute_generalized_inverse_mass(&self, body: &RigidBodyEntity, r: &Vec3, n: &Vec3) -> f32 {
+    fn compute_generalized_inverse_mass(&self, body: &RigidBodyData, r: &Vec3, n: &Vec3) -> f32 {
         let inv_inertia = body.effective_inverse_inertia();
         let r_cross_n = r.cross(n);
         body.rb.inv_mass + r_cross_n.dot(inv_inertia * r_cross_n)

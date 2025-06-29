@@ -6,7 +6,7 @@ use crate::{
     Collider, PhysicsWorldId, RigidBody, ShapeWrapper,
 };
 
-pub struct RigidBodyEntity {
+pub struct RigidBodyData {
     pub id: u64,
     pub rb: RigidBody,
     pub shape: ShapeWrapper,
@@ -14,7 +14,7 @@ pub struct RigidBodyEntity {
     pub inv_inertia_tensor: Mat3,
 }
 
-impl RigidBodyEntity {
+impl RigidBodyData {
     pub fn new(rigid_body: RigidBody, collider: Collider) -> Self {
         let inertia_tensor = collider.inertia_tensor(rigid_body.mass);
         Self {
@@ -29,7 +29,7 @@ impl RigidBodyEntity {
     pub fn all(ctx: &ReducerContext, world_id: PhysicsWorldId) -> Vec<Self> {
         let colliders = Collider::all(ctx, world_id);
         let mut entities: Vec<_> = RigidBody::all(ctx, world_id)
-            .map(move |rb| RigidBodyEntity::new(rb, *colliders.get(&rb.collider_id).unwrap()))
+            .map(move |rb| RigidBodyData::new(rb, *colliders.get(&rb.collider_id).unwrap()))
             .collect();
         entities.sort_by_key(|e| e.id);
         entities
@@ -47,8 +47,8 @@ impl RigidBodyEntity {
     }
 }
 
-impl From<&RigidBodyEntity> for Isometry3<f32> {
-    fn from(value: &RigidBodyEntity) -> Self {
+impl From<&RigidBodyData> for Isometry3<f32> {
+    fn from(value: &RigidBodyData) -> Self {
         value.rb.into()
     }
 }

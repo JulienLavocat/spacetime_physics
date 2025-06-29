@@ -1,11 +1,8 @@
-use core::f32;
-
-use log::info;
 use spacetime_physics::{
     math::{Quat, Vec3},
     physics_world::physics_world,
-    raycast_all, schedule_next_physics_tick, step_world, Collider, PhysicsTrigger, PhysicsWorld,
-    RigidBody, RigidBodyType,
+    schedule_next_physics_tick, step_world, Collider, PhysicsTrigger, PhysicsWorld, RigidBody,
+    RigidBodyType,
 };
 use spacetimedb::{rand::Rng, reducer, table, Identity, ReducerContext, ScheduleAt, Table};
 
@@ -105,17 +102,6 @@ pub fn physics_tick_world(ctx: &ReducerContext, tick: PhysicsWorldTick) {
 
     // Update the physics world and synchorinze the kinematic entities positions and rotations
     step_world(ctx, &world, kinematic_entities);
-
-    // This is an example of how to perform a raycast in the physics world.
-    // You can use this in any reducer to implement shooting, picking, etc.
-    let origin = Vec3::ZERO;
-    let direction = Vec3::splat(100.0);
-    let max_distance = f32::MAX;
-    for item in raycast_all(ctx, world.id, origin, direction, max_distance, true) {
-        if world.debug_raycasts {
-            info!("Raycast hit: {}", item);
-        }
-    }
 
     ctx.db.physics_ticks().delete(tick);
     ctx.db.physics_ticks().insert(PhysicsWorldTick {

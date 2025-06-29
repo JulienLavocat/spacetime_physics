@@ -2,7 +2,7 @@ use std::fmt::Display;
 
 use log::debug;
 
-use crate::{math::Vec3, utils::get_bodies_mut, CollisionPoint, PhysicsWorld, RigidBodyEntity};
+use crate::{math::Vec3, utils::get_bodies_mut, CollisionPoint, PhysicsWorld, RigidBodyData};
 
 use super::{position::PositionConstraint, Constraint};
 
@@ -26,8 +26,8 @@ pub struct PenetrationConstraint {
 
 impl PenetrationConstraint {
     pub fn new(
-        a: &RigidBodyEntity,
-        b: &RigidBodyEntity,
+        a: &RigidBodyData,
+        b: &RigidBodyData,
         point: CollisionPoint,
         compliance: f32,
     ) -> Self {
@@ -52,8 +52,8 @@ impl PenetrationConstraint {
     fn solve_contact(
         &mut self,
         world: &PhysicsWorld,
-        body_a: &mut RigidBodyEntity,
-        body_b: &mut RigidBodyEntity,
+        body_a: &mut RigidBodyData,
+        body_b: &mut RigidBodyData,
         dt: f32,
     ) {
         // Shorter aliases for readability
@@ -98,8 +98,8 @@ impl PenetrationConstraint {
     fn solve_friction(
         &mut self,
         world: &PhysicsWorld,
-        body1: &mut RigidBodyEntity,
-        body2: &mut RigidBodyEntity,
+        body1: &mut RigidBodyData,
+        body2: &mut RigidBodyData,
         dt: f32,
     ) {
         // Shorter aliases
@@ -166,7 +166,7 @@ impl PenetrationConstraint {
 }
 
 impl Constraint for PenetrationConstraint {
-    fn solve(&mut self, world: &PhysicsWorld, bodies: &mut [RigidBodyEntity], dt: f32) {
+    fn solve(&mut self, world: &PhysicsWorld, bodies: &mut [RigidBodyData], dt: f32) {
         let (body_a, body_b) = get_bodies_mut(self.a, self.b, bodies);
         self.solve_contact(world, body_a, body_b, dt);
         self.solve_friction(world, body_a, body_b, dt);
