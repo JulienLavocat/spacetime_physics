@@ -32,8 +32,7 @@ pub fn init(ctx: &ReducerContext) {
     let world = PhysicsWorld::builder()
         .ticks_per_second(60.0) // The reducer responsible for stepping the physics world will be scheduled at 60Hz, see TickWorld bellow
         .gravity(Vec3::new(0.0, -9.81, 0.0))
-        .sub_step(1)
-        .debug_time(true)
+        // .debug_time(true)
         // .debug_broad_phase(true)
         // .debug_narrow_phase(true)
         // .debug(true)

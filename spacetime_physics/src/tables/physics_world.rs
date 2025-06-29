@@ -17,33 +17,39 @@ pub fn schedule_next_physics_tick(ctx: &ReducerContext, world: &PhysicsWorld) ->
 pub struct PhysicsWorld {
     #[primary_key]
     #[auto_inc]
-    #[builder(default = 0)]
     /// The unique identifier for the physics world. This is automatically incremented by the database.
     /// It is used to be able to have multiple separated simulations running at the same time.
+    #[builder(default = 0)]
     pub id: u64,
-    #[builder(default = 60.0)]
+
     /// The number of physics updates per second. This determines how often the physics world is
     /// updated. A common value is 60, which means the physics world will update 60 times per second.
+    #[builder(default = 60.0)]
     pub ticks_per_second: f32,
-    #[builder(default = 1.0 / 60.0)]
+
     /// The time step by which the physics world is updated. This is the duration of each physics step.
     /// This is different from the ticks per second, as it represents the actual time duration of each step.
+    #[builder(default = 1.0 / 60.0)]
     pub time_step: f32,
-    #[builder(default = 20)]
+
     /// The number of sub-steps to perform in each physics step. This allows for more accurate
     /// simulation by breaking down the physics step into smaller increments. A value of 20 is common,
+    #[builder(default = 20)]
     pub sub_step: u32,
-    #[builder(default = Vec3::new(0.0, -9.81, 0.0))]
+
     /// The gravity vector applied to the physics world. This is typically set to a downward
     /// vector like (0.0, -9.81, 0.0) to simulate Earth's gravity.
+    #[builder(default = Vec3::new(0.0, -9.81, 0.0))]
     pub gravity: Vec3,
-    #[builder(default = 1e-3)]
+
     /// The precision of the physics simulation, used to determine how close objects need to be
     /// to collide.
+    #[builder(default = 1e-3)]
     pub precision: f32,
-    #[builder(default = 1)]
+
     /// The number of position iterations to perform during the physics step. This should be as low
     /// as possible while still achieving stable results, a value of 1 is usually sufficient.
+    #[builder(default = 1)]
     pub position_iterations: u32,
 
     /// The dilation factor for the QBVH (Quantized Bounding Volume Hierarchy) used for collision detection.
