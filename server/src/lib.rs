@@ -37,20 +37,20 @@ pub fn init(ctx: &ReducerContext) {
         .build()
         .insert(ctx);
 
-    // let range = -100000.0..100000.0;
+    let range = -100000.0..100000.0;
     let sphere_collider = Collider::sphere(world.id, 1.0).insert(ctx).id;
-    // for _ in 0..5000 {
-    //     RigidBody::builder()
-    //         .position(Vec3::new(
-    //             ctx.rng().gen_range(range.clone()),
-    //             100.0,
-    //             ctx.rng().gen_range(range.clone()),
-    //         ))
-    //         .collider_id(sphere_collider)
-    //         .body_type(RigidBodyType::Dynamic)
-    //         .build()
-    //         .insert(ctx);
-    // }
+    for _ in 0..5000 {
+        RigidBody::builder()
+            .position(Vec3::new(
+                ctx.rng().gen_range(range.clone()),
+                100.0,
+                ctx.rng().gen_range(range.clone()),
+            ))
+            .collider_id(sphere_collider)
+            .body_type(RigidBodyType::Dynamic)
+            .build()
+            .insert(ctx);
+    }
 
     // Create a small sphere that will fal towards the ground
     RigidBody::builder()

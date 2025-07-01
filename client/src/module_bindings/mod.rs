@@ -32,14 +32,14 @@ pub use collider_type::Collider;
 pub use cuboid_type::Cuboid;
 pub use friction_type::Friction;
 pub use mat_3_type::Mat3;
-pub use on_connect_reducer::{on_connect, set_flags_for_on_connect, OnConnectCallbackId};
+pub use on_connect_reducer::{OnConnectCallbackId, on_connect, set_flags_for_on_connect};
 pub use on_disconnected_reducer::{
-    on_disconnected, set_flags_for_on_disconnected, OnDisconnectedCallbackId,
+    OnDisconnectedCallbackId, on_disconnected, set_flags_for_on_disconnected,
 };
 pub use physic_tick_type::PhysicTick;
 pub use physics_rigid_bodies_table::*;
 pub use physics_tick_world_reducer::{
-    physics_tick_world, set_flags_for_physics_tick_world, PhysicsTickWorldCallbackId,
+    PhysicsTickWorldCallbackId, physics_tick_world, set_flags_for_physics_tick_world,
 };
 pub use physics_ticks_table::*;
 pub use physics_world_table::*;
@@ -458,21 +458,21 @@ impl __sdk::SubscriptionHandle for SubscriptionHandle {
 /// either a [`DbConnection`] or an [`EventContext`] and operate on either.
 pub trait RemoteDbContext:
     __sdk::DbContext<
-    DbView = RemoteTables,
-    Reducers = RemoteReducers,
-    SetReducerFlags = SetReducerFlags,
-    SubscriptionBuilder = __sdk::SubscriptionBuilder<RemoteModule>,
->
+        DbView = RemoteTables,
+        Reducers = RemoteReducers,
+        SetReducerFlags = SetReducerFlags,
+        SubscriptionBuilder = __sdk::SubscriptionBuilder<RemoteModule>,
+    >
 {
 }
 impl<
-        Ctx: __sdk::DbContext<
+    Ctx: __sdk::DbContext<
             DbView = RemoteTables,
             Reducers = RemoteReducers,
             SetReducerFlags = SetReducerFlags,
             SubscriptionBuilder = __sdk::SubscriptionBuilder<RemoteModule>,
         >,
-    > RemoteDbContext for Ctx
+> RemoteDbContext for Ctx
 {
 }
 

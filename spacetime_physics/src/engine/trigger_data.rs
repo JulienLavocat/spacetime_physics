@@ -13,6 +13,7 @@ pub struct TriggerData {
     pub world_id: u64,
     pub isometry: Isometry3<f32>,
     pub current_entities_inside: HashSet<RigidBodyId>,
+    pub new_entities_inside: HashSet<RigidBodyId>,
     pub added_entities: HashSet<RigidBodyId>,
     pub removed_entities: HashSet<RigidBodyId>,
 }
@@ -28,6 +29,7 @@ impl TriggerData {
             current_entities_inside: trigger.entities_inside.iter().copied().collect(),
             added_entities: HashSet::new(),
             removed_entities: HashSet::new(),
+            new_entities_inside: HashSet::new(),
         }
     }
 
