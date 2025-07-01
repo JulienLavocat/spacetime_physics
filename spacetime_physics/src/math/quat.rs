@@ -148,6 +148,18 @@ impl From<Quat> for UnitQuaternion<f32> {
     }
 }
 
+impl From<UnitQuaternion<f32>> for Quat {
+    fn from(value: UnitQuaternion<f32>) -> Self {
+        let quaternion = value.into_inner();
+        Quat {
+            x: quaternion.i,
+            y: quaternion.j,
+            z: quaternion.k,
+            w: quaternion.w,
+        }
+    }
+}
+
 impl Mul<Vec3> for Quat {
     type Output = Vec3;
 

@@ -6,12 +6,14 @@ use spacetimedb::{table, ReducerContext, Table};
 
 use crate::math::{Quat, Vec3};
 
+use super::RigidBodyId;
+
 #[table(name = physics_triggers)]
-#[derive(Builder, Debug, Clone, Copy, PartialEq)]
+#[derive(Builder, Debug, Clone, PartialEq)]
 pub struct PhysicsTrigger {
+    #[builder(default = 0)]
     #[primary_key]
     #[auto_inc]
-    #[builder(default = 0)]
     pub id: u64,
     #[index(btree)]
     #[builder(default = 1)]
@@ -23,6 +25,18 @@ pub struct PhysicsTrigger {
     pub rotation: Quat,
 
     pub collider_id: u64,
+
+    /// The entities currently inside the trigger.
+    #[builder(default = Vec::new())]
+    pub entities_inside: Vec<RigidBodyId>,
+
+    /// The entities that were added to the trigger since the last update.
+    #[builder(default = Vec::new())]
+    pub added_entities: Vec<RigidBodyId>,
+
+    /// The entities that were removed from the trigger since the last update.
+    #[builder(default = Vec::new())]
+    pub removed_entities: Vec<RigidBodyId>,
 }
 
 impl PhysicsTrigger {
@@ -30,12 +44,12 @@ impl PhysicsTrigger {
         ctx.db.physics_triggers().insert(self)
     }
 
-    pub fn all(ctx: &ReducerContext, world_id: u64) -> Vec<Self> {
-        ctx.db
-            .physics_triggers()
-            .world_id()
-            .filter(world_id)
-            .collect()
+    pub fn update(self, ctx: &ReducerContext) -> Self {
+        ctx.db.physics_triggers().id().update(self)
+    }
+
+    pub fn all(ctx: &ReducerContext, world_id: u64) -> impl Iterator<Item = Self> {
+        ctx.db.physics_triggers().world_id().filter(world_id)
     }
 }
 

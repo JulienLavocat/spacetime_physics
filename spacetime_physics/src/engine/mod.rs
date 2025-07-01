@@ -8,11 +8,13 @@ use xpbd::{integrate_bodies, recompute_velocities, solve_constraints, solve_velo
 use crate::{
     math::{Quat, Vec3},
     tables::PhysicsWorld,
+    Collider,
 };
 
 mod collision_detection;
 mod constraints;
 mod rigid_body_data;
+mod trigger_data;
 mod xpbd;
 
 pub use rigid_body_data::RigidBodyData;
@@ -26,7 +28,8 @@ pub fn step_world(
 ) {
     let sw = world.stopwatch("step_world");
 
-    let mut entities: Vec<_> = RigidBodyData::all(ctx, world.id);
+    let colliders = Collider::all(ctx, world.id);
+    let mut entities: Vec<_> = RigidBodyData::collect(ctx, world.id, &colliders);
     let entities = entities.as_mut_slice();
 
     let dt = world.time_step / world.sub_step as f32;
@@ -76,7 +79,7 @@ pub fn step_world(
         sw.end();
     }
 
-    detect_triggers(ctx, world, entities);
+    collision_detection.detect_triggers(ctx, world, entities, &colliders);
 
     if world.debug {
         debug!("---------- End of substeps ----------");
@@ -135,58 +138,4 @@ fn sync_kinematic_bodies(
         entity.rb.rotation = *rotation;
         entity.rb.position = *position;
     }
-}
-
-fn detect_triggers(_ctx: &ReducerContext, _world: &PhysicsWorld, _bodies: &[RigidBodyData]) {
-    // let sw = world.stopwatch("detect_triggers");
-    // let triggers = PhysicsTrigger::all(ctx, world.id);
-    // let colliders = Collider::all(ctx, world.id);
-    // let triggers = triggers.as_slice();
-    // let trigger_entities = PhysicsTriggerEntity::all(ctx, world.id);
-    //
-    // // TODO: Add a toggle for high-frequency trigger detection that would run every substep
-    // // TODO: Use broad phase to reduce the number of checks
-    // for trigger in triggers {
-    //     let mut entities_inside = HashSet::new();
-    //     let is_intersection = colliders
-    //         .get(&trigger.collider_id)
-    //         .unwrap().
-    //     for body in bodies {
-    //         if let Ok(is_intersecting) =
-    //             trigger_collider.intersects(&trigger.into(), &body.into(), &body_collider)
-    //         {
-    //             if is_intersecting {
-    //                 entities_inside.insert(PhysicsTriggerEntity {
-    //                     trigger_id: trigger.id,
-    //                     world_id: world.id,
-    //                     entity_id: body.id,
-    //                 });
-    //             }
-    //         }
-    //     }
-    //
-    //     let old_entities = trigger_entities
-    //         .get(&trigger.id)
-    //         .cloned()
-    //         .unwrap_or_default();
-    //
-    //     let deleted_entities = old_entities.difference(&entities_inside);
-    //     let added_entities = entities_inside.difference(&old_entities);
-    //
-    //     if world.debug_triggers() && !trigger_entities.is_empty() {
-    //         debug!(
-    //             "[PhysicsWorld#{}] [Trigger] {}: previous_entities: {:?}, current_entities: {:?}, deleted: {:?}, added: {:?}",
-    //             world.id, trigger.id, old_entities, entities_inside, deleted_entities, added_entities
-    //         );
-    //     }
-    //
-    //     for entity in deleted_entities {
-    //         ctx.db.physics_trigger_entities().delete(*entity);
-    //     }
-    //
-    //     for entity in added_entities {
-    //         entity.insert(ctx);
-    //     }
-    // }
-    // sw.end();
 }

@@ -1,13 +1,16 @@
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
 use log::debug;
 use parry3d::{
     partitioning::Qbvh as QbvhImpl, query::visitors::BoundingVolumeIntersectionsSimultaneousVisitor,
 };
+use spacetimedb::ReducerContext;
 
-use crate::{test_collision, utils::get_bodies, PhysicsWorld, RigidBodyId};
+use crate::{test_collision, utils::get_bodies, Collider, PhysicsWorld, RigidBodyId};
 
-use super::{constraints::PenetrationConstraint, rigid_body_data::RigidBodyData};
+use super::{
+    constraints::PenetrationConstraint, rigid_body_data::RigidBodyData, trigger_data::TriggerData,
+};
 
 pub struct CollisionDetection {
     qbvh: QbvhImpl<RigidBodyId>,
@@ -93,5 +96,53 @@ impl CollisionDetection {
 
         sw.end();
         constraints
+    }
+
+    pub fn detect_triggers(
+        &self,
+        ctx: &ReducerContext,
+        world: &PhysicsWorld,
+        bodies: &[RigidBodyData],
+        colliders: &HashMap<u64, Collider>,
+    ) {
+        let triggers = TriggerData::collect(ctx, world.id, colliders);
+
+        // TODO: Use QBVH to optimize trigger detection
+        for mut trigger in triggers {
+            let new_entities_inside: HashSet<RigidBodyId> = bodies
+                .iter()
+                .filter_map(|body| {
+                    if trigger
+                        .shape
+                        .intersects(&trigger.isometry, &body.into(), &body.shape)
+                    {
+                        Some(body.id)
+                    } else {
+                        None
+                    }
+                })
+                .collect();
+
+            trigger.added_entities = new_entities_inside
+                .difference(&trigger.current_entities_inside)
+                .cloned()
+                .collect();
+            trigger.removed_entities = trigger
+                .current_entities_inside
+                .difference(&new_entities_inside)
+                .cloned()
+                .collect();
+            trigger.current_entities_inside = new_entities_inside;
+
+            if world.debug_triggers() {
+                debug!(
+                    "[PhysicsWorld#{}] [Trigger] Trigger {:?} entities inside: {:?}, added: {:?}, removed: {:?}",
+                    world.id, trigger.trigger_id, trigger.current_entities_inside, 
+                    trigger.added_entities, trigger.removed_entities
+                );
+            }
+
+            trigger.update(ctx);
+        }
     }
 }

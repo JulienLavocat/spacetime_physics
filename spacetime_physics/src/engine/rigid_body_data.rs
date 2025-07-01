@@ -1,9 +1,11 @@
+use std::collections::HashMap;
+
 use parry3d::na::Isometry3;
 use spacetimedb::ReducerContext;
 
 use crate::{
     math::{Mat3, Vec3},
-    Collider, PhysicsWorldId, RigidBody, ShapeWrapper,
+    Collider, ColliderId, PhysicsWorldId, RigidBody, ShapeWrapper,
 };
 
 pub struct RigidBodyData {
@@ -15,7 +17,7 @@ pub struct RigidBodyData {
 }
 
 impl RigidBodyData {
-    pub fn new(rigid_body: RigidBody, collider: Collider) -> Self {
+    pub fn new(rigid_body: RigidBody, collider: &Collider) -> Self {
         let inertia_tensor = collider.inertia_tensor(rigid_body.mass);
         Self {
             id: rigid_body.id,
@@ -26,10 +28,13 @@ impl RigidBodyData {
         }
     }
 
-    pub fn all(ctx: &ReducerContext, world_id: PhysicsWorldId) -> Vec<Self> {
-        let colliders = Collider::all(ctx, world_id);
+    pub fn collect(
+        ctx: &ReducerContext,
+        world_id: PhysicsWorldId,
+        colliders: &HashMap<ColliderId, Collider>,
+    ) -> Vec<Self> {
         let mut entities: Vec<_> = RigidBody::all(ctx, world_id)
-            .map(move |rb| RigidBodyData::new(rb, *colliders.get(&rb.collider_id).unwrap()))
+            .map(move |rb| RigidBodyData::new(rb, colliders.get(&rb.collider_id).unwrap()))
             .collect();
         entities.sort_by_key(|e| e.id);
         entities

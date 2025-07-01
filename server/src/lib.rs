@@ -29,6 +29,7 @@ pub fn init(ctx: &ReducerContext) {
     let world = PhysicsWorld::builder()
         .ticks_per_second(60.0) // The reducer responsible for stepping the physics world will be scheduled at 60Hz, see TickWorld bellow
         .gravity(Vec3::new(0.0, -9.81, 0.0))
+        .debug_triggers(true)
         // .debug_time(true)
         // .debug_broad_phase(true)
         // .debug_narrow_phase(true)
@@ -36,20 +37,20 @@ pub fn init(ctx: &ReducerContext) {
         .build()
         .insert(ctx);
 
-    let range = -100000.0..100000.0;
+    // let range = -100000.0..100000.0;
     let sphere_collider = Collider::sphere(world.id, 1.0).insert(ctx).id;
-    for _ in 0..5000 {
-        RigidBody::builder()
-            .position(Vec3::new(
-                ctx.rng().gen_range(range.clone()),
-                100.0,
-                ctx.rng().gen_range(range.clone()),
-            ))
-            .collider_id(sphere_collider)
-            .body_type(RigidBodyType::Dynamic)
-            .build()
-            .insert(ctx);
-    }
+    // for _ in 0..5000 {
+    //     RigidBody::builder()
+    //         .position(Vec3::new(
+    //             ctx.rng().gen_range(range.clone()),
+    //             100.0,
+    //             ctx.rng().gen_range(range.clone()),
+    //         ))
+    //         .collider_id(sphere_collider)
+    //         .body_type(RigidBodyType::Dynamic)
+    //         .build()
+    //         .insert(ctx);
+    // }
 
     // Create a small sphere that will fal towards the ground
     RigidBody::builder()
@@ -60,17 +61,24 @@ pub fn init(ctx: &ReducerContext) {
         .insert(ctx);
 
     // Floor
-    let floor_collider = Collider::cuboid(world.id, Vec3::new(1000.0, 1.0, 1000.0))
-        .insert(ctx)
-        .id;
+    // let floor_collider = Collider::cuboid(world.id, Vec3::new(1000.0, 1.0, 1000.0))
+    //     .insert(ctx)
+    //     .id;
+    // RigidBody::builder()
+    //     .position(Vec3::new(0.0, -1.0, 0.0))
+    //     .collider_id(floor_collider)
+    //     .body_type(RigidBodyType::Static)
+    //     .build()
+    //     .insert(ctx);
+
     RigidBody::builder()
-        .position(Vec3::new(0.0, -1.0, 0.0))
-        .collider_id(floor_collider)
+        .position(Vec3::splat(-2.0))
+        .collider_id(sphere_collider)
         .body_type(RigidBodyType::Static)
         .build()
         .insert(ctx);
 
-    let trigger_collider = Collider::cuboid(world.id, Vec3::new(1000.0, 1000.0, 1000.0))
+    let trigger_collider = Collider::cuboid(world.id, Vec3::new(10.0, 10.0, 10.0))
         .insert(ctx)
         .id;
     PhysicsTrigger::builder()

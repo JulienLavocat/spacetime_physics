@@ -1,5 +1,3 @@
-use core::panic;
-
 use crate::RigidBodyData;
 
 use super::CollisionPoint;
@@ -16,11 +14,7 @@ pub fn test_collision(
         .shape
         .contact(&iso_a, &body_b.shape, &iso_b, prediction);
 
-    if let Err(err) = result {
-        panic!("Collision detection failed: {}", err);
-    }
-
-    result.unwrap().map(|contact| {
+    result.map(|contact| {
         let world_a = contact.point1.into();
         let world_b = contact.point2.into();
         let local_a = body_a

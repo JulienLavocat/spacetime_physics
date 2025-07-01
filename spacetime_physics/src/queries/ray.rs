@@ -3,7 +3,7 @@ use std::fmt::Display;
 use parry3d::query::Ray;
 use spacetimedb::ReducerContext;
 
-use crate::{math::Vec3, RigidBodyData};
+use crate::{math::Vec3, Collider, RigidBodyData};
 
 #[derive(Debug, Clone)]
 pub struct RacyCastHit {
@@ -31,7 +31,8 @@ pub fn raycast_all(
     max_distance: f32,
     solid: bool,
 ) -> impl Iterator<Item = RacyCastHit> {
-    let bodies = RigidBodyData::all(ctx, world_id).into_iter();
+    let colliders = Collider::all(ctx, world_id);
+    let bodies = RigidBodyData::collect(ctx, world_id, &colliders).into_iter();
     raycast_all_with_rigid_bodies(bodies, origin, direction, max_distance, solid)
 }
 

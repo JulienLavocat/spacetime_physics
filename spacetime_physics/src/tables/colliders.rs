@@ -4,6 +4,8 @@ use spacetimedb::{table, ReducerContext, SpacetimeType, Table};
 
 use crate::math::{Mat3, Vec3};
 
+pub type ColliderId = u64;
+
 #[derive(SpacetimeType, Default, Clone, Copy, Debug, PartialEq)]
 pub enum ColliderType {
     #[default]

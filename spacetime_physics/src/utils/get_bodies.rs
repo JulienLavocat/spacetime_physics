@@ -1,4 +1,4 @@
-use crate::{tables::RigidBody, RigidBodyData};
+use crate::RigidBodyData;
 
 /// Retrieves mutable references to two `RigidBody` instances by their IDs from a slice of bodies.
 /// This function assumes that the bodies are sorted by their IDs and that the IDs are unique.

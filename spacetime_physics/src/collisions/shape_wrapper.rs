@@ -2,11 +2,12 @@ use crate::{tables::Collider, ColliderType};
 use parry3d::{
     bounding_volume::{Aabb, BoundingVolume},
     na::Isometry3,
-    query::{contact, intersection_test, Contact, Ray, RayCast, RayIntersection, Unsupported},
+    query::{contact, intersection_test, Contact, Ray, RayCast, RayIntersection},
     shape::{Ball, Capsule, Cone, Cuboid, Cylinder, HalfSpace, Shape, Triangle},
 };
 
 /// Acts as a wrapper around spacetime_physics colliders and Parry's shapes,
+#[derive(Debug)]
 pub enum ShapeWrapper {
     Sphere(Ball),
     Plane(HalfSpace),
@@ -84,14 +85,15 @@ impl ShapeWrapper {
         other: &ShapeWrapper,
         isometry_b: &Isometry3<f32>,
         prediction: f32,
-    ) -> Result<Option<Contact>, Unsupported> {
-        contact(
+    ) -> Option<Contact> {
+        let result = contact(
             isometry_a,
             self.as_parry_shape(),
             isometry_b,
             other.as_parry_shape(),
             prediction,
-        )
+        );
+        result.unwrap_or_default()
     }
 
     pub fn intersects(
@@ -99,13 +101,15 @@ impl ShapeWrapper {
         isometry_a: &Isometry3<f32>,
         isometry_b: &Isometry3<f32>,
         other: &ShapeWrapper,
-    ) -> Result<bool, Unsupported> {
-        intersection_test(
+    ) -> bool {
+        let result = intersection_test(
             isometry_a,
             self.as_parry_shape(),
             isometry_b,
             other.as_parry_shape(),
-        )
+        );
+
+        result.unwrap_or_default()
     }
 }
 
