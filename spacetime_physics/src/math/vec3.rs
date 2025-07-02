@@ -1,5 +1,6 @@
 use std::{
     fmt::Display,
+    hash::{Hash, Hasher},
     ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign},
 };
 
@@ -142,6 +143,14 @@ impl Vec3 {
             y: self.y.min(other.y),
             z: self.z.min(other.z),
         }
+    }
+}
+
+impl Hash for Vec3 {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.x.to_bits().hash(state);
+        self.y.to_bits().hash(state);
+        self.z.to_bits().hash(state);
     }
 }
 
@@ -355,7 +364,7 @@ impl Div for Vec3 {
 
     fn div(self, rhs: Self) -> Self::Output {
         Self {
-            x: self.x / rhs.z,
+            x: self.x / rhs.x,
             y: self.y / rhs.y,
             z: self.z / rhs.z,
         }

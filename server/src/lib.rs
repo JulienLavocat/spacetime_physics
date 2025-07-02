@@ -1,7 +1,7 @@
 use spacetime_physics::{
     math::{Quat, Vec3},
     physics_world::physics_world,
-    schedule_next_physics_tick, step_world, Collider, PhysicsTrigger, PhysicsWorld, RigidBody,
+    schedule_physics_tick, step_world, Collider, PhysicsTrigger, PhysicsWorld, RigidBody,
     RigidBodyType,
 };
 use spacetimedb::{rand::Rng, reducer, table, Identity, ReducerContext, ScheduleAt, Table};
@@ -29,7 +29,7 @@ pub fn init(ctx: &ReducerContext) {
     let world = PhysicsWorld::builder()
         .ticks_per_second(60.0) // The reducer responsible for stepping the physics world will be scheduled at 60Hz, see TickWorld bellow
         .gravity(Vec3::new(0.0, -9.81, 0.0))
-        .debug_triggers(true)
+        // .debug_triggers(true)
         // .debug_time(true)
         // .debug_broad_phase(true)
         // .debug_narrow_phase(true)
@@ -91,7 +91,7 @@ pub fn init(ctx: &ReducerContext) {
     ctx.db.physics_ticks().insert(PhysicsWorldTick {
         id: 0,
         world_id: world.id,
-        scheduled_at: ctx.timestamp.into(),
+        scheduled_at: schedule_physics_tick(&world),
     });
 }
 
@@ -110,11 +110,4 @@ pub fn physics_tick_world(ctx: &ReducerContext, tick: PhysicsWorldTick) {
 
     // Update the physics world and synchorinze the kinematic entities positions and rotations
     step_world(ctx, &world, kinematic_entities);
-
-    ctx.db.physics_ticks().delete(tick);
-    ctx.db.physics_ticks().insert(PhysicsWorldTick {
-        id: 0,
-        world_id: world.id,
-        scheduled_at: schedule_next_physics_tick(ctx, &world),
-    });
 }

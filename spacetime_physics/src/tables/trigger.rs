@@ -8,6 +8,8 @@ use crate::math::{Quat, Vec3};
 
 use super::RigidBodyId;
 
+pub type PhysicsTriggerId = u64;
+
 #[table(name = physics_triggers)]
 #[derive(Builder, Debug, Clone, PartialEq)]
 pub struct PhysicsTrigger {

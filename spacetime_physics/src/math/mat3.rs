@@ -159,13 +159,19 @@ impl Mul<Vec3> for Mat3 {
 }
 
 impl Mul<Mat3> for f32 {
-    type Output = Vec3;
+    type Output = Mat3;
 
     fn mul(self, mat: Mat3) -> Self::Output {
-        Vec3::new(
-            self * mat.m11 + self * mat.m12 + self * mat.m13,
-            self * mat.m21 + self * mat.m22 + self * mat.m23,
-            self * mat.m31 + self * mat.m32 + self * mat.m33,
-        )
+        Mat3 {
+            m11: self * mat.m11,
+            m12: self * mat.m12,
+            m13: self * mat.m13,
+            m21: self * mat.m21,
+            m22: self * mat.m22,
+            m23: self * mat.m23,
+            m31: self * mat.m31,
+            m32: self * mat.m32,
+            m33: self * mat.m33,
+        }
     }
 }

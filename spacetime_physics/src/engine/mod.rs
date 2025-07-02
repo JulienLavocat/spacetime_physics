@@ -9,7 +9,7 @@ use xpbd::{integrate_bodies, recompute_velocities, solve_constraints, solve_velo
 use crate::{
     math::{Quat, Vec3},
     tables::PhysicsWorld,
-    Collider,
+    Collider, RayCast,
 };
 
 mod collision_detection;
@@ -32,9 +32,11 @@ pub fn step_world(
     let colliders = Collider::all(ctx, world.id);
     let mut triggers = TriggerData::collect(ctx, world.id, &colliders);
     let mut entities = RigidBodyData::collect(ctx, world.id, &colliders);
+    let mut raycasts = RayCast::all(ctx, world.id);
 
     let entities = entities.as_mut_slice();
     let triggers = triggers.as_mut_slice();
+    let raycasts = raycasts.as_mut_slice();
 
     let dt = world.time_step / world.sub_step as f32;
 
@@ -42,7 +44,7 @@ pub fn step_world(
 
     // TODO: Include triggers in the entities list
     let mut collision_detection = CollisionDetection::new();
-    collision_detection.broad_phase(world, entities, triggers);
+    collision_detection.broad_phase(world, entities, triggers, raycasts);
 
     if world.debug_broad_phase() {
         debug!(
@@ -84,6 +86,7 @@ pub fn step_world(
     }
 
     collision_detection.narrow_phase_triggers(ctx, world, entities, triggers);
+    collision_detection.narrow_phase_raycast(ctx, world, entities, raycasts);
 
     if world.debug {
         debug!("---------- End of substeps ----------");
