@@ -149,7 +149,7 @@ impl CollisionDetection {
 
             if trigger
                 .shape
-                .intersects(&trigger.isometry, &body.rb.into(), &body.shape)
+                .intersects(&trigger.isometry, &body.into(), body.shape())
             {
                 trigger.new_entities_inside.insert(body.id);
             } else {
@@ -197,8 +197,8 @@ impl CollisionDetection {
 
             for broad_hit in broad_hits {
                 let body = &bodies[broad_hit.rigidbody_index];
-                if let Some(intersection) = body.shape.cast_ray_and_get_normal(
-                    &body.rb.into(),
+                if let Some(intersection) = body.shape().cast_ray_and_get_normal(
+                    &body.into(),
                     &ray,
                     raycast.max_distance,
                     raycast.solid,
@@ -298,7 +298,7 @@ impl CollisionDetection {
                     collidable_index: i,
                 },
                 entity
-                    .shape
+                    .shape()
                     .collision_aabb(&entity.into(), prediction_distance),
             ));
         }

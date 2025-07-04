@@ -18,31 +18,34 @@ pub(crate) fn integrate_bodies(
 ) {
     let sw = world.stopwatch("integrate_bodies");
     for body in bodies {
-        if !body.rb.is_dynamic() {
+        if !body.is_dynamic() {
             continue;
         }
 
         // --- Linear integration ---
 
-        body.rb.previous_position = body.rb.position;
-        let weight = world.gravity * body.rb.mass;
-        let total_force = body.rb.force + weight;
+        body.set_previous_position(body.position());
+        let weight = world.gravity * body.effective_mass();
+        let total_force = body.force() + weight;
 
         // v ← v + h * fext / m
-        body.rb.linear_velocity += total_force * body.rb.inv_mass * delta_time;
+        body.set_linear_velocity(
+            body.linear_velocity() + total_force * body.effective_inverse_mass() * delta_time,
+        );
+
         // x ← x + h * v
-        body.rb.position += body.rb.linear_velocity * delta_time;
+        body.set_position(body.position() + body.linear_velocity() * delta_time);
 
         // --- Angular integration ---
 
-        body.rb.previous_rotation = body.rb.rotation;
+        body.set_previous_rotation(body.rotation());
 
-        let i = body.inertia_tensor;
-        let inv_inertia_tensor = body.inv_inertia_tensor;
-        let omega = body.rb.angular_velocity;
+        let i = body.inertia_tensor();
+        let inv_inertia_tensor = body.inv_inertia_tensor();
+        let omega = body.angular_velocity();
 
         // gyroscopic torque: ω × (Iω)
-        let torque = body.rb.torque;
+        let torque = body.torque();
         let i_omega = i * omega;
         let gyro = omega.cross(i_omega);
 
@@ -50,19 +53,19 @@ pub(crate) fn integrate_bodies(
         let angular_acceleration = inv_inertia_tensor * (torque - gyro);
 
         // ω ← ω + h * α
-        body.rb.angular_velocity += delta_time * angular_acceleration;
+        body.set_angular_velocity(body.angular_velocity() + delta_time * angular_acceleration);
 
         // q ← q + 0.5 * h * q × ω
-        let dq = 0.5 * Quat::from_xyz(body.rb.angular_velocity, 0.0) * body.rb.rotation;
-        body.rb.rotation = (body.rb.rotation + dq * delta_time).normalize();
+        let dq = 0.5 * delta_time * body.rotation() * Quat::from_xyz(body.angular_velocity(), 0.0);
+        body.set_rotation(body.rotation() + dq);
 
-        body.rb.force = Vec3::ZERO;
-        body.rb.torque = Vec3::ZERO;
+        body.set_torque(Vec3::ZERO);
+        body.set_force(Vec3::ZERO);
 
         if world.debug_substep() {
             debug!(
             "[Integrate] body {}: position: {}, rotation: {}, velocity: {}, angular_velocity: {}",
-            body.rb.id, body.rb.position, body.rb.rotation, body.rb.linear_velocity, body.rb.angular_velocity
+            body.id, body.position(), body.rotation(), body.linear_velocity(), body.angular_velocity()
         );
         }
     }
@@ -85,27 +88,28 @@ pub(crate) fn solve_constraints(
 pub(crate) fn recompute_velocities(world: &PhysicsWorld, bodies: &mut [RigidBodyData], dt: f32) {
     let sw = world.stopwatch("recompute_velocities");
     for body in bodies {
-        if !body.rb.is_dynamic() {
-            body.rb.linear_velocity = Vec3::ZERO;
-            body.rb.angular_velocity = Vec3::ZERO;
+        if !body.is_dynamic() {
+            body.set_linear_velocity(Vec3::ZERO);
+            body.set_angular_velocity(Vec3::ZERO);
             continue;
         }
 
-        body.rb.pre_solve_linear_velocity = body.rb.linear_velocity;
-        body.rb.linear_velocity = (body.rb.position - body.rb.previous_position) / dt;
+        body.set_pre_solve_linear_velocity(body.linear_velocity());
+        body.set_linear_velocity((body.position() - body.previous_position()) / dt);
 
-        body.rb.pre_solve_angular_velocity = body.rb.angular_velocity;
-        body.rb.angular_velocity =
-            (body.rb.rotation * body.rb.previous_rotation.inverse()).as_radians() / dt;
+        body.set_pre_solve_angular_velocity(body.angular_velocity());
+        body.set_angular_velocity(
+            (body.rotation() * body.previous_rotation().inverse()).as_radians() / dt,
+        );
 
         if world.debug_substep() {
             debug!(
                 "[RecomputeVelocities] body {}: velocity: {} -> {}, angular_velocity: {} -> {}",
-                body.rb.id,
-                body.rb.pre_solve_linear_velocity,
-                body.rb.linear_velocity,
-                body.rb.pre_solve_angular_velocity,
-                body.rb.angular_velocity
+                body.id,
+                body.pre_solve_linear_velocity(),
+                body.linear_velocity(),
+                body.pre_solve_angular_velocity(),
+                body.angular_velocity()
             );
         }
     }
@@ -126,13 +130,13 @@ pub(crate) fn solve_velocities(
 
         // Compute pre-solve relative normal velocities at the contact point (used for restitution)
         let pre_solve_contact_vel1 = compute_contact_vel(
-            body1.rb.pre_solve_linear_velocity,
-            body1.rb.pre_solve_angular_velocity,
+            body1.pre_solve_linear_velocity(),
+            body1.pre_solve_angular_velocity(),
             constraint.world_a,
         );
         let pre_solve_contact_vel2 = compute_contact_vel(
-            body2.rb.pre_solve_linear_velocity,
-            body2.rb.pre_solve_angular_velocity,
+            body2.pre_solve_linear_velocity(),
+            body2.pre_solve_angular_velocity(),
             constraint.world_b,
         );
         let pre_solve_relative_vel = pre_solve_contact_vel1 - pre_solve_contact_vel2;
@@ -140,13 +144,13 @@ pub(crate) fn solve_velocities(
 
         // Compute relative normal and tangential velocities at the contact point (equation 29)
         let contact_vel1 = compute_contact_vel(
-            body1.rb.linear_velocity,
-            body1.rb.angular_velocity,
+            body1.linear_velocity(),
+            body1.angular_velocity(),
             constraint.world_a,
         );
         let contact_vel2 = compute_contact_vel(
-            body2.rb.linear_velocity,
-            body2.rb.angular_velocity,
+            body2.linear_velocity(),
+            body2.angular_velocity(),
             constraint.world_b,
         );
         let relative_vel = contact_vel1 - contact_vel2;
@@ -158,16 +162,8 @@ pub(crate) fn solve_velocities(
         let inv_inertia1 = body1.effective_inverse_inertia();
         let inv_inertia2 = body2.effective_inverse_inertia();
 
-        let friction_coefficient = body1
-            .rb
-            .friction
-            .combine(&body2.rb.friction)
-            .dynamic_coefficient;
-        let restitution_coefficient = body1
-            .rb
-            .restitution
-            .combine(&body2.rb.restitution)
-            .coefficient;
+        let friction_coefficient = body1.combine_dynamic_friction(body2);
+        let restitution_coefficient = body1.combine_restitution(body2);
 
         // Compute dynamic friction
         let friction_impulse = get_dynamic_friction(
@@ -205,19 +201,25 @@ pub(crate) fn solve_velocities(
 
         // Compute velocity impulse and apply velocity updates (equation 33)
         let p = delta_v / (w1 + w2);
-        if body1.rb.is_dynamic() {
-            body1.rb.linear_velocity += p * inv_mass1;
-            body1.rb.angular_velocity += compute_delta_ang_vel(inv_inertia1, constraint.world_a, p);
+        if body1.is_dynamic() {
+            body1.set_linear_velocity(body1.linear_velocity() + p * inv_mass1);
+            body1.set_angular_velocity(
+                body1.angular_velocity()
+                    + compute_delta_ang_vel(inv_inertia1, constraint.world_a, p),
+            );
         }
-        if body2.rb.is_dynamic() {
-            body2.rb.linear_velocity -= p * inv_mass2;
-            body2.rb.angular_velocity -= compute_delta_ang_vel(inv_inertia2, constraint.world_b, p);
+        if body2.is_dynamic() {
+            body2.set_linear_velocity(body2.linear_velocity() - p * inv_mass2);
+            body2.set_angular_velocity(
+                body2.angular_velocity()
+                    - compute_delta_ang_vel(inv_inertia2, constraint.world_b, p),
+            );
         }
 
         if world.debug {
             debug!(
             "[SolveVelocities]: a: {}, b: {}, normal: {}, normal_vel: {}, tangent_vel: {}, friction_impulse: {}, restitution_impulse: {}, delta_v: {}, delta_v_length: {}, a_linear_velocity: {}, a_angular_velocity: {}, b_linear_velocity: {}, b_angular_velocity: {}",
-            constraint.a, constraint.b, normal, normal_vel, tangent_vel, friction_impulse, restitution_impulse, delta_v, delta_v_length, body1.rb.linear_velocity, body1.rb.angular_velocity, body2.rb.linear_velocity, body2.rb.angular_velocity
+            constraint.a, constraint.b, normal, normal_vel, tangent_vel, friction_impulse, restitution_impulse, delta_v, delta_v_length, body1.linear_velocity(), body1.angular_velocity(), body2.linear_velocity(), body2.angular_velocity()
         );
         }
     }

@@ -1,19 +1,20 @@
-use bevy::{
-    color::palettes::css::{GRAY, RED},
-    input::mouse::MouseMotion,
-    platform::collections::HashMap,
-    prelude::*,
-};
+use bevy::{log::LogPlugin, platform::collections::HashMap, prelude::*};
 use bevy_inspector_egui::{bevy_egui::EguiPlugin, quick::WorldInspectorPlugin};
 use bevy_spacetimedb::{
     ReadDeleteEvent, ReadInsertEvent, ReadStdbConnectedEvent, ReadUpdateEvent, StdbConnectedEvent,
     StdbConnection, StdbConnectionErrorEvent, StdbDisconnectedEvent, StdbPlugin, tables,
 };
+use freecam::FreeCamPlugin;
 use module_bindings::{
-    Collider, DbConnection, PhysicsRigidBodiesTableAccess, PhysicsWorldTableAccess, RigidBody,
+    DbConnection, PhysicsCollidersTableAccess, PhysicsRigidBodiesTableAccess,
+    PhysicsWorldTableAccess, RigidBody,
 };
+use spacetimedb_sdk::DbContext;
+use utils::collider_to_mesh;
 
+mod freecam;
 mod module_bindings;
+mod utils;
 
 #[derive(Default, Resource)]
 pub struct RigidBodies {
@@ -36,7 +37,11 @@ impl RigidBodies {
 
 fn main() -> AppExit {
     App::new()
-        .add_plugins(DefaultPlugins)
+        .add_plugins(DefaultPlugins.set(LogPlugin {
+            level: bevy::log::Level::DEBUG,
+            filter: "info,wgpu_core=warn,wgpu_hal=error,naga=warn,client=debug".into(),
+            ..Default::default()
+        }))
         .add_plugins(
             StdbPlugin::default()
                 .with_connection(|connected, disconnected, errored, _| {
@@ -67,39 +72,32 @@ fn main() -> AppExit {
             enable_multipass_for_primary_context: true,
         })
         .add_plugins(WorldInspectorPlugin::new())
+        .add_plugins(FreeCamPlugin)
         .insert_resource(RigidBodies::default())
-        .add_systems(Startup, setup)
         .add_systems(First, on_connected)
         .add_systems(PreUpdate, on_rigid_body_inserted)
-        .add_systems(Update, (on_rigid_body_updated, freecam))
+        .add_systems(Update, on_rigid_body_updated)
         .add_systems(PostUpdate, on_rigid_body_deleted)
         .run()
-}
-
-fn setup(mut commands: Commands) {
-    commands.spawn((
-        Name::new("Camera"),
-        Camera3d::default(),
-        Transform::from_xyz(0.0, 5.0, 10.0).looking_at(Vec3::ZERO, Vec3::Y),
-    ));
-
-    commands.spawn((
-        Name::new("Light"),
-        PointLight {
-            intensity: 1000.0,
-            shadows_enabled: true,
-            ..default()
-        },
-        Transform::from_xyz(5.0, 10.0, 5.0).looking_at(Vec3::ZERO, Vec3::Y),
-    ));
 }
 
 fn on_connected(mut events: ReadStdbConnectedEvent, res: Res<StdbConnection<DbConnection>>) {
     for _ in events.read() {
         info!("Connected to SpacetimeDB.");
         res.subscribe()
-            .on_applied(|_| info!("Subscribed to all tables"))
-            .subscribe_to_all_tables();
+            .on_error(|_, err| panic!("subscription failed: {}", err))
+            .on_applied(|ctx| {
+                ctx.subscription_builder()
+                    .on_error(|_, err| panic!("subscription failed: {}", err))
+                    .on_applied(|_| {
+                        info!("Subscription applied successfully.");
+                    })
+                    .subscribe("SELECT * FROM physics_rigid_bodies");
+            })
+            .subscribe([
+                "SELECT * FROM physics_colliders",
+                "SELECT * FROM physics_rigid_body_properties",
+            ]);
     }
 }
 
@@ -109,70 +107,34 @@ fn on_rigid_body_inserted(
     mut rigid_bodies: ResMut<RigidBodies>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
+    stdb: Res<StdbConnection<DbConnection>>,
 ) {
     for event in events.read() {
         debug!("RigidBody inserted: {}", event.row.id);
 
         let body = event.row.clone();
 
-        let (mesh, material) = match body.collider {
-            Collider::Plane(plane) => {
-                // Planes are not rendered, so we return None
-                let material = materials.add(StandardMaterial {
-                    base_color: GRAY.into(),
-                    ..default()
-                });
-                let mesh = meshes.add(Mesh::from(Plane3d {
-                    normal: Dir3::from_xyz(plane.normal.x, plane.normal.y, plane.normal.z).unwrap(),
-                    half_size: Vec2::new(100.0, 100.0),
-                }));
-
-                (Some(mesh), Some(material))
-            }
-            Collider::Sphere(sphere) => {
-                let material = Some(materials.add(StandardMaterial {
-                    base_color: RED.into(),
-                    ..default()
-                }));
-                let mesh = Some(meshes.add(Sphere::new(sphere.radius)));
-
-                (mesh, material)
-            }
-            Collider::Cuboid(cuboid) => {
-                let material = Some(materials.add(StandardMaterial {
-                    base_color: RED.into(),
-                    ..default()
-                }));
-                let mesh = Some(meshes.add(Cuboid::new(
-                    cuboid.half_extents.x * 2.0,
-                    cuboid.half_extents.y * 2.0,
-                    cuboid.half_extents.z * 2.0,
-                )));
-
-                (mesh, material)
-            }
-        };
-
         let pos = event.row.position.clone();
         let rotation = event.row.rotation.clone();
 
+        let collider = stdb
+            .db()
+            .physics_colliders()
+            .id()
+            .find(&body.collider_id)
+            .unwrap();
+        debug!("Collider: {:?}", collider);
+        let (mesh, material) = collider_to_mesh(&collider, &mut meshes, &mut materials);
         let entity = commands
             .spawn((
                 Name::from(format!("RigidBody#{}", event.row.id)),
                 Transform::from_xyz(pos.x, pos.y, pos.z).with_rotation(Quat::from_xyzw(
                     rotation.x, rotation.y, rotation.z, rotation.w,
                 )),
+                Mesh3d(mesh),
+                MeshMaterial3d(material.clone()),
             ))
             .id();
-
-        if let Some(mesh) = &mesh {
-            commands.entity(entity).insert(Mesh3d(mesh.clone()));
-        }
-        if let Some(material) = &material {
-            commands
-                .entity(entity)
-                .insert(MeshMaterial3d(material.clone()));
-        }
 
         rigid_bodies.insert(event.row.id, entity);
     }
@@ -205,46 +167,4 @@ fn on_rigid_body_deleted(
             rigid_bodies.remove(event.row.id);
         }
     }
-}
-
-fn freecam(
-    mut camera_transform: Single<&mut Transform, With<Camera3d>>,
-    keyboard_input: Res<ButtonInput<KeyCode>>,
-    time: Res<Time>,
-    mouse_motion: Res<ButtonInput<MouseButton>>,
-    mut mouse_events: EventReader<MouseMotion>,
-) {
-    let speed = 10.0 * time.delta_secs();
-    let mut translation = camera_transform.translation;
-
-    if keyboard_input.pressed(KeyCode::KeyW) {
-        translation += camera_transform.forward() * speed;
-    }
-    if keyboard_input.pressed(KeyCode::KeyS) {
-        translation -= camera_transform.forward() * speed;
-    }
-    if keyboard_input.pressed(KeyCode::KeyA) {
-        translation -= camera_transform.right() * speed;
-    }
-    if keyboard_input.pressed(KeyCode::KeyD) {
-        translation += camera_transform.right() * speed;
-    }
-    if keyboard_input.pressed(KeyCode::Space) {
-        translation += Vec3::Y * speed;
-    }
-    if keyboard_input.pressed(KeyCode::ShiftLeft) {
-        translation -= Vec3::Y * speed;
-    }
-
-    if mouse_motion.pressed(MouseButton::Right) {
-        let delta: Vec2 = mouse_events.read().map(|e| e.delta).sum();
-        let yaw = -delta.x * 0.002;
-        let pitch = -delta.y * 0.002;
-
-        camera_transform.rotate(Quat::from_axis_angle(Vec3::Y, yaw));
-        let right = camera_transform.right().into();
-        camera_transform.rotate(Quat::from_axis_angle(right, pitch));
-    }
-
-    camera_transform.translation = translation;
 }

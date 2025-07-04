@@ -6,12 +6,12 @@
 #![allow(unused, clippy::all)]
 use spacetimedb_sdk::__codegen::{self as __sdk, __lib, __sats, __ws};
 
-use super::physic_tick_type::PhysicTick;
+use super::physics_world_tick_type::PhysicsWorldTick;
 
 #[derive(__lib::ser::Serialize, __lib::de::Deserialize, Clone, PartialEq, Debug)]
 #[sats(crate = __lib)]
 pub(super) struct PhysicsTickWorldArgs {
-    pub tick: PhysicTick,
+    pub tick: PhysicsWorldTick,
 }
 
 impl From<PhysicsTickWorldArgs> for super::Reducer {
@@ -36,7 +36,7 @@ pub trait physics_tick_world {
     /// This method returns immediately, and errors only if we are unable to send the request.
     /// The reducer will run asynchronously in the future,
     ///  and its status can be observed by listening for [`Self::on_physics_tick_world`] callbacks.
-    fn physics_tick_world(&self, tick: PhysicTick) -> __sdk::Result<()>;
+    fn physics_tick_world(&self, tick: PhysicsWorldTick) -> __sdk::Result<()>;
     /// Register a callback to run whenever we are notified of an invocation of the reducer `physics_tick_world`.
     ///
     /// Callbacks should inspect the [`__sdk::ReducerEvent`] contained in the [`super::ReducerEventContext`]
@@ -46,7 +46,7 @@ pub trait physics_tick_world {
     /// to cancel the callback.
     fn on_physics_tick_world(
         &self,
-        callback: impl FnMut(&super::ReducerEventContext, &PhysicTick) + Send + 'static,
+        callback: impl FnMut(&super::ReducerEventContext, &PhysicsWorldTick) + Send + 'static,
     ) -> PhysicsTickWorldCallbackId;
     /// Cancel a callback previously registered by [`Self::on_physics_tick_world`],
     /// causing it not to run in the future.
@@ -54,13 +54,13 @@ pub trait physics_tick_world {
 }
 
 impl physics_tick_world for super::RemoteReducers {
-    fn physics_tick_world(&self, tick: PhysicTick) -> __sdk::Result<()> {
+    fn physics_tick_world(&self, tick: PhysicsWorldTick) -> __sdk::Result<()> {
         self.imp
             .call_reducer("physics_tick_world", PhysicsTickWorldArgs { tick })
     }
     fn on_physics_tick_world(
         &self,
-        mut callback: impl FnMut(&super::ReducerEventContext, &PhysicTick) + Send + 'static,
+        mut callback: impl FnMut(&super::ReducerEventContext, &PhysicsWorldTick) + Send + 'static,
     ) -> PhysicsTickWorldCallbackId {
         PhysicsTickWorldCallbackId(self.imp.on_reducer(
             "physics_tick_world",

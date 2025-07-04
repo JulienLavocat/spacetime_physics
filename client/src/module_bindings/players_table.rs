@@ -5,6 +5,7 @@
 
 #![allow(unused, clippy::all)]
 use super::players_type::Players;
+use super::quat_type::Quat;
 use super::vec_3_type::Vec3;
 use spacetimedb_sdk::__codegen::{self as __sdk, __lib, __sats, __ws};
 

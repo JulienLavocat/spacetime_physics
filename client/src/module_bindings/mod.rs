@@ -7,51 +7,51 @@
 use spacetimedb_sdk::__codegen::{self as __sdk, __lib, __sats, __ws};
 
 pub mod collider_type;
-pub mod cuboid_type;
-pub mod friction_type;
-pub mod mat_3_type;
-pub mod on_connect_reducer;
-pub mod on_disconnected_reducer;
-pub mod physic_tick_type;
+pub mod collider_type_type;
+pub mod physics_colliders_table;
+pub mod physics_raycasts_table;
 pub mod physics_rigid_bodies_table;
+pub mod physics_rigid_body_properties_table;
 pub mod physics_tick_world_reducer;
 pub mod physics_ticks_table;
+pub mod physics_trigger_type;
+pub mod physics_triggers_table;
 pub mod physics_world_table;
+pub mod physics_world_tick_type;
 pub mod physics_world_type;
-pub mod plane_type;
 pub mod players_table;
 pub mod players_type;
 pub mod quat_type;
-pub mod restitution_type;
+pub mod ray_cast_hit_type;
+pub mod ray_cast_type;
+pub mod rigid_body_properties_type;
 pub mod rigid_body_type;
 pub mod rigid_body_type_type;
-pub mod sphere_type;
 pub mod vec_3_type;
 
 pub use collider_type::Collider;
-pub use cuboid_type::Cuboid;
-pub use friction_type::Friction;
-pub use mat_3_type::Mat3;
-pub use on_connect_reducer::{OnConnectCallbackId, on_connect, set_flags_for_on_connect};
-pub use on_disconnected_reducer::{
-    OnDisconnectedCallbackId, on_disconnected, set_flags_for_on_disconnected,
-};
-pub use physic_tick_type::PhysicTick;
+pub use collider_type_type::ColliderType;
+pub use physics_colliders_table::*;
+pub use physics_raycasts_table::*;
 pub use physics_rigid_bodies_table::*;
+pub use physics_rigid_body_properties_table::*;
 pub use physics_tick_world_reducer::{
-    PhysicsTickWorldCallbackId, physics_tick_world, set_flags_for_physics_tick_world,
+    physics_tick_world, set_flags_for_physics_tick_world, PhysicsTickWorldCallbackId,
 };
 pub use physics_ticks_table::*;
+pub use physics_trigger_type::PhysicsTrigger;
+pub use physics_triggers_table::*;
 pub use physics_world_table::*;
+pub use physics_world_tick_type::PhysicsWorldTick;
 pub use physics_world_type::PhysicsWorld;
-pub use plane_type::Plane;
 pub use players_table::*;
 pub use players_type::Players;
 pub use quat_type::Quat;
-pub use restitution_type::Restitution;
+pub use ray_cast_hit_type::RayCastHit;
+pub use ray_cast_type::RayCast;
+pub use rigid_body_properties_type::RigidBodyProperties;
 pub use rigid_body_type::RigidBody;
 pub use rigid_body_type_type::RigidBodyType;
-pub use sphere_type::Sphere;
 pub use vec_3_type::Vec3;
 
 #[derive(Clone, PartialEq, Debug)]
@@ -62,9 +62,7 @@ pub use vec_3_type::Vec3;
 /// to indicate which reducer caused the event.
 
 pub enum Reducer {
-    OnConnect,
-    OnDisconnected,
-    PhysicsTickWorld { tick: PhysicTick },
+    PhysicsTickWorld { tick: PhysicsWorldTick },
 }
 
 impl __sdk::InModule for Reducer {
@@ -74,8 +72,6 @@ impl __sdk::InModule for Reducer {
 impl __sdk::Reducer for Reducer {
     fn reducer_name(&self) -> &'static str {
         match self {
-            Reducer::OnConnect => "on_connect",
-            Reducer::OnDisconnected => "on_disconnected",
             Reducer::PhysicsTickWorld { .. } => "physics_tick_world",
         }
     }
@@ -84,17 +80,6 @@ impl TryFrom<__ws::ReducerCallInfo<__ws::BsatnFormat>> for Reducer {
     type Error = __sdk::Error;
     fn try_from(value: __ws::ReducerCallInfo<__ws::BsatnFormat>) -> __sdk::Result<Self> {
         match &value.reducer_name[..] {
-            "on_connect" => Ok(
-                __sdk::parse_reducer_args::<on_connect_reducer::OnConnectArgs>(
-                    "on_connect",
-                    &value.args,
-                )?
-                .into(),
-            ),
-            "on_disconnected" => Ok(__sdk::parse_reducer_args::<
-                on_disconnected_reducer::OnDisconnectedArgs,
-            >("on_disconnected", &value.args)?
-            .into()),
             "physics_tick_world" => Ok(__sdk::parse_reducer_args::<
                 physics_tick_world_reducer::PhysicsTickWorldArgs,
             >("physics_tick_world", &value.args)?
@@ -113,8 +98,12 @@ impl TryFrom<__ws::ReducerCallInfo<__ws::BsatnFormat>> for Reducer {
 #[allow(non_snake_case)]
 #[doc(hidden)]
 pub struct DbUpdate {
+    physics_colliders: __sdk::TableUpdate<Collider>,
+    physics_raycasts: __sdk::TableUpdate<RayCast>,
     physics_rigid_bodies: __sdk::TableUpdate<RigidBody>,
-    physics_ticks: __sdk::TableUpdate<PhysicTick>,
+    physics_rigid_body_properties: __sdk::TableUpdate<RigidBodyProperties>,
+    physics_ticks: __sdk::TableUpdate<PhysicsWorldTick>,
+    physics_triggers: __sdk::TableUpdate<PhysicsTrigger>,
     physics_world: __sdk::TableUpdate<PhysicsWorld>,
     players: __sdk::TableUpdate<Players>,
 }
@@ -125,12 +114,24 @@ impl TryFrom<__ws::DatabaseUpdate<__ws::BsatnFormat>> for DbUpdate {
         let mut db_update = DbUpdate::default();
         for table_update in raw.tables {
             match &table_update.table_name[..] {
+                "physics_colliders" => db_update
+                    .physics_colliders
+                    .append(physics_colliders_table::parse_table_update(table_update)?),
+                "physics_raycasts" => db_update
+                    .physics_raycasts
+                    .append(physics_raycasts_table::parse_table_update(table_update)?),
                 "physics_rigid_bodies" => db_update.physics_rigid_bodies.append(
                     physics_rigid_bodies_table::parse_table_update(table_update)?,
+                ),
+                "physics_rigid_body_properties" => db_update.physics_rigid_body_properties.append(
+                    physics_rigid_body_properties_table::parse_table_update(table_update)?,
                 ),
                 "physics_ticks" => db_update
                     .physics_ticks
                     .append(physics_ticks_table::parse_table_update(table_update)?),
+                "physics_triggers" => db_update
+                    .physics_triggers
+                    .append(physics_triggers_table::parse_table_update(table_update)?),
                 "physics_world" => db_update
                     .physics_world
                     .append(physics_world_table::parse_table_update(table_update)?),
@@ -163,12 +164,27 @@ impl __sdk::DbUpdate for DbUpdate {
     ) -> AppliedDiff<'_> {
         let mut diff = AppliedDiff::default();
 
+        diff.physics_colliders = cache
+            .apply_diff_to_table::<Collider>("physics_colliders", &self.physics_colliders)
+            .with_updates_by_pk(|row| &row.id);
+        diff.physics_raycasts = cache
+            .apply_diff_to_table::<RayCast>("physics_raycasts", &self.physics_raycasts)
+            .with_updates_by_pk(|row| &row.id);
         diff.physics_rigid_bodies = cache
             .apply_diff_to_table::<RigidBody>("physics_rigid_bodies", &self.physics_rigid_bodies)
             .with_updates_by_pk(|row| &row.id);
+        diff.physics_rigid_body_properties = cache
+            .apply_diff_to_table::<RigidBodyProperties>(
+                "physics_rigid_body_properties",
+                &self.physics_rigid_body_properties,
+            )
+            .with_updates_by_pk(|row| &row.id);
         diff.physics_ticks = cache
-            .apply_diff_to_table::<PhysicTick>("physics_ticks", &self.physics_ticks)
-            .with_updates_by_pk(|row| &row.world_id);
+            .apply_diff_to_table::<PhysicsWorldTick>("physics_ticks", &self.physics_ticks)
+            .with_updates_by_pk(|row| &row.id);
+        diff.physics_triggers = cache
+            .apply_diff_to_table::<PhysicsTrigger>("physics_triggers", &self.physics_triggers)
+            .with_updates_by_pk(|row| &row.id);
         diff.physics_world = cache
             .apply_diff_to_table::<PhysicsWorld>("physics_world", &self.physics_world)
             .with_updates_by_pk(|row| &row.id);
@@ -184,8 +200,12 @@ impl __sdk::DbUpdate for DbUpdate {
 #[allow(non_snake_case)]
 #[doc(hidden)]
 pub struct AppliedDiff<'r> {
+    physics_colliders: __sdk::TableAppliedDiff<'r, Collider>,
+    physics_raycasts: __sdk::TableAppliedDiff<'r, RayCast>,
     physics_rigid_bodies: __sdk::TableAppliedDiff<'r, RigidBody>,
-    physics_ticks: __sdk::TableAppliedDiff<'r, PhysicTick>,
+    physics_rigid_body_properties: __sdk::TableAppliedDiff<'r, RigidBodyProperties>,
+    physics_ticks: __sdk::TableAppliedDiff<'r, PhysicsWorldTick>,
+    physics_triggers: __sdk::TableAppliedDiff<'r, PhysicsTrigger>,
     physics_world: __sdk::TableAppliedDiff<'r, PhysicsWorld>,
     players: __sdk::TableAppliedDiff<'r, Players>,
 }
@@ -200,14 +220,34 @@ impl<'r> __sdk::AppliedDiff<'r> for AppliedDiff<'r> {
         event: &EventContext,
         callbacks: &mut __sdk::DbCallbacks<RemoteModule>,
     ) {
+        callbacks.invoke_table_row_callbacks::<Collider>(
+            "physics_colliders",
+            &self.physics_colliders,
+            event,
+        );
+        callbacks.invoke_table_row_callbacks::<RayCast>(
+            "physics_raycasts",
+            &self.physics_raycasts,
+            event,
+        );
         callbacks.invoke_table_row_callbacks::<RigidBody>(
             "physics_rigid_bodies",
             &self.physics_rigid_bodies,
             event,
         );
-        callbacks.invoke_table_row_callbacks::<PhysicTick>(
+        callbacks.invoke_table_row_callbacks::<RigidBodyProperties>(
+            "physics_rigid_body_properties",
+            &self.physics_rigid_body_properties,
+            event,
+        );
+        callbacks.invoke_table_row_callbacks::<PhysicsWorldTick>(
             "physics_ticks",
             &self.physics_ticks,
+            event,
+        );
+        callbacks.invoke_table_row_callbacks::<PhysicsTrigger>(
+            "physics_triggers",
+            &self.physics_triggers,
             event,
         );
         callbacks.invoke_table_row_callbacks::<PhysicsWorld>(
@@ -458,21 +498,21 @@ impl __sdk::SubscriptionHandle for SubscriptionHandle {
 /// either a [`DbConnection`] or an [`EventContext`] and operate on either.
 pub trait RemoteDbContext:
     __sdk::DbContext<
-        DbView = RemoteTables,
-        Reducers = RemoteReducers,
-        SetReducerFlags = SetReducerFlags,
-        SubscriptionBuilder = __sdk::SubscriptionBuilder<RemoteModule>,
-    >
+    DbView = RemoteTables,
+    Reducers = RemoteReducers,
+    SetReducerFlags = SetReducerFlags,
+    SubscriptionBuilder = __sdk::SubscriptionBuilder<RemoteModule>,
+>
 {
 }
 impl<
-    Ctx: __sdk::DbContext<
+        Ctx: __sdk::DbContext<
             DbView = RemoteTables,
             Reducers = RemoteReducers,
             SetReducerFlags = SetReducerFlags,
             SubscriptionBuilder = __sdk::SubscriptionBuilder<RemoteModule>,
         >,
-> RemoteDbContext for Ctx
+    > RemoteDbContext for Ctx
 {
 }
 
@@ -791,8 +831,12 @@ impl __sdk::SpacetimeModule for RemoteModule {
     type SubscriptionHandle = SubscriptionHandle;
 
     fn register_tables(client_cache: &mut __sdk::ClientCache<Self>) {
+        physics_colliders_table::register_table(client_cache);
+        physics_raycasts_table::register_table(client_cache);
         physics_rigid_bodies_table::register_table(client_cache);
+        physics_rigid_body_properties_table::register_table(client_cache);
         physics_ticks_table::register_table(client_cache);
+        physics_triggers_table::register_table(client_cache);
         physics_world_table::register_table(client_cache);
         players_table::register_table(client_cache);
     }

@@ -6,11 +6,7 @@
 #![allow(unused, clippy::all)]
 use spacetimedb_sdk::__codegen::{self as __sdk, __lib, __sats, __ws};
 
-use super::collider_type::Collider;
-use super::friction_type::Friction;
-use super::mat_3_type::Mat3;
 use super::quat_type::Quat;
-use super::restitution_type::Restitution;
 use super::rigid_body_type_type::RigidBodyType;
 use super::vec_3_type::Vec3;
 
@@ -24,19 +20,10 @@ pub struct RigidBody {
     pub linear_velocity: Vec3,
     pub angular_velocity: Vec3,
     pub force: Vec3,
-    pub mass: f32,
-    pub inv_mass: f32,
-    pub collider: Collider,
-    pub inertia_tensor: Mat3,
-    pub inv_inertia_tensor: Option<Mat3>,
     pub torque: Vec3,
-    pub friction: Friction,
-    pub restitution: Restitution,
-    pub pre_solve_linear_velocity: Vec3,
-    pub pre_solve_angular_velocity: Vec3,
-    pub previous_position: Vec3,
-    pub previous_rotation: Quat,
     pub body_type: RigidBodyType,
+    pub collider_id: u64,
+    pub properties_id: u64,
 }
 
 impl __sdk::InModule for RigidBody {

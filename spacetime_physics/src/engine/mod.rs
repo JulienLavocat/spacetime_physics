@@ -98,13 +98,13 @@ pub fn step_world(
             debug!(
                 "Updating {} position: {} -> {}, velocity: {}, rotation: {}",
                 entity.id,
-                entity.rb.previous_position,
-                entity.rb.position,
-                entity.rb.linear_velocity,
-                entity.rb.rotation,
+                entity.previous_position(),
+                entity.position(),
+                entity.linear_velocity(),
+                entity.rotation(),
             );
         }
-        entity.rb.update(ctx);
+        entity.update(ctx);
     }
     update_sw.end();
 
@@ -119,7 +119,7 @@ fn debug_bodies(bodies: &[RigidBodyData]) {
     for body in bodies {
         debug!(
             "[Body] {}: position: {}, rotation: {}, velocity: {}, angular_velocity: {}, force: {}, torque: {}",
-            body.id, body.rb.position, body.rb.rotation, body.rb.linear_velocity, body.rb.angular_velocity, body.rb.force, body.rb.torque
+            body.id, body.position(), body.rotation(), body.linear_velocity(), body.angular_velocity(), body.force(), body.torque()
         );
     }
 }
@@ -133,7 +133,7 @@ fn sync_kinematic_bodies(
         .collect();
 
     for entity in entities {
-        if !entity.rb.is_kinematic() {
+        if !entity.is_kinematic() {
             continue;
         }
 
@@ -142,7 +142,7 @@ fn sync_kinematic_bodies(
             None => continue, // No kinematic data for this body
         };
 
-        entity.rb.rotation = *rotation;
-        entity.rb.position = *position;
+        entity.set_rotation(*rotation);
+        entity.set_position(*position);
     }
 }

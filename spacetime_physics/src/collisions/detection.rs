@@ -11,22 +11,20 @@ pub fn test_collision(
     let iso_b = body_b.into();
 
     let result = body_a
-        .shape
-        .contact(&iso_a, &body_b.shape, &iso_b, prediction);
+        .shape()
+        .contact(&iso_a, body_b.shape(), &iso_b, prediction);
 
     result.map(|contact| {
         let world_a = contact.point1.into();
         let world_b = contact.point2.into();
         let local_a = body_a
-            .rb
-            .rotation
+            .rotation()
             .inverse()
-            .rotate(world_a - body_a.rb.position);
+            .rotate(world_a - body_a.position());
         let local_b = body_b
-            .rb
-            .rotation
+            .rotation()
             .inverse()
-            .rotate(world_b - body_b.rb.position);
+            .rotate(world_b - body_b.position());
         CollisionPoint {
             world_a,
             world_b,

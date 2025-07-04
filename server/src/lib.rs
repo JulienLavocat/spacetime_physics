@@ -1,10 +1,10 @@
 use spacetime_physics::{
     math::{Quat, Vec3},
     physics_world::physics_world,
-    schedule_physics_tick, step_world, Collider, PhysicsTrigger, PhysicsWorld, RigidBody,
+    schedule_physics_tick, step_world, Collider, PhysicsWorld, RigidBody, RigidBodyProperties,
     RigidBodyType,
 };
-use spacetimedb::{rand::Rng, reducer, table, Identity, ReducerContext, ScheduleAt, Table};
+use spacetimedb::{reducer, table, Identity, ReducerContext, ScheduleAt, Table};
 
 #[table(name = players)]
 pub struct Players {
@@ -37,53 +37,46 @@ pub fn init(ctx: &ReducerContext) {
         .build()
         .insert(ctx);
 
-    let range = -100000.0..100000.0;
+    // let range = 0.0..100.0;
+    let sphere_properties = RigidBodyProperties::builder().build().insert(ctx).id;
     let sphere_collider = Collider::sphere(world.id, 1.0).insert(ctx).id;
-    for _ in 0..5000 {
-        RigidBody::builder()
-            .position(Vec3::new(
-                ctx.rng().gen_range(range.clone()),
-                100.0,
-                ctx.rng().gen_range(range.clone()),
-            ))
-            .collider_id(sphere_collider)
-            .body_type(RigidBodyType::Dynamic)
-            .build()
-            .insert(ctx);
-    }
+    // for _ in 0..10 {
+    //     RigidBody::builder()
+    //         .position(Vec3::new(
+    //             ctx.rng().gen_range(range.clone()),
+    //             100.0,
+    //             ctx.rng().gen_range(range.clone()),
+    //         ))
+    //         .collider_id(sphere_collider)
+    //         .properties_id(sphere_properties)
+    //         .body_type(RigidBodyType::Dynamic)
+    //         .build()
+    //         .insert(ctx);
+    // }
 
     // Create a small sphere that will fal towards the ground
     RigidBody::builder()
         .position(Vec3::new(0.0, 10.0, 0.0))
         .collider_id(sphere_collider)
         .body_type(RigidBodyType::Dynamic)
+        .properties_id(sphere_properties)
         .build()
         .insert(ctx);
 
     // Floor
-    // let floor_collider = Collider::cuboid(world.id, Vec3::new(1000.0, 1.0, 1000.0))
-    //     .insert(ctx)
-    //     .id;
-    // RigidBody::builder()
-    //     .position(Vec3::new(0.0, -1.0, 0.0))
-    //     .collider_id(floor_collider)
-    //     .body_type(RigidBodyType::Static)
-    //     .build()
-    //     .insert(ctx);
-
-    RigidBody::builder()
-        .position(Vec3::splat(-2.0))
-        .collider_id(sphere_collider)
-        .body_type(RigidBodyType::Static)
+    let floor_collider = Collider::plane(world.id, Vec3::Y).insert(ctx).id;
+    let floor_properties = RigidBodyProperties::builder()
+        .friction_static_coefficient(0.5)
+        .friction_dynamic_coefficient(0.5)
+        .restitution_coefficient(0.1)
         .build()
-        .insert(ctx);
-
-    let trigger_collider = Collider::cuboid(world.id, Vec3::new(10.0, 10.0, 10.0))
         .insert(ctx)
         .id;
-    PhysicsTrigger::builder()
-        .world_id(world.id)
-        .collider_id(trigger_collider)
+    RigidBody::builder()
+        .position(Vec3::new(0.0, -1.0, 0.0))
+        .collider_id(floor_collider)
+        .body_type(RigidBodyType::Static)
+        .properties_id(floor_properties)
         .build()
         .insert(ctx);
 

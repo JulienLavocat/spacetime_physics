@@ -6,14 +6,18 @@
 #![allow(unused, clippy::all)]
 use spacetimedb_sdk::__codegen::{self as __sdk, __lib, __sats, __ws};
 
-use super::vec_3_type::Vec3;
-
 #[derive(__lib::ser::Serialize, __lib::de::Deserialize, Clone, PartialEq, Debug)]
 #[sats(crate = __lib)]
-pub struct Plane {
-    pub normal: Vec3,
+pub struct RigidBodyProperties {
+    pub id: u64,
+    pub world_id: u64,
+    pub friction_static_coefficient: f32,
+    pub friction_dynamic_coefficient: f32,
+    pub restitution_coefficient: f32,
+    pub mass: f32,
+    pub inv_mass: f32,
 }
 
-impl __sdk::InModule for Plane {
+impl __sdk::InModule for RigidBodyProperties {
     type Module = super::RemoteModule;
 }

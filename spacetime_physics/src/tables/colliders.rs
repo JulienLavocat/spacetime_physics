@@ -28,6 +28,7 @@ pub struct Collider {
     pub world_id: u64,
     pub radius: f32,
     pub normal: Vec3,
+    pub height: f32,
     pub half_extents: Vec3,
     pub half_height: f32,
     pub point_a: Vec3,
@@ -105,12 +106,11 @@ impl Collider {
         }
     }
 
-    pub fn capsule(world_id: u64, radius: f32, point_a: Vec3, point_b: Vec3) -> Self {
+    pub fn capsule(world_id: u64, radius: f32, half_height: f32) -> Self {
         Self {
             world_id,
             radius,
-            point_a,
-            point_b,
+            half_height,
             collider_type: ColliderType::Capsule,
             ..Default::default()
         }

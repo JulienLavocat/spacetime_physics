@@ -4,11 +4,7 @@
 // This was generated using spacetimedb cli version 1.2.0 (commit ).
 
 #![allow(unused, clippy::all)]
-use super::collider_type::Collider;
-use super::friction_type::Friction;
-use super::mat_3_type::Mat3;
 use super::quat_type::Quat;
-use super::restitution_type::Restitution;
 use super::rigid_body_type::RigidBody;
 use super::rigid_body_type_type::RigidBodyType;
 use super::vec_3_type::Vec3;

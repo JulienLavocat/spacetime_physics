@@ -6,13 +6,23 @@
 #![allow(unused, clippy::all)]
 use spacetimedb_sdk::__codegen::{self as __sdk, __lib, __sats, __ws};
 
+use super::ray_cast_hit_type::RayCastHit;
+use super::vec_3_type::Vec3;
+
 #[derive(__lib::ser::Serialize, __lib::de::Deserialize, Clone, PartialEq, Debug)]
 #[sats(crate = __lib)]
-pub struct Friction {
-    pub static_coefficient: f32,
-    pub dynamic_coefficient: f32,
+pub struct RayCast {
+    pub id: u64,
+    pub world_id: u64,
+    pub origin: Vec3,
+    pub direction: Vec3,
+    pub max_distance: f32,
+    pub solid: bool,
+    pub hits: Vec<RayCastHit>,
+    pub added_hits: Vec<RayCastHit>,
+    pub removed_hits: Vec<RayCastHit>,
 }
 
-impl __sdk::InModule for Friction {
+impl __sdk::InModule for RayCast {
     type Module = super::RemoteModule;
 }

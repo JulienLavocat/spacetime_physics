@@ -125,13 +125,11 @@ impl From<&Collider> for ShapeWrapper {
             ColliderType::Sphere => ShapeWrapper::Sphere(Ball::new(collider.radius)),
             ColliderType::Plane => ShapeWrapper::Plane(HalfSpace::new(collider.normal.into())),
             ColliderType::Cuboid => ShapeWrapper::Cuboid(Cuboid::new(collider.half_extents.into())),
-            ColliderType::Capsule => ShapeWrapper::Capsule(Capsule::new(
-                collider.point_a.into(),
-                collider.point_b.into(),
-                collider.radius,
-            )),
+            ColliderType::Capsule => {
+                ShapeWrapper::Capsule(Capsule::new_y(collider.half_height, collider.radius))
+            }
             ColliderType::Cylinder => {
-                ShapeWrapper::Cylinder(Cylinder::new(collider.radius, collider.half_height))
+                ShapeWrapper::Cylinder(Cylinder::new(collider.half_height, collider.radius))
             }
             ColliderType::Cone => {
                 ShapeWrapper::Cone(Cone::new(collider.radius, collider.half_height))

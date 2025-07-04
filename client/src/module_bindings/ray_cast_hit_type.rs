@@ -6,20 +6,17 @@
 #![allow(unused, clippy::all)]
 use spacetimedb_sdk::__codegen::{self as __sdk, __lib, __sats, __ws};
 
+use super::vec_3_type::Vec3;
+
 #[derive(__lib::ser::Serialize, __lib::de::Deserialize, Clone, PartialEq, Debug)]
 #[sats(crate = __lib)]
-pub struct Mat3 {
-    pub m_11: f32,
-    pub m_12: f32,
-    pub m_13: f32,
-    pub m_21: f32,
-    pub m_22: f32,
-    pub m_23: f32,
-    pub m_31: f32,
-    pub m_32: f32,
-    pub m_33: f32,
+pub struct RayCastHit {
+    pub distance: f32,
+    pub position: Vec3,
+    pub normal: Vec3,
+    pub rigid_body_id: u64,
 }
 
-impl __sdk::InModule for Mat3 {
+impl __sdk::InModule for RayCastHit {
     type Module = super::RemoteModule;
 }

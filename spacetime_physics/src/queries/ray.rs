@@ -46,8 +46,9 @@ pub fn raycast_all_with_rigid_bodies(
     let ray = Ray::new(origin.into(), direction.into());
 
     entities.filter_map(move |body| {
-        let isometry = body.rb.into();
-        body.shape
+        let isometry = (&body).into();
+
+        body.shape()
             .cast_ray_and_get_normal(&isometry, &ray, max_distance, solid)
             .map(|intersection| RacyCastHit {
                 distance: intersection.time_of_impact,

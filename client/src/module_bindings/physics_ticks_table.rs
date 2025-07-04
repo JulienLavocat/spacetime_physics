@@ -4,7 +4,7 @@
 // This was generated using spacetimedb cli version 1.2.0 (commit ).
 
 #![allow(unused, clippy::all)]
-use super::physic_tick_type::PhysicTick;
+use super::physics_world_tick_type::PhysicsWorldTick;
 use spacetimedb_sdk::__codegen::{self as __sdk, __lib, __sats, __ws};
 
 /// Table handle for the table `physics_ticks`.
@@ -16,7 +16,7 @@ use spacetimedb_sdk::__codegen::{self as __sdk, __lib, __sats, __ws};
 /// but to directly chain method calls,
 /// like `ctx.db.physics_ticks().on_insert(...)`.
 pub struct PhysicsTicksTableHandle<'ctx> {
-    imp: __sdk::TableHandle<PhysicTick>,
+    imp: __sdk::TableHandle<PhysicsWorldTick>,
     ctx: std::marker::PhantomData<&'ctx super::RemoteTables>,
 }
 
@@ -33,7 +33,7 @@ pub trait PhysicsTicksTableAccess {
 impl PhysicsTicksTableAccess for super::RemoteTables {
     fn physics_ticks(&self) -> PhysicsTicksTableHandle<'_> {
         PhysicsTicksTableHandle {
-            imp: self.imp.get_table::<PhysicTick>("physics_ticks"),
+            imp: self.imp.get_table::<PhysicsWorldTick>("physics_ticks"),
             ctx: std::marker::PhantomData,
         }
     }
@@ -43,13 +43,13 @@ pub struct PhysicsTicksInsertCallbackId(__sdk::CallbackId);
 pub struct PhysicsTicksDeleteCallbackId(__sdk::CallbackId);
 
 impl<'ctx> __sdk::Table for PhysicsTicksTableHandle<'ctx> {
-    type Row = PhysicTick;
+    type Row = PhysicsWorldTick;
     type EventContext = super::EventContext;
 
     fn count(&self) -> u64 {
         self.imp.count()
     }
-    fn iter(&self) -> impl Iterator<Item = PhysicTick> + '_ {
+    fn iter(&self) -> impl Iterator<Item = PhysicsWorldTick> + '_ {
         self.imp.iter()
     }
 
@@ -82,8 +82,8 @@ impl<'ctx> __sdk::Table for PhysicsTicksTableHandle<'ctx> {
 
 #[doc(hidden)]
 pub(super) fn register_table(client_cache: &mut __sdk::ClientCache<super::RemoteModule>) {
-    let _table = client_cache.get_or_make_table::<PhysicTick>("physics_ticks");
-    _table.add_unique_constraint::<u64>("world_id", |row| &row.world_id);
+    let _table = client_cache.get_or_make_table::<PhysicsWorldTick>("physics_ticks");
+    _table.add_unique_constraint::<u64>("id", |row| &row.id);
 }
 pub struct PhysicsTicksUpdateCallbackId(__sdk::CallbackId);
 
@@ -105,40 +105,40 @@ impl<'ctx> __sdk::TableWithPrimaryKey for PhysicsTicksTableHandle<'ctx> {
 #[doc(hidden)]
 pub(super) fn parse_table_update(
     raw_updates: __ws::TableUpdate<__ws::BsatnFormat>,
-) -> __sdk::Result<__sdk::TableUpdate<PhysicTick>> {
+) -> __sdk::Result<__sdk::TableUpdate<PhysicsWorldTick>> {
     __sdk::TableUpdate::parse_table_update(raw_updates).map_err(|e| {
-        __sdk::InternalError::failed_parse("TableUpdate<PhysicTick>", "TableUpdate")
+        __sdk::InternalError::failed_parse("TableUpdate<PhysicsWorldTick>", "TableUpdate")
             .with_cause(e)
             .into()
     })
 }
 
-/// Access to the `world_id` unique index on the table `physics_ticks`,
+/// Access to the `id` unique index on the table `physics_ticks`,
 /// which allows point queries on the field of the same name
-/// via the [`PhysicsTicksWorldIdUnique::find`] method.
+/// via the [`PhysicsTicksIdUnique::find`] method.
 ///
 /// Users are encouraged not to explicitly reference this type,
 /// but to directly chain method calls,
-/// like `ctx.db.physics_ticks().world_id().find(...)`.
-pub struct PhysicsTicksWorldIdUnique<'ctx> {
-    imp: __sdk::UniqueConstraintHandle<PhysicTick, u64>,
+/// like `ctx.db.physics_ticks().id().find(...)`.
+pub struct PhysicsTicksIdUnique<'ctx> {
+    imp: __sdk::UniqueConstraintHandle<PhysicsWorldTick, u64>,
     phantom: std::marker::PhantomData<&'ctx super::RemoteTables>,
 }
 
 impl<'ctx> PhysicsTicksTableHandle<'ctx> {
-    /// Get a handle on the `world_id` unique index on the table `physics_ticks`.
-    pub fn world_id(&self) -> PhysicsTicksWorldIdUnique<'ctx> {
-        PhysicsTicksWorldIdUnique {
-            imp: self.imp.get_unique_constraint::<u64>("world_id"),
+    /// Get a handle on the `id` unique index on the table `physics_ticks`.
+    pub fn id(&self) -> PhysicsTicksIdUnique<'ctx> {
+        PhysicsTicksIdUnique {
+            imp: self.imp.get_unique_constraint::<u64>("id"),
             phantom: std::marker::PhantomData,
         }
     }
 }
 
-impl<'ctx> PhysicsTicksWorldIdUnique<'ctx> {
-    /// Find the subscribed row whose `world_id` column value is equal to `col_val`,
+impl<'ctx> PhysicsTicksIdUnique<'ctx> {
+    /// Find the subscribed row whose `id` column value is equal to `col_val`,
     /// if such a row is present in the client cache.
-    pub fn find(&self, col_val: &u64) -> Option<PhysicTick> {
+    pub fn find(&self, col_val: &u64) -> Option<PhysicsWorldTick> {
         self.imp.find(col_val)
     }
 }

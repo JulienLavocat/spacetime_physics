@@ -6,14 +6,22 @@
 #![allow(unused, clippy::all)]
 use spacetimedb_sdk::__codegen::{self as __sdk, __lib, __sats, __ws};
 
+use super::quat_type::Quat;
 use super::vec_3_type::Vec3;
 
 #[derive(__lib::ser::Serialize, __lib::de::Deserialize, Clone, PartialEq, Debug)]
 #[sats(crate = __lib)]
-pub struct Cuboid {
-    pub half_extents: Vec3,
+pub struct PhysicsTrigger {
+    pub id: u64,
+    pub world_id: u64,
+    pub position: Vec3,
+    pub rotation: Quat,
+    pub collider_id: u64,
+    pub entities_inside: Vec<u64>,
+    pub added_entities: Vec<u64>,
+    pub removed_entities: Vec<u64>,
 }
 
-impl __sdk::InModule for Cuboid {
+impl __sdk::InModule for PhysicsTrigger {
     type Module = super::RemoteModule;
 }

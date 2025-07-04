@@ -6,18 +6,23 @@
 #![allow(unused, clippy::all)]
 use spacetimedb_sdk::__codegen::{self as __sdk, __lib, __sats, __ws};
 
-use super::cuboid_type::Cuboid;
-use super::plane_type::Plane;
-use super::sphere_type::Sphere;
+use super::collider_type_type::ColliderType;
+use super::vec_3_type::Vec3;
 
 #[derive(__lib::ser::Serialize, __lib::de::Deserialize, Clone, PartialEq, Debug)]
 #[sats(crate = __lib)]
-pub enum Collider {
-    Sphere(Sphere),
-
-    Plane(Plane),
-
-    Cuboid(Cuboid),
+pub struct Collider {
+    pub id: u64,
+    pub world_id: u64,
+    pub radius: f32,
+    pub normal: Vec3,
+    pub height: f32,
+    pub half_extents: Vec3,
+    pub half_height: f32,
+    pub point_a: Vec3,
+    pub point_b: Vec3,
+    pub point_c: Vec3,
+    pub collider_type: ColliderType,
 }
 
 impl __sdk::InModule for Collider {

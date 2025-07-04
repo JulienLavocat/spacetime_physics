@@ -8,10 +8,23 @@ use spacetimedb_sdk::__codegen::{self as __sdk, __lib, __sats, __ws};
 
 #[derive(__lib::ser::Serialize, __lib::de::Deserialize, Clone, PartialEq, Debug)]
 #[sats(crate = __lib)]
-pub struct Restitution {
-    pub coefficient: f32,
+#[derive(Copy, Eq, Hash)]
+pub enum ColliderType {
+    Sphere,
+
+    Plane,
+
+    Cuboid,
+
+    Cylinder,
+
+    Cone,
+
+    Capsule,
+
+    Triangle,
 }
 
-impl __sdk::InModule for Restitution {
+impl __sdk::InModule for ColliderType {
     type Module = super::RemoteModule;
 }

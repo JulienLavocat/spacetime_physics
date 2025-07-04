@@ -18,7 +18,18 @@ pub struct PhysicsWorld {
     pub gravity: Vec3,
     pub precision: f32,
     pub position_iterations: u32,
+    pub qvbh_dilation_factor: f32,
+    pub length_unit: f32,
+    pub normalized_prediction_distance: f32,
     pub debug: bool,
+    pub debug_time: bool,
+    pub debug_triggers: bool,
+    pub debug_broad_phase: bool,
+    pub debug_narrow_phase: bool,
+    pub debug_broad_narrow_phase: bool,
+    pub debug_raycasts: bool,
+    pub debug_constraints: bool,
+    pub debug_substep: bool,
 }
 
 impl __sdk::InModule for PhysicsWorld {
