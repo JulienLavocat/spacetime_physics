@@ -33,7 +33,7 @@ pub fn init(ctx: &ReducerContext) {
         // .debug_time(true)
         // .debug_broad_phase(true)
         // .debug_narrow_phase(true)
-        // .debug(true)
+        .debug(true)
         .build()
         .insert(ctx);
 
@@ -55,11 +55,24 @@ pub fn init(ctx: &ReducerContext) {
     // }
 
     // Create a small sphere that will fal towards the ground
+    // RigidBody::builder()
+    //     .position(Vec3::new(1.0, 3.0, 100.0))
+    //     .collider_id(sphere_collider)
+    //     .body_type(RigidBodyType::Dynamic)
+    //     .properties_id(sphere_properties)
+    //     .build()
+    //     .insert(ctx);
+
+    // Create a small cube that will fall towards the ground
+    let cube_properties = RigidBodyProperties::builder().build().insert(ctx).id;
+    let cube_collider = Collider::cuboid(world.id, Vec3::new(1.0, 1.0, 1.0))
+        .insert(ctx)
+        .id;
     RigidBody::builder()
-        .position(Vec3::new(0.0, 10.0, 0.0))
-        .collider_id(sphere_collider)
+        .position(Vec3::new(0.0, 5.0, 0.0))
+        .collider_id(cube_collider)
         .body_type(RigidBodyType::Dynamic)
-        .properties_id(sphere_properties)
+        .properties_id(cube_properties)
         .build()
         .insert(ctx);
 

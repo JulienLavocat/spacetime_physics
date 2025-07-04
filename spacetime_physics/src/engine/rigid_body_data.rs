@@ -200,13 +200,11 @@ impl RigidBodyData {
 
     pub fn set_force(&mut self, force: Vec3) {
         self.rb.force = force;
-        // FIXME: Is this necessary?
         self.is_dirty = true;
     }
 
     pub fn set_torque(&mut self, torque: Vec3) {
         self.rb.torque = torque;
-        // FIXME: Is this necessary?
         self.is_dirty = true;
     }
 
