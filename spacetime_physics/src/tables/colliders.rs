@@ -59,6 +59,11 @@ impl Collider {
         ctx.db.physics_colliders().id().delete(self.id);
     }
 
+    pub fn id(&mut self, id: u64) -> &mut Self {
+        self.id = id;
+        self
+    }
+
     pub fn sphere(world_id: u64, radius: f32) -> Self {
         Self {
             world_id,
