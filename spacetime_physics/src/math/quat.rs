@@ -54,6 +54,32 @@ impl Quat {
         }
     }
 
+    pub fn from_euler_angles_deg(x_deg: f32, y_deg: f32, z_deg: f32) -> Self {
+        let (x, y, z) = (
+            crate::math::deg_to_rad(x_deg),
+            crate::math::deg_to_rad(y_deg),
+            crate::math::deg_to_rad(z_deg),
+        );
+
+        let (hx, hy, hz) = (0.5 * x, 0.5 * y, 0.5 * z);
+
+        let (cx, sx) = (hx.cos(), hx.sin());
+        let (cy, sy) = (hy.cos(), hy.sin());
+        let (cz, sz) = (hz.cos(), hz.sin());
+
+        let qw = cx * cy * cz + sx * sy * sz;
+        let qx = sx * cy * cz - cx * sy * sz;
+        let qy = cx * sy * cz + sx * cy * sz;
+        let qz = cx * cy * sz - sx * sy * cz;
+
+        Self {
+            x: qx,
+            y: qy,
+            z: qz,
+            w: qw,
+        }
+    }
+
     pub fn from_scaled_axis(delta_angle: Vec3) -> Quat {
         let half_angle = delta_angle.length() * 0.5;
         let sin_half_angle = half_angle.sin();
