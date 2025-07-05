@@ -7,6 +7,8 @@
 
 Discuss the project on [Discord](https://discord.com/channels/1037340874172014652/1391058999503229031)
 
+![Crates.io Version](https://img.shields.io/crates/v/spacetime_physics)
+
 ---
 
 ## ✨ Key Features
