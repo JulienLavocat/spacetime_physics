@@ -1,6 +1,6 @@
 [package]
 name = "spacetime_physics"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 description = "Physics engine for SpacetimeDB"
 license = "Apache-2.0"
