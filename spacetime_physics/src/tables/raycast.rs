@@ -1,6 +1,7 @@
+use core::f32;
 use std::hash::Hash;
 
-use bon::Builder;
+use bon::{builder, Builder};
 use spacetimedb::{table, ReducerContext, SpacetimeType, Table};
 
 use crate::math::Vec3;
@@ -50,10 +51,12 @@ pub struct RayCast {
     /// Unique identifier for the raycast.
     #[primary_key]
     #[auto_inc]
+    #[builder(default = 0)]
     pub id: u64,
 
     /// The world this raycast belongs to.
     #[index(btree)]
+    #[builder(default = 1)]
     pub world_id: u64,
 
     /// The origin point of the raycast in world coordinates.
@@ -63,11 +66,13 @@ pub struct RayCast {
     pub direction: Vec3,
 
     /// The maximum distance the raycast can travel.
+    #[builder(default = f32::MAX)]
     pub max_distance: f32,
 
     /// Whether the raycast should treat shapes as solid.
     /// If `true`, rays starting inside a shape will register an immediate hit.
     /// This is typically used to detect entities fully enclosing the ray origin.
+    #[builder(default = false)]
     pub solid: bool,
 
     /// The entities currently intersecting the raycast.
