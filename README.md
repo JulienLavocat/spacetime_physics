@@ -107,7 +107,8 @@ pub fn physics_tick_world(ctx: &ReducerContext, tick: PhysicsWorldTick) {
     step_world(ctx, &world, kinematic_entities);
 
     // After the physics world has been stepped, you can perform post-processing
-    // e.g. creating events for entities that entered or exited triggers, raycasts hits, etc.
+    // e.g. creating events for entities that entered or exited triggers,
+    // raycasts hits, etc.
 }
 ```
 
@@ -150,7 +151,8 @@ let rigid_body = RigidBody::builder()
 // Start by creating a collider for the trigger, this can be a cuboid, sphere, etc.
 let collider = Collider::cuboid(world.id, Vec3::new(1.0, 1.0, 1.0)).insert(ctx).id;
 
-// Now create the trigger itself, this can be used to detect when entities enter or exit the trigger volume
+// Now create the trigger itself, this can be used to detect when entities enter
+// or exit the trigger volume
 let trigger = Trigger::builder()
     .position(Vec3::new(0.0, 5.0, 0.0)) // position of the trigger
     .size(Vec3::new(2.0, 2.0, 2.0)) // size of the trigger volume
@@ -158,7 +160,8 @@ let trigger = Trigger::builder()
     .build()
     .insert(ctx);
 
-// Each trigger have several properties, which can be used to detect when entities enter or exit the trigger:
+// Each trigger have several properties, which can be used to detect when
+// entities enter or exit the trigger:
 - trigger.added_entities // Entities that entered the trigger volume this tick
 - trigger.removed_entities // Entities that exited the trigger volume this tick
 - trigger.entities_inside // All entities currently in the trigger volume
@@ -168,7 +171,8 @@ let trigger = Trigger::builder()
 
 ```rust
 
-// Unlike rigid bodies and triggers, raycasts doesn't need anything else like a collider or properties.
+// Unlike rigid bodies and triggers, raycasts doesn't need anything else
+// like a collider or properties.
 let raycast = RayCast::new(
     world.id, // The world this raycast belongs to
     Vec3::new(0.0, 10.0, 0.0), // Start position of the ray
@@ -231,11 +235,10 @@ This roadmap is loosely ordered by priority and is subject to change as the
 project evolves or as new features are requested.
 
 - [ ] **Dynamic Bodies**: Fix bugs and improve stability.
-- [ ] Lag compensation: Implement lag compensation.
+- [ ] **Lag compensation**: Implement lag compensation.
 - [ ] **Events**: Emit events when bodies enter/exit triggers, raycasts hit, etc.
-- [ ] Client side prediction: Implement client side prediction for smoother gameplay.
-- [ ] C# API: Provide a C# API for Unity and other C# environments.
-- [ ] Documentation: Improve documentation and examples.
+- [ ] **C# API**: Provide a C# API for Unity and other C# environments.
+- [ ] **Documentation**: Improve documentation and examples.
 
 ---
 
