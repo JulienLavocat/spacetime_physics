@@ -108,6 +108,23 @@ impl Quat {
         vec + (uv * (2.0 * self.w)) + uuv
     }
 
+    /// Get the forward vector of the quaternion.
+    /// This method expects the quaternion to be normalized.
+    pub fn forward_by(&self, vec: Vec3) -> Vec3 {
+        let uv = Vec3::new(
+            self.y * vec.z - self.z * vec.y,
+            self.z * vec.x - self.x * vec.z,
+            self.x * vec.y - self.y * vec.x,
+        );
+        let uuv = Vec3::new(
+            self.y * uv.z - self.z * uv.y,
+            self.z * uv.x - self.x * uv.z,
+            self.x * uv.y - self.y * uv.x,
+        );
+
+        vec + (uv * (2.0 * self.w)) + uuv
+    }
+
     pub fn to_mat3(&self) -> Mat3 {
         let x2 = self.x * self.x;
         let y2 = self.y * self.y;
