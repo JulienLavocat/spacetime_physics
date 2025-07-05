@@ -56,9 +56,9 @@ impl Quat {
 
     pub fn from_euler_angles_deg(x_deg: f32, y_deg: f32, z_deg: f32) -> Self {
         let (x, y, z) = (
-            crate::math::deg_to_rad(x_deg),
-            crate::math::deg_to_rad(y_deg),
-            crate::math::deg_to_rad(z_deg),
+            x_deg.to_radians(),
+            y_deg.to_radians(),
+            z_deg.to_radians(),
         );
 
         let (hx, hy, hz) = (0.5 * x, 0.5 * y, 0.5 * z);
