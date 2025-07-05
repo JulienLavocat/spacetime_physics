@@ -4,8 +4,8 @@
 // This was generated using spacetimedb cli version 1.2.0 (commit ).
 
 #![allow(unused, clippy::all)]
-use super::physics_trigger_type::PhysicsTrigger;
 use super::quat_type::Quat;
+use super::trigger_type::Trigger;
 use super::vec_3_type::Vec3;
 use spacetimedb_sdk::__codegen::{self as __sdk, __lib, __sats, __ws};
 
@@ -18,7 +18,7 @@ use spacetimedb_sdk::__codegen::{self as __sdk, __lib, __sats, __ws};
 /// but to directly chain method calls,
 /// like `ctx.db.physics_triggers().on_insert(...)`.
 pub struct PhysicsTriggersTableHandle<'ctx> {
-    imp: __sdk::TableHandle<PhysicsTrigger>,
+    imp: __sdk::TableHandle<Trigger>,
     ctx: std::marker::PhantomData<&'ctx super::RemoteTables>,
 }
 
@@ -35,7 +35,7 @@ pub trait PhysicsTriggersTableAccess {
 impl PhysicsTriggersTableAccess for super::RemoteTables {
     fn physics_triggers(&self) -> PhysicsTriggersTableHandle<'_> {
         PhysicsTriggersTableHandle {
-            imp: self.imp.get_table::<PhysicsTrigger>("physics_triggers"),
+            imp: self.imp.get_table::<Trigger>("physics_triggers"),
             ctx: std::marker::PhantomData,
         }
     }
@@ -45,13 +45,13 @@ pub struct PhysicsTriggersInsertCallbackId(__sdk::CallbackId);
 pub struct PhysicsTriggersDeleteCallbackId(__sdk::CallbackId);
 
 impl<'ctx> __sdk::Table for PhysicsTriggersTableHandle<'ctx> {
-    type Row = PhysicsTrigger;
+    type Row = Trigger;
     type EventContext = super::EventContext;
 
     fn count(&self) -> u64 {
         self.imp.count()
     }
-    fn iter(&self) -> impl Iterator<Item = PhysicsTrigger> + '_ {
+    fn iter(&self) -> impl Iterator<Item = Trigger> + '_ {
         self.imp.iter()
     }
 
@@ -84,7 +84,7 @@ impl<'ctx> __sdk::Table for PhysicsTriggersTableHandle<'ctx> {
 
 #[doc(hidden)]
 pub(super) fn register_table(client_cache: &mut __sdk::ClientCache<super::RemoteModule>) {
-    let _table = client_cache.get_or_make_table::<PhysicsTrigger>("physics_triggers");
+    let _table = client_cache.get_or_make_table::<Trigger>("physics_triggers");
     _table.add_unique_constraint::<u64>("id", |row| &row.id);
 }
 pub struct PhysicsTriggersUpdateCallbackId(__sdk::CallbackId);
@@ -107,9 +107,9 @@ impl<'ctx> __sdk::TableWithPrimaryKey for PhysicsTriggersTableHandle<'ctx> {
 #[doc(hidden)]
 pub(super) fn parse_table_update(
     raw_updates: __ws::TableUpdate<__ws::BsatnFormat>,
-) -> __sdk::Result<__sdk::TableUpdate<PhysicsTrigger>> {
+) -> __sdk::Result<__sdk::TableUpdate<Trigger>> {
     __sdk::TableUpdate::parse_table_update(raw_updates).map_err(|e| {
-        __sdk::InternalError::failed_parse("TableUpdate<PhysicsTrigger>", "TableUpdate")
+        __sdk::InternalError::failed_parse("TableUpdate<Trigger>", "TableUpdate")
             .with_cause(e)
             .into()
     })
@@ -123,7 +123,7 @@ pub(super) fn parse_table_update(
 /// but to directly chain method calls,
 /// like `ctx.db.physics_triggers().id().find(...)`.
 pub struct PhysicsTriggersIdUnique<'ctx> {
-    imp: __sdk::UniqueConstraintHandle<PhysicsTrigger, u64>,
+    imp: __sdk::UniqueConstraintHandle<Trigger, u64>,
     phantom: std::marker::PhantomData<&'ctx super::RemoteTables>,
 }
 
@@ -140,7 +140,7 @@ impl<'ctx> PhysicsTriggersTableHandle<'ctx> {
 impl<'ctx> PhysicsTriggersIdUnique<'ctx> {
     /// Find the subscribed row whose `id` column value is equal to `col_val`,
     /// if such a row is present in the client cache.
-    pub fn find(&self, col_val: &u64) -> Option<PhysicsTrigger> {
+    pub fn find(&self, col_val: &u64) -> Option<Trigger> {
         self.imp.find(col_val)
     }
 }

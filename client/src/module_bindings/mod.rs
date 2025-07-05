@@ -14,7 +14,6 @@ pub mod physics_rigid_bodies_table;
 pub mod physics_rigid_body_properties_table;
 pub mod physics_tick_world_reducer;
 pub mod physics_ticks_table;
-pub mod physics_trigger_type;
 pub mod physics_triggers_table;
 pub mod physics_world_table;
 pub mod physics_world_tick_type;
@@ -27,6 +26,8 @@ pub mod ray_cast_type;
 pub mod rigid_body_properties_type;
 pub mod rigid_body_type;
 pub mod rigid_body_type_type;
+pub mod shoot_player_reducer;
+pub mod trigger_type;
 pub mod vec_3_type;
 
 pub use collider_type::Collider;
@@ -39,7 +40,6 @@ pub use physics_tick_world_reducer::{
     physics_tick_world, set_flags_for_physics_tick_world, PhysicsTickWorldCallbackId,
 };
 pub use physics_ticks_table::*;
-pub use physics_trigger_type::PhysicsTrigger;
 pub use physics_triggers_table::*;
 pub use physics_world_table::*;
 pub use physics_world_tick_type::PhysicsWorldTick;
@@ -52,6 +52,8 @@ pub use ray_cast_type::RayCast;
 pub use rigid_body_properties_type::RigidBodyProperties;
 pub use rigid_body_type::RigidBody;
 pub use rigid_body_type_type::RigidBodyType;
+pub use shoot_player_reducer::{set_flags_for_shoot_player, shoot_player, ShootPlayerCallbackId};
+pub use trigger_type::Trigger;
 pub use vec_3_type::Vec3;
 
 #[derive(Clone, PartialEq, Debug)]
@@ -63,6 +65,7 @@ pub use vec_3_type::Vec3;
 
 pub enum Reducer {
     PhysicsTickWorld { tick: PhysicsWorldTick },
+    ShootPlayer,
 }
 
 impl __sdk::InModule for Reducer {
@@ -73,6 +76,7 @@ impl __sdk::Reducer for Reducer {
     fn reducer_name(&self) -> &'static str {
         match self {
             Reducer::PhysicsTickWorld { .. } => "physics_tick_world",
+            Reducer::ShootPlayer => "shoot_player",
         }
     }
 }
@@ -84,6 +88,13 @@ impl TryFrom<__ws::ReducerCallInfo<__ws::BsatnFormat>> for Reducer {
                 physics_tick_world_reducer::PhysicsTickWorldArgs,
             >("physics_tick_world", &value.args)?
             .into()),
+            "shoot_player" => Ok(
+                __sdk::parse_reducer_args::<shoot_player_reducer::ShootPlayerArgs>(
+                    "shoot_player",
+                    &value.args,
+                )?
+                .into(),
+            ),
             unknown => {
                 Err(
                     __sdk::InternalError::unknown_name("reducer", unknown, "ReducerCallInfo")
@@ -103,7 +114,7 @@ pub struct DbUpdate {
     physics_rigid_bodies: __sdk::TableUpdate<RigidBody>,
     physics_rigid_body_properties: __sdk::TableUpdate<RigidBodyProperties>,
     physics_ticks: __sdk::TableUpdate<PhysicsWorldTick>,
-    physics_triggers: __sdk::TableUpdate<PhysicsTrigger>,
+    physics_triggers: __sdk::TableUpdate<Trigger>,
     physics_world: __sdk::TableUpdate<PhysicsWorld>,
     players: __sdk::TableUpdate<Players>,
 }
@@ -183,7 +194,7 @@ impl __sdk::DbUpdate for DbUpdate {
             .apply_diff_to_table::<PhysicsWorldTick>("physics_ticks", &self.physics_ticks)
             .with_updates_by_pk(|row| &row.id);
         diff.physics_triggers = cache
-            .apply_diff_to_table::<PhysicsTrigger>("physics_triggers", &self.physics_triggers)
+            .apply_diff_to_table::<Trigger>("physics_triggers", &self.physics_triggers)
             .with_updates_by_pk(|row| &row.id);
         diff.physics_world = cache
             .apply_diff_to_table::<PhysicsWorld>("physics_world", &self.physics_world)
@@ -205,7 +216,7 @@ pub struct AppliedDiff<'r> {
     physics_rigid_bodies: __sdk::TableAppliedDiff<'r, RigidBody>,
     physics_rigid_body_properties: __sdk::TableAppliedDiff<'r, RigidBodyProperties>,
     physics_ticks: __sdk::TableAppliedDiff<'r, PhysicsWorldTick>,
-    physics_triggers: __sdk::TableAppliedDiff<'r, PhysicsTrigger>,
+    physics_triggers: __sdk::TableAppliedDiff<'r, Trigger>,
     physics_world: __sdk::TableAppliedDiff<'r, PhysicsWorld>,
     players: __sdk::TableAppliedDiff<'r, Players>,
 }
@@ -245,7 +256,7 @@ impl<'r> __sdk::AppliedDiff<'r> for AppliedDiff<'r> {
             &self.physics_ticks,
             event,
         );
-        callbacks.invoke_table_row_callbacks::<PhysicsTrigger>(
+        callbacks.invoke_table_row_callbacks::<Trigger>(
             "physics_triggers",
             &self.physics_triggers,
             event,

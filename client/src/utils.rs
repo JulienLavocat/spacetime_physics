@@ -37,9 +37,9 @@ pub fn collider_to_mesh(
                 ..default()
             });
             let mesh = meshes.add(Cuboid::new(
-                collider.half_extents.x * 2.0,
-                collider.half_extents.y * 2.0,
-                collider.half_extents.z * 2.0,
+                collider.size.x,
+                collider.size.y,
+                collider.size.z,
             ));
             debug!("Cuboid mesh: {:?}, {:?}", mesh, collider);
 
@@ -50,7 +50,7 @@ pub fn collider_to_mesh(
                 base_color: RED.into(),
                 ..default()
             });
-            let mesh = meshes.add(Capsule3d::new(collider.radius, collider.half_height * 2.0));
+            let mesh = meshes.add(Capsule3d::new(collider.radius, collider.height));
 
             (mesh, material)
         }
@@ -59,7 +59,7 @@ pub fn collider_to_mesh(
                 base_color: RED.into(),
                 ..default()
             });
-            let mesh = meshes.add(Cylinder::new(collider.radius, collider.half_height * 2.0));
+            let mesh = meshes.add(Cylinder::new(collider.radius, collider.height));
 
             (mesh, material)
         }
@@ -81,7 +81,7 @@ pub fn collider_to_mesh(
                 base_color: RED.into(),
                 ..default()
             });
-            let mesh = meshes.add(Cone::new(collider.radius, collider.half_height * 2.0));
+            let mesh = meshes.add(Cone::new(collider.radius, collider.height));
 
             (mesh, material)
         }

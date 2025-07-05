@@ -11,7 +11,7 @@ use super::vec_3_type::Vec3;
 
 #[derive(__lib::ser::Serialize, __lib::de::Deserialize, Clone, PartialEq, Debug)]
 #[sats(crate = __lib)]
-pub struct PhysicsTrigger {
+pub struct Trigger {
     pub id: u64,
     pub world_id: u64,
     pub position: Vec3,
@@ -22,6 +22,6 @@ pub struct PhysicsTrigger {
     pub removed_entities: Vec<u64>,
 }
 
-impl __sdk::InModule for PhysicsTrigger {
+impl __sdk::InModule for Trigger {
     type Module = super::RemoteModule;
 }
