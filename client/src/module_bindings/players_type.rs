@@ -16,6 +16,7 @@ pub struct Players {
     pub position: Vec3,
     pub rotation: Quat,
     pub rigid_body_id: u64,
+    pub weapon_raycast_id: u64,
 }
 
 impl __sdk::InModule for Players {
