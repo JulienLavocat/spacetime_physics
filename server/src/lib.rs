@@ -3,8 +3,8 @@ use spacetime_physics::{
     math::{Quat, Vec3},
     physics_raycasts,
     physics_world::physics_world,
-    schedule_physics_tick, step_world, Collider, PhysicsTrigger, PhysicsWorld, RayCast, RigidBody,
-    RigidBodyProperties, RigidBodyType,
+    schedule_physics_tick, step_world, Collider, PhysicsWorld, RayCast, RigidBody,
+    RigidBodyProperties, RigidBodyType, Trigger,
 };
 use spacetimedb::{rand::Rng, reducer, table, Identity, ReducerContext, ScheduleAt, Table};
 
@@ -103,7 +103,7 @@ pub fn init(ctx: &ReducerContext) {
     let trigger_collider = Collider::cuboid(world.id, Vec3::new(1.0, 1.0, 1.0))
         .insert(ctx)
         .id;
-    PhysicsTrigger::builder()
+    Trigger::builder()
         .position(Vec3::new(0.0, 1.0, 0.0))
         .collider_id(trigger_collider)
         .build()
@@ -160,7 +160,7 @@ pub fn shoot_player(ctx: &ReducerContext) {
     }
 
     for hit in &raycast.hits {
-        // Apply damages to the players that were hit.
+        // Apply damages to the players that were hit. You could also apply special effets based on
 
         let intial_damage = 10;
         let falloff = 0.1; // Damage falloff per meter

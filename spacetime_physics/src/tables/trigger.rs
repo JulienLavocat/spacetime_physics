@@ -8,11 +8,11 @@ use crate::math::{Quat, Vec3};
 
 use super::RigidBodyId;
 
-pub type PhysicsTriggerId = u64;
+pub type TriggerId = u64;
 
 #[table(name = physics_triggers)]
 #[derive(Builder, Debug, Clone, PartialEq)]
-pub struct PhysicsTrigger {
+pub struct Trigger {
     #[builder(default = 0)]
     #[primary_key]
     #[auto_inc]
@@ -41,7 +41,7 @@ pub struct PhysicsTrigger {
     pub removed_entities: Vec<RigidBodyId>,
 }
 
-impl PhysicsTrigger {
+impl Trigger {
     pub fn insert(self, ctx: &ReducerContext) -> Self {
         ctx.db.physics_triggers().insert(self)
     }
@@ -55,19 +55,19 @@ impl PhysicsTrigger {
     }
 }
 
-impl From<PhysicsTrigger> for Isometry3<f32> {
-    fn from(trigger: PhysicsTrigger) -> Self {
+impl From<Trigger> for Isometry3<f32> {
+    fn from(trigger: Trigger) -> Self {
         Isometry3::from_parts(trigger.position.into(), trigger.rotation.into())
     }
 }
 
-impl From<&PhysicsTrigger> for Isometry3<f32> {
-    fn from(trigger: &PhysicsTrigger) -> Self {
+impl From<&Trigger> for Isometry3<f32> {
+    fn from(trigger: &Trigger) -> Self {
         Isometry3::from_parts(trigger.position.into(), trigger.rotation.into())
     }
 }
 
-impl Display for PhysicsTrigger {
+impl Display for Trigger {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,

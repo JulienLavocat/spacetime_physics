@@ -3,12 +3,12 @@ use std::collections::{HashMap, HashSet};
 use parry3d::na::Isometry3;
 use spacetimedb::ReducerContext;
 
-use crate::{Collider, ColliderId, PhysicsTrigger, PhysicsTriggerId, RigidBodyId, ShapeWrapper};
+use crate::{Collider, ColliderId, RigidBodyId, ShapeWrapper, Trigger, TriggerId};
 
 #[derive(Debug)]
 pub struct TriggerData {
     pub shape: ShapeWrapper,
-    pub trigger_id: PhysicsTriggerId,
+    pub trigger_id: TriggerId,
     pub collider_id: ColliderId,
     pub world_id: u64,
     pub isometry: Isometry3<f32>,
@@ -19,7 +19,7 @@ pub struct TriggerData {
 }
 
 impl TriggerData {
-    pub fn new(trigger: &PhysicsTrigger, collider: &Collider) -> Self {
+    pub fn new(trigger: &Trigger, collider: &Collider) -> Self {
         Self {
             collider_id: collider.id,
             trigger_id: trigger.id,
@@ -38,7 +38,7 @@ impl TriggerData {
         world_id: u64,
         colliders: &HashMap<ColliderId, Collider>,
     ) -> Vec<Self> {
-        PhysicsTrigger::all(ctx, world_id)
+        Trigger::all(ctx, world_id)
             .map(|trigger| {
                 let collider = colliders.get(&trigger.collider_id).unwrap();
                 TriggerData::new(&trigger, collider)
@@ -47,7 +47,7 @@ impl TriggerData {
     }
 
     pub fn update(&self, ctx: &ReducerContext) {
-        PhysicsTrigger {
+        Trigger {
             id: self.trigger_id,
             world_id: self.world_id,
             position: self.isometry.translation.vector.into(),
