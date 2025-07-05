@@ -7,7 +7,26 @@
 
 Discuss the project on [Discord](https://discord.com/channels/1037340874172014652/1391058999503229031)
 
-![Crates.io Version](https://img.shields.io/crates/v/spacetime_physics)
+<p align="center">
+    <a href="https://discord.com/channels/1037340874172014652/1391058999503229031" target="_blank">
+        <img alt="Discord" src="https://img.shields.io/discord/1037340874172014652?style=for-the-badge&logo=discord">
+    </a>
+    <a href="https://crates.io/crates/spacetime_physics" target="_blank">
+        <img alt="Crates.io Version" src="https://img.shields.io/crates/v/spacetime_physics?style=for-the-badge&link=https%3A%2F%2Fcrates.io%2Fcrates%2Fspacetime_physics">
+    </a>
+    <a href="https://crates.io/crates/spacetime_physics" target="_blank">
+        <img alt="Crates.io License" src="https://img.shields.io/crates/l/spacetime_physics?style=for-the-badge">
+    </a>
+    <a href="https://crates.io/crates/spacetime_physics" target="_blank">
+        <img alt="Crates.io Documentation" src="https://img.shields.io/docsrs/spacetime_physics?style=for-the-badge">
+    </a>
+    <a href="https://crates.io/crates/spacetime_physics" target="_blank">
+        <img alt="Crates.io Downloads" src="https://img.shields.io/crates/d/spacetime_physics?style=for-the-badge">
+    </a>
+    <a href="https://github.com/JulienLavocat/spacetime_physics" target="_blank">
+        <img alt="GitHub last commit" src="https://img.shields.io/github/last-commit/JulienLavocat/spacetime_physics?style=for-the-badge">
+    </a>
+</p>
 
 ---
 
