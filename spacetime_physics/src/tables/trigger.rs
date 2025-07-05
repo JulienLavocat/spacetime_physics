@@ -54,6 +54,14 @@ impl Trigger {
         ctx.db.physics_triggers().id().update(self)
     }
 
+    pub fn delete(self, ctx: &ReducerContext) {
+        ctx.db.physics_triggers().id().delete(self.id);
+    }
+
+    pub fn delete_by_id(ctx: &ReducerContext, id: u64) {
+        ctx.db.physics_triggers().id().delete(id);
+    }
+
     pub fn all(ctx: &ReducerContext, world_id: u64) -> impl Iterator<Item = Self> {
         ctx.db.physics_triggers().world_id().filter(world_id)
     }

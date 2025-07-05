@@ -63,6 +63,10 @@ impl Collider {
         ctx.db.physics_colliders().id().delete(self.id);
     }
 
+    pub fn delete_by_id(ctx: &ReducerContext, id: u64) {
+        ctx.db.physics_colliders().id().delete(id);
+    }
+
     pub fn id(&mut self, id: u64) -> &mut Self {
         self.id = id;
         self

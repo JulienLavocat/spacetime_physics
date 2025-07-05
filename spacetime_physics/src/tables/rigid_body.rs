@@ -70,6 +70,10 @@ impl RigidBody {
         ctx.db.physics_rigid_bodies().id().delete(self.id);
     }
 
+    pub fn delte_by_id(ctx: &ReducerContext, id: u64) {
+        ctx.db.physics_rigid_bodies().id().delete(id);
+    }
+
     pub fn is_dynamic(&self) -> bool {
         self.body_type == RigidBodyType::Dynamic
     }

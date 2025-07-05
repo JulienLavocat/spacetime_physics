@@ -118,6 +118,14 @@ impl RayCast {
         ctx.db.physics_raycasts().id().update(self)
     }
 
+    pub fn delete(self, ctx: &ReducerContext) {
+        ctx.db.physics_raycasts().id().delete(self.id);
+    }
+
+    pub fn delete_by_id(ctx: &ReducerContext, id: u64) {
+        ctx.db.physics_raycasts().id().delete(id);
+    }
+
     pub fn all(ctx: &ReducerContext, world_id: u64) -> Vec<Self> {
         ctx.db
             .physics_raycasts()

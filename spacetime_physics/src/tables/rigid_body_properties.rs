@@ -43,6 +43,18 @@ impl RigidBodyProperties {
             .filter(world_id)
     }
 
+    pub fn update(self, ctx: &ReducerContext) -> Self {
+        ctx.db.physics_rigid_body_properties().id().update(self)
+    }
+
+    pub fn delete(self, ctx: &ReducerContext) {
+        ctx.db.physics_rigid_body_properties().id().delete(self.id);
+    }
+
+    pub fn delte_by_id(ctx: &ReducerContext, id: u64) {
+        ctx.db.physics_rigid_body_properties().id().delete(id);
+    }
+
     pub fn combine_static_friction(&self, other: &Self) -> f32 {
         (self.friction_static_coefficient + other.friction_static_coefficient) / 2.0
     }

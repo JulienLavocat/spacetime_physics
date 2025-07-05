@@ -116,6 +116,18 @@ impl PhysicsWorld {
         ctx.db.physics_world().id().find(id)
     }
 
+    pub fn update(self, ctx: &ReducerContext) -> Self {
+        ctx.db.physics_world().id().update(self)
+    }
+
+    pub fn delete(&self, ctx: &ReducerContext) {
+        ctx.db.physics_world().id().delete(self.id);
+    }
+
+    pub fn delete_by_id(ctx: &ReducerContext, id: PhysicsWorldId) {
+        ctx.db.physics_world().id().delete(id);
+    }
+
     pub fn prediction_distance(&self) -> f32 {
         self.normalized_prediction_distance * self.length_unit
     }
