@@ -5,6 +5,8 @@
 > It’s built around an XPBD solver and designed for multiplayer simulations
 > that are fast, deterministic, and scalable.
 
+Discuss the project on [Discord](https://discord.com/channels/1037340874172014652/1391058999503229031)
+
 ---
 
 ## ✨ Key Features
@@ -240,7 +242,8 @@ project evolves or as new features are requested.
 ## Contributing
 
 1. Clone the repo
-2. Submit a PR with your changes
+2. Checkout the Justfile to see available commands
+3. Submit a PR with your changes
 
 ---
 
