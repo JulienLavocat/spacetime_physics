@@ -112,6 +112,10 @@ impl PhysicsWorld {
         ctx.db.physics_world().insert(self)
     }
 
+    pub fn find(ctx: &ReducerContext, id: PhysicsWorldId) -> Option<Self> {
+        ctx.db.physics_world().id().find(id)
+    }
+
     pub fn prediction_distance(&self) -> f32 {
         self.normalized_prediction_distance * self.length_unit
     }

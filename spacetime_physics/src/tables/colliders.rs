@@ -42,6 +42,10 @@ impl Collider {
         ctx.db.physics_colliders().insert(self)
     }
 
+    pub fn find(ctx: &ReducerContext, id: u64) -> Option<Self> {
+        ctx.db.physics_colliders().id().find(id)
+    }
+
     pub fn all(ctx: &ReducerContext, world_id: u64) -> HashMap<u64, Self> {
         ctx.db
             .physics_colliders()

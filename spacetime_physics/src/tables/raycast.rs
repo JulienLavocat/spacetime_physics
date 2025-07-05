@@ -110,6 +110,10 @@ impl RayCast {
         ctx.db.physics_raycasts().insert(self)
     }
 
+    pub fn find(ctx: &ReducerContext, id: u64) -> Option<Self> {
+        ctx.db.physics_raycasts().id().find(id)
+    }
+
     pub fn update(self, ctx: &ReducerContext) -> Self {
         ctx.db.physics_raycasts().id().update(self)
     }

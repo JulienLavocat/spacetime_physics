@@ -54,6 +54,10 @@ impl RigidBody {
         ctx.db.physics_rigid_bodies().insert(self)
     }
 
+    pub fn find(ctx: &ReducerContext, id: u64) -> Option<Self> {
+        ctx.db.physics_rigid_bodies().id().find(id)
+    }
+
     pub fn all(ctx: &ReducerContext, world_id: u64) -> impl Iterator<Item = RigidBody> {
         ctx.db.physics_rigid_bodies().world_id().filter(world_id)
     }
