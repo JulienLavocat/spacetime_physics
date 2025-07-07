@@ -29,6 +29,7 @@ pub fn step_world(
 ) {
     let sw = world.stopwatch("step_world");
 
+    let load_sw = world.stopwatch("load_data");
     let colliders = Collider::all(ctx, world.id);
     let mut triggers = TriggerData::collect(ctx, world.id, &colliders);
     let mut entities = RigidBodyData::collect(ctx, world.id, &colliders);
@@ -37,6 +38,7 @@ pub fn step_world(
     let entities = entities.as_mut_slice();
     let triggers = triggers.as_mut_slice();
     let raycasts = raycasts.as_mut_slice();
+    load_sw.end();
 
     let dt = world.time_step / world.sub_step as f32;
 

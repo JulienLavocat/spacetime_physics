@@ -190,6 +190,7 @@ impl CollisionDetection {
         bodies: &[RigidBodyData],
         raycasts: &mut [RayCast],
     ) {
+        let sw = world.stopwatch("narrow_phase_raycast");
         for (raycast_id, broad_hits) in self.raycasts_pairs.iter() {
             let raycast = &mut raycasts[raycast_id.raycast_index];
             let ray = Ray::new(raycast.origin.into(), raycast.direction.into());
@@ -226,6 +227,7 @@ impl CollisionDetection {
             }
             raycast.clone().update(ctx);
         }
+        sw.end();
     }
 
     fn run_broad_phase_pairs(&mut self, world: &PhysicsWorld) {

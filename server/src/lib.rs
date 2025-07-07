@@ -37,14 +37,18 @@ pub fn init(ctx: &ReducerContext) {
         .ticks_per_second(60.0) // The reducer responsible for stepping the physics world will be scheduled at 60Hz, see TickWorld bellow
         .gravity(Vec3::new(0.0, -9.81, 0.0)) // The default gravity is set to Earth's gravity, this
         // is the default value, but you can change it to whatever you want.
-        .debug(true)
+        .sub_step(0)
+        .debug_time(true)
         .build()
         .insert(ctx);
 
-    let range = 0.0..100.0;
+    let range = 0.0..10000.0;
     let sphere_properties = RigidBodyProperties::builder().build().insert(ctx).id;
     let sphere_collider = Collider::sphere(world.id, 1.0).insert(ctx).id;
-    for _ in 0..10 {
+    let trigger_collider = Collider::cuboid(world.id, Vec3::new(1.0, 1.0, 1.0))
+        .insert(ctx)
+        .id;
+    for _ in 0..2000 {
         RigidBody::builder()
             .position(Vec3::new(
                 ctx.rng().gen_range(range.clone()),
@@ -58,56 +62,83 @@ pub fn init(ctx: &ReducerContext) {
             .insert(ctx);
     }
 
-    // Create a small sphere that will fal towards the ground
-    RigidBody::builder()
-        .position(Vec3::new(1.0, 3.0, 100.0))
-        .collider_id(sphere_collider)
-        .body_type(RigidBodyType::Dynamic)
-        .properties_id(sphere_properties)
-        .build()
+    for _ in 0..15000 {
+        Trigger::builder()
+            .position(Vec3::new(
+                ctx.rng().gen_range(range.clone()),
+                100.0,
+                ctx.rng().gen_range(range.clone()),
+            ))
+            .collider_id(trigger_collider)
+            .build()
+            .insert(ctx);
+    }
+
+    for _ in 0..5000 {
+        RayCast::new(
+            world.id,
+            Vec3::new(
+                ctx.rng().gen_range(range.clone()),
+                100.0,
+                ctx.rng().gen_range(range.clone()),
+            ),
+            Vec3::Z,
+            100.0,
+            false,
+        )
         .insert(ctx);
+    }
+
+    // Create a small sphere that will fal towards the ground
+    // RigidBody::builder()
+    //     .position(Vec3::new(1.0, 3.0, 100.0))
+    //     .collider_id(sphere_collider)
+    //     .body_type(RigidBodyType::Dynamic)
+    //     .properties_id(sphere_properties)
+    //     .build()
+    //     .insert(ctx);
 
     // Create a small cube that will fall towards the ground
-    let cube_properties = RigidBodyProperties::builder().build().insert(ctx).id;
-    let cube_collider = Collider::cuboid(world.id, Vec3::new(1.0, 1.0, 1.0))
-        .insert(ctx)
-        .id;
-    RigidBody::builder()
-        .position(Vec3::new(0.0, 5.0, 0.0))
-        .collider_id(cube_collider)
-        .body_type(RigidBodyType::Dynamic)
-        .properties_id(cube_properties)
-        .build()
-        .insert(ctx);
+    // let cube_properties = RigidBodyProperties::builder().build().insert(ctx).id;
+    // let cube_collider = Collider::cuboid(world.id, Vec3::new(1.0, 1.0, 1.0))
+    //     .insert(ctx)
+    //     .id;
+    // RigidBody::builder()
+    //     .position(Vec3::new(0.0, 5.0, 0.0))
+    //     .collider_id(cube_collider)
+    //     .body_type(RigidBodyType::Dynamic)
+    //     .properties_id(cube_properties)
+    //     .build()
+    //     .insert(ctx);
 
     // Floor
-    let floor_collider = Collider::plane(world.id, Vec3::Y).insert(ctx).id;
-    let floor_properties = RigidBodyProperties::builder()
-        .friction_static_coefficient(0.5)
-        .friction_dynamic_coefficient(0.5)
-        .restitution_coefficient(0.1)
-        .build()
-        .insert(ctx)
-        .id;
-    RigidBody::builder()
-        .position(Vec3::new(0.0, -1.0, 0.0))
-        .collider_id(floor_collider)
-        .body_type(RigidBodyType::Static)
-        .properties_id(floor_properties)
-        .build()
-        .insert(ctx);
-
-    // A trigger is a special type of collider that only detects collisions and does not apply any forces.
-    // Triggers are useful for things like detecting when a player enters a certain area, or when a projectile hits a target.
-    // A good example of a trigger is an area of effect, like a healing area or a damage area.
-    let trigger_collider = Collider::cuboid(world.id, Vec3::new(1.0, 1.0, 1.0))
-        .insert(ctx)
-        .id;
-    Trigger::builder()
-        .position(Vec3::new(0.0, 1.0, 0.0))
-        .collider_id(trigger_collider)
-        .build()
-        .insert(ctx);
+    // let floor_collider = Collider::plane(world.id, Vec3::Y).insert(ctx).id;
+    // let floor_properties = RigidBodyProperties::builder()
+    //     .friction_static_coefficient(0.5)
+    //     .friction_dynamic_coefficient(0.5)
+    //     .restitution_coefficient(0.1)
+    //     .build()
+    //     .insert(ctx)
+    //     .id;
+    // RigidBody::builder()
+    //     .position(Vec3::new(0.0, -1.0, 0.0))
+    //     .collider_id(floor_collider)
+    //     .body_type(RigidBodyType::Static)
+    //     .properties_id(floor_properties)
+    //     .build()
+    //     .insert(ctx);
+    //
+    // // A trigger is a special type of collider that only detects collisions and does not apply any forces.
+    // // Triggers are useful for things like detecting when a player enters a certain area, or when a projectile hits a target.
+    // // A good example of a trigger is an area of effect, like a healing area or a damage area.
+    // let trigger_collider = Collider::cuboid(world.id, Vec3::new(1.0, 1.0, 1.0))
+    //     .insert(ctx)
+    //     .id;
+    // Trigger::builder()
+    //     .position(Vec3::new(0.0, 1.0, 0.0))
+    //     .collider_id(trigger_collider)
+    //     .build()
+    //     .insert(ctx);
 
     // You can create raycasts that will be used to detect collisions with rigid bodies.
     // This is useful for things like shooting, where you want to detect if a ray intersects with a rigid body.
