@@ -540,3 +540,7 @@ impl Display for Vec3 {
         write!(f, "Vec3({}, {}, {})", self.x, self.y, self.z)
     }
 }
+
+#[cfg(test)]
+#[path = "vec3_tests.rs"]
+mod tests;
