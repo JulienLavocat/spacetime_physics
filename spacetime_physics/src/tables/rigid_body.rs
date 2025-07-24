@@ -27,19 +27,19 @@ pub struct RigidBody {
     #[index(btree)]
     #[builder(default = 1)]
     pub world_id: u64,
-    #[builder(default = Vec3::ZERO)]
+    #[builder(default = glam::Vec3::ZERO.into())]
     pub position: Vec3,
-    #[builder(default = Quat::IDENTITY)]
+    #[builder(default = glam::Quat::IDENTITY.into())]
     pub rotation: Quat,
-    #[builder(default = Vec3::ZERO)]
+    #[builder(default = glam::Vec3::ZERO.into())]
     pub linear_velocity: Vec3,
-    #[builder(default = Vec3::ZERO)]
+    #[builder(default = glam::Vec3::ZERO.into())]
     pub angular_velocity: Vec3,
 
-    #[builder(default = Vec3::ZERO)]
+    #[builder(default = glam::Vec3::ZERO.into())]
     pub force: Vec3,
 
-    #[builder(default = Vec3::ZERO)]
+    #[builder(default = glam::Vec3::ZERO.into())]
     pub torque: Vec3,
 
     #[builder(default = RigidBodyType::default())]

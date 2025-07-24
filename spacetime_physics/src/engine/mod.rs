@@ -144,7 +144,7 @@ fn sync_kinematic_bodies(
             None => continue, // No kinematic data for this body
         };
 
-        entity.set_rotation(*rotation);
-        entity.set_position(*position);
+        entity.set_position(position.into());
+        entity.set_rotation(rotation.into());
     }
 }

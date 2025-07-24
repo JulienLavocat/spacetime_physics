@@ -4,7 +4,7 @@ use super::*;
 
 fn shared_setup() -> (PhysicsWorld, Vec<RigidBodyData>) {
     let world = PhysicsWorld::builder().build();
-    let collider = Collider::cuboid(world.id, Vec3::new(1.0, 1.0, 1.0));
+    let collider = Collider::cuboid(world.id, Vec3::new(1.0, 1.0, 1.0).into());
     let properties = RigidBodyProperties::builder().mass(1.0).build();
     let body = RigidBodyData::new(
         RigidBody::builder()

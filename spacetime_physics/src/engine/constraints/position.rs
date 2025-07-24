@@ -1,7 +1,6 @@
-use crate::{
-    math::{Quat, Vec3},
-    RigidBodyData,
-};
+use glam::{Quat, Vec3};
+
+use crate::RigidBodyData;
 
 use super::Constraint;
 
@@ -54,7 +53,7 @@ pub trait PositionConstraint: Constraint {
 
     fn compute_generalized_inverse_mass(&self, body: &RigidBodyData, r: &Vec3, n: &Vec3) -> f32 {
         let inv_inertia = body.effective_inverse_inertia();
-        let r_cross_n = r.cross(n);
+        let r_cross_n = r.cross(*n);
         body.inv_mass() + r_cross_n.dot(inv_inertia * r_cross_n)
     }
 }

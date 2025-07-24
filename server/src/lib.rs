@@ -1,10 +1,8 @@
 use log::debug;
 use spacetime_physics::{
-    math::{Quat, Vec3},
-    physics_raycasts,
-    physics_world::physics_world,
-    schedule_physics_tick, step_world, Collider, PhysicsWorld, RayCast, RigidBody,
-    RigidBodyProperties, RigidBodyType, Trigger,
+    physics_raycasts, physics_world::physics_world, schedule_physics_tick, step_world, Collider,
+    PhysicsWorld, RayCast, RigidBody, RigidBodyProperties, RigidBodyType, SQuat, SVec3, Trigger,
+    Vec3,
 };
 use spacetimedb::{rand::Rng, reducer, table, Identity, ReducerContext, ScheduleAt, Table};
 
@@ -12,8 +10,8 @@ use spacetimedb::{rand::Rng, reducer, table, Identity, ReducerContext, ScheduleA
 pub struct Players {
     #[primary_key]
     pub id: Identity,
-    pub position: Vec3,
-    pub rotation: Quat,
+    pub position: SVec3,
+    pub rotation: SQuat,
     pub rigid_body_id: u64,
     pub weapon_raycast_id: u64,
 }
@@ -35,7 +33,7 @@ pub fn init(ctx: &ReducerContext) {
     // Different worlds never interact with each other.
     let world = PhysicsWorld::builder()
         .ticks_per_second(60.0) // The reducer responsible for stepping the physics world will be scheduled at 60Hz, see TickWorld bellow
-        .gravity(Vec3::new(0.0, -9.81, 0.0)) // The default gravity is set to Earth's gravity, this
+        .gravity(Vec3::new(0.0, -9.81, 0.0).into()) // The default gravity is set to Earth's gravity, this
         // is the default value, but you can change it to whatever you want.
         .sub_step(0)
         .debug_time(true)
@@ -45,16 +43,19 @@ pub fn init(ctx: &ReducerContext) {
     let range = 0.0..10000.0;
     let sphere_properties = RigidBodyProperties::builder().build().insert(ctx).id;
     let sphere_collider = Collider::sphere(world.id, 1.0).insert(ctx).id;
-    let trigger_collider = Collider::cuboid(world.id, Vec3::new(1.0, 1.0, 1.0))
+    let trigger_collider = Collider::cuboid(world.id, Vec3::new(1.0, 1.0, 1.0).into())
         .insert(ctx)
         .id;
     for _ in 0..2000 {
         RigidBody::builder()
-            .position(Vec3::new(
-                ctx.rng().gen_range(range.clone()),
-                100.0,
-                ctx.rng().gen_range(range.clone()),
-            ))
+            .position(
+                Vec3::new(
+                    ctx.rng().gen_range(range.clone()),
+                    100.0,
+                    ctx.rng().gen_range(range.clone()),
+                )
+                .into(),
+            )
             .collider_id(sphere_collider)
             .properties_id(sphere_properties)
             .body_type(RigidBodyType::Dynamic)
@@ -64,11 +65,14 @@ pub fn init(ctx: &ReducerContext) {
 
     for _ in 0..15000 {
         Trigger::builder()
-            .position(Vec3::new(
-                ctx.rng().gen_range(range.clone()),
-                100.0,
-                ctx.rng().gen_range(range.clone()),
-            ))
+            .position(
+                Vec3::new(
+                    ctx.rng().gen_range(range.clone()),
+                    100.0,
+                    ctx.rng().gen_range(range.clone()),
+                )
+                .into(),
+            )
             .collider_id(trigger_collider)
             .build()
             .insert(ctx);
@@ -81,8 +85,9 @@ pub fn init(ctx: &ReducerContext) {
                 ctx.rng().gen_range(range.clone()),
                 100.0,
                 ctx.rng().gen_range(range.clone()),
-            ),
-            Vec3::Z,
+            )
+            .into(),
+            Vec3::Z.into(),
             100.0,
             false,
         )
@@ -144,7 +149,7 @@ pub fn init(ctx: &ReducerContext) {
     // This is useful for things like shooting, where you want to detect if a ray intersects with a rigid body.
     // RayCasts created this way will be updated automatically by the physics world and are
     // generally more efficient. For instant raycasts, you can use PhyssicsWorld::raycast().
-    RayCast::new(world.id, Vec3::ZERO, Vec3::Z, 100.0, false).insert(ctx);
+    RayCast::new(world.id, Vec3::ZERO.into(), Vec3::Z.into(), 100.0, false).insert(ctx);
 
     // Schedule the physics tick for the world
     ctx.db.physics_ticks().insert(PhysicsWorldTick {

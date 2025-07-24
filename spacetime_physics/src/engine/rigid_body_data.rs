@@ -1,12 +1,10 @@
 use std::collections::HashMap;
 
+use glam::{Mat3, Quat, Vec3};
 use parry3d::na::Isometry3;
 use spacetimedb::ReducerContext;
 
-use crate::{
-    math::{Mat3, Quat, Vec3},
-    Collider, ColliderId, PhysicsWorldId, RigidBody, RigidBodyProperties, ShapeWrapper,
-};
+use crate::{Collider, ColliderId, PhysicsWorldId, RigidBody, RigidBodyProperties, ShapeWrapper};
 
 /// Represents a rigid body in the physics engine, containing its properties and state.
 /// This struct is used as an abstraction layer to the RigidBody storage in the database,
@@ -27,6 +25,12 @@ pub struct RigidBodyData {
     pre_solve_angular_velocity: Vec3,
     previous_position: Vec3,
     previous_rotation: Quat,
+    position: Vec3,
+    rotation: Quat,
+    linear_velocity: Vec3,
+    angular_velocity: Vec3,
+    force: Vec3,
+    torque: Vec3,
     is_dirty: bool,
 }
 
@@ -48,10 +52,16 @@ impl RigidBodyData {
             restitution_coefficient: rb_properties.restitution_coefficient,
             inertia_tensor,
             inv_inertia_tensor: inertia_tensor.inverse(),
-            pre_solve_linear_velocity: rigid_body.linear_velocity,
-            pre_solve_angular_velocity: rigid_body.angular_velocity,
-            previous_position: rigid_body.position,
-            previous_rotation: rigid_body.rotation,
+            pre_solve_linear_velocity: rigid_body.linear_velocity.into(),
+            pre_solve_angular_velocity: rigid_body.angular_velocity.into(),
+            previous_position: rigid_body.position.into(),
+            previous_rotation: rigid_body.rotation.into(),
+            position: rigid_body.position.into(),
+            rotation: rigid_body.rotation.into(),
+            linear_velocity: rigid_body.linear_velocity.into(),
+            angular_velocity: rigid_body.angular_velocity.into(),
+            force: rigid_body.force.into(),
+            torque: rigid_body.torque.into(),
             is_dirty: false,
         }
     }
@@ -91,7 +101,7 @@ impl RigidBodyData {
 
     pub fn effective_inverse_inertia(&self) -> Mat3 {
         // TODO: Take into account locked axes
-        let r = self.rb.rotation.to_mat3();
+        let r = Mat3::from_quat(self.rb.rotation.into());
         r * self.inv_inertia_tensor * r.transpose()
     }
 
@@ -116,11 +126,11 @@ impl RigidBodyData {
     }
 
     pub fn position(&self) -> Vec3 {
-        self.rb.position
+        self.position
     }
 
     pub fn rotation(&self) -> Quat {
-        self.rb.rotation
+        self.rotation
     }
 
     pub fn is_dynamic(&self) -> bool {
@@ -140,19 +150,19 @@ impl RigidBodyData {
     }
 
     pub fn linear_velocity(&self) -> Vec3 {
-        self.rb.linear_velocity
+        self.linear_velocity
     }
 
     pub fn angular_velocity(&self) -> Vec3 {
-        self.rb.angular_velocity
+        self.angular_velocity
     }
 
     pub fn force(&self) -> Vec3 {
-        self.rb.force
+        self.force
     }
 
     pub fn torque(&self) -> Vec3 {
-        self.rb.torque
+        self.torque
     }
 
     pub fn inertia_tensor(&self) -> Mat3 {
@@ -172,12 +182,12 @@ impl RigidBodyData {
     }
 
     pub fn set_position(&mut self, position: Vec3) {
-        self.rb.position = position;
+        self.position = position;
         self.is_dirty = true;
     }
 
     pub fn set_rotation(&mut self, rotation: Quat) {
-        self.rb.rotation = rotation.normalize();
+        self.rotation = rotation.normalize();
         self.is_dirty = true;
     }
 
@@ -190,21 +200,21 @@ impl RigidBodyData {
     }
 
     pub fn set_linear_velocity(&mut self, velocity: Vec3) {
-        self.rb.linear_velocity = velocity;
+        self.linear_velocity = velocity;
     }
 
     pub fn set_angular_velocity(&mut self, velocity: Vec3) {
-        self.rb.angular_velocity = velocity;
+        self.angular_velocity = velocity;
         self.is_dirty = true;
     }
 
     pub fn set_force(&mut self, force: Vec3) {
-        self.rb.force = force;
+        self.force = force;
         self.is_dirty = true;
     }
 
     pub fn set_torque(&mut self, torque: Vec3) {
-        self.rb.torque = torque;
+        self.torque = torque;
         self.is_dirty = true;
     }
 
@@ -216,7 +226,13 @@ impl RigidBodyData {
         self.pre_solve_angular_velocity = velocity;
     }
 
-    pub fn update(&self, ctx: &ReducerContext) {
+    pub fn update(&mut self, ctx: &ReducerContext) {
+        self.rb.position = self.position.into();
+        self.rb.rotation = self.rotation.into();
+        self.rb.linear_velocity = self.linear_velocity.into();
+        self.rb.angular_velocity = self.angular_velocity.into();
+        self.rb.force = self.force.into();
+        self.rb.torque = self.torque.into();
         self.rb.update(ctx);
     }
 }

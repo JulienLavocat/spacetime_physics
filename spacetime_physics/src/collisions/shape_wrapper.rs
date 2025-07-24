@@ -1,7 +1,8 @@
 use crate::{tables::Collider, ColliderType};
+use glam::Vec3;
 use parry3d::{
     bounding_volume::{Aabb, BoundingVolume},
-    na::Isometry3,
+    na::{Isometry3, Vector3},
     query::{contact, intersection_test, Contact, Ray, RayCast, RayIntersection},
     shape::{Ball, Capsule, Cone, Cuboid, Cylinder, HalfSpace, Shape, Triangle},
 };
@@ -124,7 +125,14 @@ impl From<&Collider> for ShapeWrapper {
         match collider.collider_type {
             ColliderType::Sphere => ShapeWrapper::Sphere(Ball::new(collider.radius)),
             ColliderType::Plane => ShapeWrapper::Plane(HalfSpace::new(collider.normal.into())),
-            ColliderType::Cuboid => ShapeWrapper::Cuboid(Cuboid::new((collider.size / 2.0).into())),
+            ColliderType::Cuboid => {
+                let size: Vec3 = collider.size.into();
+                ShapeWrapper::Cuboid(Cuboid::new(Vector3::new(
+                    size.x / 2.0,
+                    size.y / 2.0,
+                    size.z / 2.0,
+                )))
+            }
             ColliderType::Capsule => {
                 ShapeWrapper::Capsule(Capsule::new_y(collider.height / 2.0, collider.radius))
             }

@@ -40,7 +40,7 @@ pub struct PhysicsWorld {
 
     /// The gravity vector applied to the physics world. This is typically set to a downward
     /// vector like (0.0, -9.81, 0.0) to simulate Earth's gravity.
-    #[builder(default = Vec3::new(0.0, -9.81, 0.0))]
+    #[builder(default = glam::Vec3::new(0.0, -9.81, 0.0).into())]
     pub gravity: Vec3,
 
     /// The precision of the physics simulation, used to determine how close objects need to be

@@ -1,10 +1,7 @@
+use glam::{Mat3, Vec3};
 use log::debug;
 
-use crate::{
-    math::{Mat3, Vec3},
-    utils::get_bodies_mut,
-    PhysicsWorld,
-};
+use crate::{utils::get_bodies_mut, PhysicsWorld};
 
 use super::{
     constraints::{Constraint, PenetrationConstraint, PositionConstraint},
@@ -41,9 +38,16 @@ pub(crate) fn recompute_velocities(world: &PhysicsWorld, bodies: &mut [RigidBody
         body.set_linear_velocity((body.position() - body.previous_position()) / dt);
 
         body.set_pre_solve_angular_velocity(body.angular_velocity());
-        body.set_angular_velocity(
-            (body.rotation() * body.previous_rotation().inverse()).as_radians() / dt,
-        );
+
+        let delta_q = body.rotation() * body.previous_rotation().inverse();
+        let (axis, angle) = delta_q.to_axis_angle();
+
+        let angular_velocity = if angle.abs() > f32::EPSILON {
+            axis * angle / dt
+        } else {
+            Vec3::ZERO
+        };
+        body.set_angular_velocity(angular_velocity);
 
         if world.debug_substep() {
             debug!(
@@ -69,7 +73,7 @@ pub(crate) fn solve_velocities(
     for constraint in penetration_constraints {
         let (body1, body2) = get_bodies_mut(constraint.a, constraint.b, bodies);
         let normal = constraint.normal;
-        let gravity = world.gravity;
+        let gravity = world.gravity.into();
 
         // Compute pre-solve relative normal velocities at the contact point (used for restitution)
         let pre_solve_contact_vel1 = compute_contact_vel(

@@ -1,4 +1,4 @@
-use crate::math::Vec3;
+use glam::Vec3;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct CollisionPoint {

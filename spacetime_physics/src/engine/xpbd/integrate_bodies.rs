@@ -1,11 +1,10 @@
+use glam::{Quat, Vec3};
 use log::debug;
 
-use crate::{
-    math::{Quat, Vec3},
-    PhysicsWorld, RigidBodyData,
-};
+use crate::{PhysicsWorld, RigidBodyData};
 
 pub fn integrate_bodies(bodies: &mut [RigidBodyData], world: &PhysicsWorld, delta_time: f32) {
+    let gravity: Vec3 = world.gravity.into();
     let sw = world.stopwatch("integrate_bodies");
     for body in bodies {
         if !body.is_dynamic() {
@@ -15,7 +14,7 @@ pub fn integrate_bodies(bodies: &mut [RigidBodyData], world: &PhysicsWorld, delt
         // --- Linear integration ---
 
         body.set_previous_position(body.position());
-        let weight = world.gravity * body.effective_mass();
+        let weight = gravity * body.effective_mass();
         let total_force = body.force() + weight;
 
         // v ← v + h * fext / m
@@ -46,7 +45,11 @@ pub fn integrate_bodies(bodies: &mut [RigidBodyData], world: &PhysicsWorld, delt
         body.set_angular_velocity(body.angular_velocity() + delta_time * angular_acceleration);
 
         // q ← q + 0.5 * h * q × ω
-        let dq = 0.5 * delta_time * body.rotation() * Quat::from_xyz(body.angular_velocity(), 0.0);
+
+        let dq = Quat::from_vec4(body.angular_velocity().extend(0.0))
+            * 0.5
+            * delta_time
+            * body.rotation();
         body.set_rotation(body.rotation() + dq);
 
         body.set_torque(Vec3::ZERO);

@@ -1,10 +1,11 @@
 mod penetration;
 mod position;
 
+use glam::Vec3;
 pub use penetration::*;
 pub use position::*;
 
-use crate::{math::Vec3, PhysicsWorld};
+use crate::PhysicsWorld;
 
 use super::RigidBodyData;
 

@@ -10,3 +10,4 @@ spacetimedb = { version = "1.2.0", features = ["unstable"] }
 log = "0.4"
 parry3d = "0.21.1"
 bon = "3.6.4"
+glam = "0.30.4"

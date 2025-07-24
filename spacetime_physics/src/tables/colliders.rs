@@ -1,8 +1,9 @@
 use std::{collections::HashMap, fmt::Display};
 
+use glam::Mat3;
 use spacetimedb::{table, ReducerContext, SpacetimeType, Table};
 
-use crate::math::{Mat3, Vec3};
+use crate::math::Vec3;
 
 pub type ColliderId = u64;
 
@@ -147,11 +148,14 @@ impl Collider {
             ColliderType::Cylinder => cylinder_inertia_tensor(mass, self.radius, self.height),
             ColliderType::Cone => cone_inertia_tensor(mass, self.radius, self.height),
             ColliderType::Capsule => {
-                capsule_inertia_tensor(mass, self.radius, self.point_a, self.point_b)
+                capsule_inertia_tensor(mass, self.radius, self.point_a.into(), self.point_b.into())
             }
-            ColliderType::Triangle => {
-                triangle_inertia_tensor(mass, self.point_a, self.point_b, self.point_c)
-            }
+            ColliderType::Triangle => triangle_inertia_tensor(
+                mass,
+                self.point_a.into(),
+                self.point_b.into(),
+                self.point_c.into(),
+            ),
         }
     }
 }
@@ -191,36 +195,46 @@ fn cuboid_inertia_tensor(mass: f32, size: Vec3) -> Mat3 {
     let i_x = (1.0 / 12.0) * mass * (h * h + d * d);
     let i_y = (1.0 / 12.0) * mass * (w * w + d * d);
     let i_z = (1.0 / 12.0) * mass * (w * w + h * h);
-    Mat3::from_diagonal(Vec3::new(i_x, i_y, i_z))
+    Mat3::from_diagonal(glam::Vec3::new(i_x, i_y, i_z))
 }
 
 fn sphere_inertia_tensor(mass: f32, radius: f32) -> Mat3 {
     let factor = (2.0 / 5.0) * mass * radius * radius;
-    Mat3::from_diagonal(Vec3::splat(factor))
+    Mat3::from_diagonal(glam::Vec3::splat(factor))
 }
 
 fn cylinder_inertia_tensor(mass: f32, radius: f32, height: f32) -> Mat3 {
     let i_xz = (1.0 / 12.0) * mass * (3.0 * radius * radius + height * height);
     let i_y = (1.0 / 2.0) * mass * radius * radius;
-    Mat3::from_diagonal(Vec3::new(i_xz, i_y, i_xz))
+    Mat3::from_diagonal(glam::Vec3::new(i_xz, i_y, i_xz))
 }
 
 fn cone_inertia_tensor(mass: f32, radius: f32, _height: f32) -> Mat3 {
     let i_xz = (3.0 / 20.0) * mass * radius * radius;
     let i_y = (3.0 / 10.0) * mass * radius * radius;
-    Mat3::from_diagonal(Vec3::new(i_xz, i_y, i_xz))
+    Mat3::from_diagonal(glam::Vec3::new(i_xz, i_y, i_xz))
 }
 
-fn capsule_inertia_tensor(mass: f32, radius: f32, point_a: Vec3, point_b: Vec3) -> Mat3 {
+fn capsule_inertia_tensor(
+    mass: f32,
+    radius: f32,
+    point_a: glam::Vec3,
+    point_b: glam::Vec3,
+) -> Mat3 {
     let length = (point_b - point_a).length();
     let i = (1.0 / 12.0) * mass * (3.0 * radius * radius + length * length);
-    Mat3::from_diagonal(Vec3::new(i, i, i)) // ← approximation
+    Mat3::from_diagonal(glam::Vec3::new(i, i, i)) // ← approximation
 }
 
-fn triangle_inertia_tensor(mass: f32, point_a: Vec3, point_b: Vec3, point_c: Vec3) -> Mat3 {
+fn triangle_inertia_tensor(
+    mass: f32,
+    point_a: glam::Vec3,
+    point_b: glam::Vec3,
+    point_c: glam::Vec3,
+) -> Mat3 {
     let ab = point_b - point_a;
     let ac = point_c - point_a;
     let area = 0.5 * ab.cross(ac).length();
     let factor = (1.0 / 6.0) * mass * area * area;
-    Mat3::from_diagonal(Vec3::splat(factor))
+    Mat3::from_diagonal(glam::Vec3::splat(factor))
 }

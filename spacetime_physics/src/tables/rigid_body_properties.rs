@@ -1,9 +1,8 @@
 use std::fmt::Display;
 
 use bon::{builder, Builder};
+use glam::Vec3;
 use spacetimedb::{table, ReducerContext, Table};
-
-use crate::math::Vec3;
 
 #[table(name = physics_rigid_body_properties, public)]
 #[derive(Builder, Debug, Clone, PartialEq)]
@@ -68,6 +67,7 @@ impl RigidBodyProperties {
     }
 
     pub fn effective_inverse_mass(&self) -> Vec3 {
+        // TODO: Use locked axes
         Vec3::splat(self.inv_mass)
     }
 }

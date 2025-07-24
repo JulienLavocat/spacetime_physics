@@ -1,8 +1,9 @@
 use std::fmt::Display;
 
+use glam::Vec3;
 use log::debug;
 
-use crate::{math::Vec3, utils::get_bodies_mut, CollisionPoint, PhysicsWorld, RigidBodyData};
+use crate::{utils::get_bodies_mut, CollisionPoint, PhysicsWorld, RigidBodyData};
 
 use super::{position::PositionConstraint, Constraint};
 
@@ -62,8 +63,8 @@ impl PenetrationConstraint {
         let compliance = self.compliance;
         let lagrange = self.normal_lagrange;
 
-        let ra = body_a.rotation().rotate(self.local_a);
-        let rb = body_b.rotation().rotate(self.local_b);
+        let ra = body_a.rotation() * self.local_a;
+        let rb = body_b.rotation() * self.local_b;
 
         if penetraion >= 0.0 {
             return;
@@ -111,10 +112,10 @@ impl PenetrationConstraint {
         let r2 = self.world_b;
 
         // Compute contact positions at the current state and before substep integration
-        let p1 = body1.position() + body1.rotation().rotate(self.local_a);
-        let p2 = body2.position() + body2.rotation().rotate(self.local_b);
-        let prev_p1 = body1.previous_position() + body1.previous_rotation().rotate(self.local_a);
-        let prev_p2 = body2.previous_position() + body2.previous_rotation().rotate(self.local_b);
+        let p1 = body1.position() + body1.rotation() * self.local_a;
+        let p2 = body2.position() + body2.rotation() * self.local_b;
+        let prev_p1 = body1.previous_position() + body1.previous_rotation() * self.local_b;
+        let prev_p2 = body2.previous_position() + body2.previous_rotation() * self.local_b;
 
         // Compute relative motion of the contact points and get the tangential component
         let delta_p = (p1 - prev_p1) - (p2 - prev_p2);

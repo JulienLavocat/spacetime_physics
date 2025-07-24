@@ -21,9 +21,9 @@ pub struct Trigger {
     #[builder(default = 1)]
     pub world_id: u64,
 
-    #[builder(default = Vec3::ZERO)]
+    #[builder(default = glam::Vec3::ZERO.into())]
     pub position: Vec3,
-    #[builder(default = Quat::IDENTITY)]
+    #[builder(default = glam::Quat::IDENTITY.into())]
     pub rotation: Quat,
 
     pub collider_id: u64,

@@ -93,11 +93,12 @@ impl RayCast {
         max_distance: f32,
         solid: bool,
     ) -> Self {
+        let direction: glam::Vec3 = direction.into();
         Self {
             id: 0,
             world_id,
             origin,
-            direction: direction.normalize(),
+            direction: direction.normalize().into(),
             max_distance,
             solid,
             hits: Vec::new(),
