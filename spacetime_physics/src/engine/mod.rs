@@ -57,9 +57,9 @@ pub fn step_world(
     }
 
     for i in 0..world.sub_step {
-        let sw = world.stopwatch(&format!("substep_{}", i));
+        let sw = world.stopwatch(&format!("substep_{i}"));
         if world.debug_substep() {
-            debug!("---------- substep: {} ----------", i);
+            debug!("---------- substep: {i} ----------");
         }
 
         // TODO: Ignore trigger bodies in the narrow phase
@@ -68,7 +68,7 @@ pub fn step_world(
         let penetration_constraints = penetration_constraints.as_mut_slice();
 
         if world.debug_substep() {
-            debug!("Collisions detected: {:?}", penetration_constraints);
+            debug!("Collisions detected: {penetration_constraints:?}",);
         }
 
         integrate_bodies(entities, world, dt);

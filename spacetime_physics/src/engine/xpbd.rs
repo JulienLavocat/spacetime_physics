@@ -277,9 +277,8 @@ fn get_restitution(
 
     if world.debug {
         debug!(
-        "[GetRestitution] normal: {}, normal_vel: {}, pre_solve_normal_vel: {}, coefficient: {}, restitution: {}",
-        normal, normal_vel, pre_solve_normal_vel, coefficient, restitution
-    );
+            "[GetRestitution] normal: {normal}, normal_vel: {normal_vel}, pre_solve_normal_vel: {pre_solve_normal_vel}, coefficient: {coefficient}, restitution: {restitution}",
+        );
     }
 
     restitution
