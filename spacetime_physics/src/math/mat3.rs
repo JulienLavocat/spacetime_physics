@@ -1,4 +1,4 @@
-use std::ops::Mul;
+use std::ops::{Mul, Sub};
 
 use spacetimedb::SpacetimeType;
 
@@ -124,6 +124,38 @@ impl Mat3 {
             m33: self.m33,
         }
     }
+
+    pub fn abs(&self) -> Self {
+        Self {
+            m11: self.m11.abs(),
+            m12: self.m12.abs(),
+            m13: self.m13.abs(),
+            m21: self.m21.abs(),
+            m22: self.m22.abs(),
+            m23: self.m23.abs(),
+            m31: self.m31.abs(),
+            m32: self.m32.abs(),
+            m33: self.m33.abs(),
+        }
+    }
+}
+
+impl Sub<Mat3> for Mat3 {
+    type Output = Self;
+
+    fn sub(self, other: Self) -> Self::Output {
+        Self {
+            m11: self.m11 - other.m11,
+            m12: self.m12 - other.m12,
+            m13: self.m13 - other.m13,
+            m21: self.m21 - other.m21,
+            m22: self.m22 - other.m22,
+            m23: self.m23 - other.m23,
+            m31: self.m31 - other.m31,
+            m32: self.m32 - other.m32,
+            m33: self.m33 - other.m33,
+        }
+    }
 }
 
 impl Mul<Mat3> for Mat3 {
@@ -175,3 +207,7 @@ impl Mul<Mat3> for f32 {
         }
     }
 }
+
+#[cfg(test)]
+#[path = "mat3_tests.rs"]
+mod tests;
