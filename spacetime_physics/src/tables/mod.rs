@@ -1,5 +1,6 @@
 pub mod colliders;
 pub mod physics_world;
+pub mod qbvh;
 pub mod raycast;
 pub mod rigid_body;
 pub mod rigid_body_properties;

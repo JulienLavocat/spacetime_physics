@@ -8,5 +8,6 @@ license = "Apache-2.0"
 [dependencies]
 spacetimedb = { version = "1.2.0", features = ["unstable"] }
 log = "0.4"
-parry3d = "0.21.1"
+parry3d = {version = "0.21.1", features = ["rkyv-serialize"]}
 bon = "3.6.4"
+rkyv = "0.7.45"

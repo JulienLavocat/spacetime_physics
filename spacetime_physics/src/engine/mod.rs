@@ -46,7 +46,7 @@ pub fn step_world(
 
     // TODO: Include triggers in the entities list
     let mut collision_detection = CollisionDetection::new();
-    collision_detection.broad_phase(world, entities, triggers, raycasts);
+    collision_detection.broad_phase(ctx, world, entities, triggers, raycasts);
 
     if world.debug_broad_phase() {
         debug!(

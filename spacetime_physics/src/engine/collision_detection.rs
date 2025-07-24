@@ -1,4 +1,7 @@
-use std::collections::{HashMap, HashSet};
+use std::{
+    collections::{HashMap, HashSet},
+    io::Read,
+};
 
 use log::debug;
 use parry3d::{
@@ -9,17 +12,19 @@ use parry3d::{
         Ray,
     },
 };
-use spacetimedb::ReducerContext;
+use rkyv::{Archive, Deserialize, Serialize};
+use spacetimedb::{log_stopwatch::LogStopwatch, ReducerContext};
 
 use crate::{
-    test_collision, utils::get_bodies_direct, PhysicsWorld, RayCast, RayCastHit, RaycastId,
+    qbvh::QbvhCache, test_collision, utils::get_bodies_direct, PhysicsWorld, RayCast, RayCastHit,
+    RaycastId,
 };
 
 use super::{
     constraints::PenetrationConstraint, rigid_body_data::RigidBodyData, trigger_data::TriggerData,
 };
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, Archive)]
 pub struct Collidable {
     pub id: u64,
     pub rigidbody_index: usize,
@@ -44,7 +49,7 @@ impl IndexedData for Collidable {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, Archive)]
 pub struct RayCastEntry {
     pub raycast_id: RaycastId,
     pub raycast_index: usize,
@@ -73,6 +78,7 @@ impl CollisionDetection {
 
     pub fn broad_phase(
         &mut self,
+        ctx: &ReducerContext,
         world: &PhysicsWorld,
         bodies: &[RigidBodyData],
         triggers: &[TriggerData],
@@ -90,7 +96,29 @@ impl CollisionDetection {
         self.run_broad_phase_pairs(world);
         self.run_broad_phase_raycast_pairs(world, raycasts);
 
+        self.serialize(ctx, world);
+        self.rebuild_from_cache(ctx, world);
+
         sw.end();
+    }
+
+    fn serialize(&self, ctx: &ReducerContext, world: &PhysicsWorld) {
+        let serialize_sw = world.stopwatch("collision_detection_serialize");
+        let qbvv_serialized = rkyv::to_bytes::<_, 512>(&self.qbvh).unwrap();
+
+        QbvhCache::upsert(ctx, world.id, qbvv_serialized.to_vec());
+
+        serialize_sw.end();
+    }
+
+    fn rebuild_from_cache(&mut self, ctx: &ReducerContext, world: &PhysicsWorld) {
+        let rebuild_sw = world.stopwatch("collision_detection_rebuild_from_cache");
+        if let Some(cache) = QbvhCache::get(ctx, world.id) {
+            let qhvh: QbvhImpl<Collidable> =
+                unsafe { rkyv::from_bytes_unchecked(&cache.bytes).unwrap() };
+            self.qbvh = qhvh;
+        }
+        rebuild_sw.end();
     }
 
     pub fn narrow_phase_constraints(
